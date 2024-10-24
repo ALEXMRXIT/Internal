@@ -1,6 +1,8 @@
 #pragma once
 #include "framework.h"
 
+class Shader;
+
 typedef struct _WindowDescription {
 	const char* title;
 	unsigned int width;
@@ -29,8 +31,7 @@ private:
 	ID3D11Device* m_device;
 	ID3D11DeviceContext* m_deviceContext;
 	ID3D11RenderTargetView* m_renderTargetView;
-	ID3D11VertexShader* m_vertexShader;
-	ID3D11PixelShader* m_pixelShader;
+	Shader* m_shader;
 	ID3D11Buffer* m_indexBuffer;
 	ID3D11Buffer* m_vertexBuffer;
 	ID3D11InputLayout* m_layout;

@@ -1,5 +1,6 @@
 #include "Engine.h"
 #include "debug.h"
+#include "Shader.h"
 
 Engine::Engine() {
 	m_windowDesc = nullptr;
@@ -109,6 +110,8 @@ bool Engine::InitRenderDevice() {
     m_device->CreateDepthStencilView(m_depthTexture, NULL, &m_depthStencilView);
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
+    m_shader = new Shader();
+
     if (!InitScene())
         return false;
 
@@ -117,55 +120,11 @@ bool Engine::InitRenderDevice() {
 
 bool Engine::InitScene() {
     HRESULT handleResult{};
-    ID3D10Blob* vertexBlob = nullptr;
-    ID3D10Blob* pixelBlob = nullptr;
-    ID3D10Blob* errorBlob = nullptr;
-
-    handleResult = D3DX11CompileFromFile(TEXT("shader.fx"), NULL, 
-        NULL, TEXT("VS"), TEXT("vs_4_0"), 0, 0, 0, &vertexBlob, &errorBlob, 0);
-    if (FAILED(handleResult)) {
-        if (errorBlob) {
-            ERROR_MSG("Error compiling vertex shader: %s", (char*)errorBlob->GetBufferPointer());
-            errorBlob->Release();
-        }
-        else
-            ERROR_MSG("Error compiling vertex shader. %d error code.", handleResult);
-        return false;
-    }
-    handleResult = D3DX11CompileFromFile(TEXT("shader.fx"), NULL, 
-        NULL, TEXT("PS"), TEXT("ps_4_0"), 0, 0, 0, &pixelBlob, &errorBlob, 0);
-    if (FAILED(handleResult)) {
-        if (errorBlob) {
-            ERROR_MSG("Error compiling pixel shader: %s", (char*)errorBlob->GetBufferPointer());
-            errorBlob->Release();
-        }
-        else
-            ERROR_MSG("Error compiling pixel shader. %d error code.", handleResult);
-        return false;
-    }
-
-    handleResult = m_device->CreateVertexShader(vertexBlob->GetBufferPointer(),
-        vertexBlob->GetBufferSize(), NULL, &m_vertexShader);
-    if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create vertex shader. %d error code.", handleResult);
-        if (vertexBlob) vertexBlob->Release();
-        if (pixelBlob) pixelBlob->Release();
-        if (errorBlob) errorBlob->Release();
-        return false;
-    }
-
-    handleResult = m_device->CreatePixelShader(pixelBlob->GetBufferPointer(),
-        pixelBlob->GetBufferSize(), NULL, &m_pixelShader);
-    if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create pixel shader. %d error code.", handleResult);
-        if (vertexBlob) vertexBlob->Release();
-        if (pixelBlob) pixelBlob->Release();
-        if (errorBlob) errorBlob->Release();
-        return false;
-    }
-
-    m_deviceContext->VSSetShader(m_vertexShader, 0, 0);
-    m_deviceContext->PSSetShader(m_pixelShader, 0, 0);
+    
+    if (FAILED(m_shader->LoadVertexShader(m_device, m_deviceContext, "shader.fx")))
+        return E_FAIL;
+    if (FAILED(m_shader->LoadPixelShader(m_device, m_deviceContext, "shader.fx")))
+        return E_FAIL;
 
     Vertex vertex[] = {
         Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
@@ -243,9 +202,6 @@ bool Engine::InitScene() {
     handleResult = m_device->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer);
     if (FAILED(handleResult)) {
         ERROR_MSG("Failed to create index buffer. %d error code.", handleResult);
-        if (vertexBlob) vertexBlob->Release();
-        if (pixelBlob) pixelBlob->Release();
-        if (errorBlob) errorBlob->Release();
         return false;
     }
     m_deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
@@ -263,9 +219,6 @@ bool Engine::InitScene() {
     handleResult = m_device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer);
     if (FAILED(handleResult)) {
         ERROR_MSG("Failed to create vertex buffer. %d error code.", handleResult);
-        if (vertexBlob) vertexBlob->Release();
-        if (pixelBlob) pixelBlob->Release();
-        if (errorBlob) errorBlob->Release();
         return false;
     }
 
@@ -279,13 +232,11 @@ bool Engine::InitScene() {
     };
     UINT numElements = ARRAYSIZE(layout);
 
-    handleResult = m_device->CreateInputLayout(layout, numElements, vertexBlob->GetBufferPointer(),
-        vertexBlob->GetBufferSize(), &m_layout);
+    LPVOID buffPtr = m_shader->getVertexBlob()->GetBufferPointer();
+    SIZE_T size = m_shader->getVertexBlob()->GetBufferSize();
+    handleResult = m_device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
     if (FAILED(handleResult)) {
         ERROR_MSG("Failed to create input layout. %d error code.", handleResult);
-        if (vertexBlob) vertexBlob->Release();
-        if (pixelBlob) pixelBlob->Release();
-        if (errorBlob) errorBlob->Release();
         return false;
     }
 
@@ -303,10 +254,6 @@ bool Engine::InitScene() {
 
     m_deviceContext->RSSetViewports(1, &viewport);
 
-    if (vertexBlob) vertexBlob->Release();
-    if (pixelBlob) pixelBlob->Release();
-    if (errorBlob) errorBlob->Release();
-
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
     bufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -318,9 +265,6 @@ bool Engine::InitScene() {
     handleResult = m_device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
     if (FAILED(handleResult)) {
         ERROR_MSG("Failed to create buffer. %d error code.", handleResult);
-        if (vertexBlob) vertexBlob->Release();
-        if (pixelBlob) pixelBlob->Release();
-        if (errorBlob) errorBlob->Release();
         return false;
     }
 
@@ -401,10 +345,9 @@ void Engine::Release() {
     if (m_device) m_device->Release();
     if (m_deviceContext) m_deviceContext->Release();
     if (m_renderTargetView) m_renderTargetView->Release();
-    if (m_vertexShader) m_vertexShader->Release();
-    if (m_pixelShader) m_pixelShader->Release();
+    if (m_shader) m_shader->Release();
     if (m_vertexBuffer) m_vertexBuffer->Release();
-    if (m_pixelShader) m_pixelShader->Release();
+    if (m_indexBuffer) m_indexBuffer->Release();
     if (m_layout) m_layout->Release();
     if (m_depthStencilView) m_depthStencilView->Release();
     if (m_depthTexture) m_depthTexture->Release();
