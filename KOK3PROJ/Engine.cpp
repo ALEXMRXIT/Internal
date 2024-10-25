@@ -1,6 +1,9 @@
 #include "Engine.h"
 #include "debug.h"
 #include "Shader.h"
+#include "Mesh.h"
+
+Engine engine;
 
 Engine::Engine() {
 	m_windowDesc = nullptr;
@@ -189,42 +192,12 @@ bool Engine::InitScene() {
         20, 22, 23
     };
 
-    D3D11_BUFFER_DESC indexBufferDesc;
-    ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-    indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    indexBufferDesc.ByteWidth = sizeof(DWORD) * 12 * 3;
-    indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    indexBufferDesc.CPUAccessFlags = 0;
-    indexBufferDesc.MiscFlags = 0;
-    D3D11_SUBRESOURCE_DATA indexBufferData;
-    ZeroMemory(&indexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
-    indexBufferData.pSysMem = indices;
-    handleResult = m_device->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer);
-    if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create index buffer. %d error code.", handleResult);
-        return false;
-    }
-    m_deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-    D3D11_BUFFER_DESC vertexBufferDesc;
-    ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-    vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    vertexBufferDesc.ByteWidth = sizeof(Vertex) * 24;
-    vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vertexBufferDesc.CPUAccessFlags = 0;
-    vertexBufferDesc.MiscFlags = 0;
-    D3D11_SUBRESOURCE_DATA vertexBufferData;
-    ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
-    vertexBufferData.pSysMem = vertex;
-    handleResult = m_device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer);
-    if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create vertex buffer. %d error code.", handleResult);
-        return false;
-    }
-
-    UINT stride = sizeof(Vertex);
-    UINT offset = 0;
-    m_deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+    RenderOperation* rendOp = new RenderOperation();
+    rendOp->CreateRenderOperation();
+    Mesh* cube1 = new Mesh();
+    if (!cube1->CreateVertex(m_device, m_deviceContext, vertex, 24)) return false;
+    if (!cube1->CreateIndex(m_device, m_deviceContext, indices, 36)) return false;
+    m_quewe.emplace_back(rendOp->SetRenderOperation(cube1));
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -298,18 +271,13 @@ void Engine::Update() {
     if (rot > 6.26f)
         rot = 0.0f;
 
-    cube1World = XMMatrixIdentity();
-
-    XMVECTOR rotaxis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    Rotation = XMMatrixRotationAxis(rotaxis, rot);
-    Translation = XMMatrixTranslation(0.0f, 0.0f, 4.0f);
-
-    cube1World = Translation * Rotation;
-    cube2World = XMMatrixIdentity();
-
-    Rotation = XMMatrixRotationAxis(rotaxis, -rot);
-    Scale = XMMatrixScaling(1.5f, 1.5f, 1.5f);
-    cube2World = Rotation * Scale;
+    for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
+        MeshRenderData& data = *(MeshRenderData*)m_quewe[iterator]->m_renderData;
+        data.m_transformMatrix = XMMatrixIdentity();
+        XMVECTOR rotaxis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+        Rotation = XMMatrixRotationAxis(rotaxis, rot);
+        data.m_transformMatrix = Translation * Rotation;
+    }
 }
 
 void Engine::Render() {
@@ -319,23 +287,16 @@ void Engine::Render() {
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, 
         D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-    WVP = cube1World * camView * camProjection;
-    cbPerObj.WVP = XMMatrixTranspose(WVP);
-    m_deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &cbPerObj, 0, 0);
-    m_deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
-    m_deviceContext->PSSetShaderResources(0, 1, &CubesTexture);
-    m_deviceContext->PSSetSamplers(0, 1, &CubesTexSamplerState);
-
-    m_deviceContext->DrawIndexed(36, 0, 0);
-
-    WVP = cube2World * camView * camProjection;
-    cbPerObj.WVP = XMMatrixTranspose(WVP);
-    m_deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &cbPerObj, 0, 0);
-    m_deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
-    m_deviceContext->PSSetShaderResources(0, 1, &CubesTexture);
-    m_deviceContext->PSSetSamplers(0, 1, &CubesTexSamplerState);
-
-    m_deviceContext->DrawIndexed(36, 0, 0);
+    for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
+        MeshRenderData& data = *(MeshRenderData*)m_quewe[iterator]->m_renderData;
+        *m_viewProjectionMatrix = data.m_transformMatrix * camView * camProjection;
+        cbPerObj.WVP = XMMatrixTranspose(*m_viewProjectionMatrix);
+        m_deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &cbPerObj, 0, 0);
+        m_deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
+        m_deviceContext->PSSetShaderResources(0, 1, &CubesTexture);
+        m_deviceContext->PSSetSamplers(0, 1, &CubesTexSamplerState);
+        m_deviceContext->DrawIndexed(36, 0, 0);
+    }
 
     m_swapChain->Present(0, 0);
 }
@@ -346,12 +307,14 @@ void Engine::Release() {
     if (m_deviceContext) m_deviceContext->Release();
     if (m_renderTargetView) m_renderTargetView->Release();
     if (m_shader) m_shader->Release();
-    if (m_vertexBuffer) m_vertexBuffer->Release();
-    if (m_indexBuffer) m_indexBuffer->Release();
     if (m_layout) m_layout->Release();
     if (m_depthStencilView) m_depthStencilView->Release();
     if (m_depthTexture) m_depthTexture->Release();
     if (m_preObjectBuffer) m_preObjectBuffer->Release();
+
+    for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
+        m_quewe[iterator]->Release();
+    m_quewe.clear();
 }
 
 int Engine::messageWindow() {

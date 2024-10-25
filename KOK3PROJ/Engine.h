@@ -17,14 +17,40 @@ struct cbPerObject {
 	XMMATRIX  WVP;
 };
 
-typedef struct _Vertex {
-	XMFLOAT3 position;
-	XMFLOAT2 texCoord;
-	_Vertex(float x, float y, float z, float tx, float ty) : 
-		position(x, y, z), texCoord(tx, ty) {}
-} Vertex, *LPVertex;
+class RenderObject {
+public:
+	virtual void Render(void* renderData) = 0;
+	virtual void Release() = 0;
+};
 
-class Engine {
+class MeshRenderData {
+public:
+	XMMATRIX m_transformMatrix;
+};
+
+class RenderOperation {
+public:
+	void* m_renderData;
+	RenderObject* m_renderObject;
+
+	void CreateRenderOperation() {
+		MeshRenderData* data = new MeshRenderData();
+		data->m_transformMatrix = XMMatrixIdentity();
+		m_renderData = data;
+	}
+
+	RenderOperation* SetRenderOperation(RenderObject* obj) {
+		m_renderObject = obj;
+		return this;
+	}
+
+	void Release() {
+		delete m_renderData;
+		if (m_renderObject) m_renderObject->Release();
+	}
+};
+
+extern class Engine {
 private:
 	WindowDescription* m_windowDesc;
 	IDXGISwapChain* m_swapChain;
@@ -32,17 +58,12 @@ private:
 	ID3D11DeviceContext* m_deviceContext;
 	ID3D11RenderTargetView* m_renderTargetView;
 	Shader* m_shader;
-	ID3D11Buffer* m_indexBuffer;
-	ID3D11Buffer* m_vertexBuffer;
 	ID3D11InputLayout* m_layout;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
 	ID3D11Buffer* m_preObjectBuffer;
+	std::vector<RenderOperation*> m_quewe;
 
-	XMMATRIX WVP;
-	XMMATRIX cube1World;
-	XMMATRIX cube2World;
-	XMMATRIX World;
 	XMMATRIX camView;
 	XMMATRIX camProjection;
 
@@ -62,6 +83,8 @@ public:
 	Engine();
 	~Engine();
 
+	XMMATRIX* m_viewProjectionMatrix;
+
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
 
@@ -72,4 +95,4 @@ public:
 	void Render();
 	void Release();
 	int messageWindow();
-};
+} engine;
