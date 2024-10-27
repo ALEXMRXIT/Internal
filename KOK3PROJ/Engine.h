@@ -2,6 +2,7 @@
 #include "framework.h"
 
 class Shader;
+class Font;
 
 typedef struct _WindowDescription {
 	const char* title;
@@ -62,11 +63,15 @@ private:
 	ID3D11DeviceContext* m_deviceContext;
 	ID3D11RenderTargetView* m_renderTargetView;
 	Shader* m_shader;
+	Font* m_font;
 	ID3D11InputLayout* m_layout;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
 	ID3D11Buffer* m_preObjectBuffer;
 	std::vector<RenderOperation*> m_quewe;
+	ID3D11RasterizerState* m_cCWcullMode;
+	ID3D11RasterizerState* m_cWcullMode;
+	ID3D11BlendState* m_transparency;
 
 	XMMATRIX camView;
 	XMMATRIX camProjection;
@@ -95,4 +100,5 @@ public:
 	void Render();
 	void Release();
 	int messageWindow();
+	const WindowDescription* getWindowDesc() const;
 } engine;

@@ -4,6 +4,7 @@
 Shader::Shader() {
     m_vertexShader = nullptr;
     m_pixelShader = nullptr;
+    m_vertexBlob = nullptr;
 }
 
 HRESULT Shader::LoadShader(const char* entryPoint, const char* shaderName, const char* profile, ID3D10Blob** blob) {
