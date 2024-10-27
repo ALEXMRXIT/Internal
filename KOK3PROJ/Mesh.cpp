@@ -71,10 +71,20 @@ void IndexBuffer::Release() {
 Mesh::Mesh() {
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
+    rot = 0.01f;
 }
 
-void Mesh::Render(void* renderData) {
-    
+void Mesh::Render(MeshRenderData* renderData) {
+    MeshRenderData& data = *renderData;
+    rot += .0005f;
+    if (rot > 6.26f)
+        rot = 0.0f;
+
+    data.m_transformMatrix = XMMatrixIdentity();
+    XMVECTOR rotaxis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    Rotation = XMMatrixRotationAxis(rotaxis, rot);
+    Translation = XMMatrixTranslation(0.0f, 0.0f, 4.0f);
+    data.m_transformMatrix = Translation * Rotation;
 }
 
 bool Mesh::CreateVertex(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size) {

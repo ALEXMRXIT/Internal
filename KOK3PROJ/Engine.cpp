@@ -248,7 +248,6 @@ bool Engine::InitScene() {
     camView = XMMatrixLookAtLH(camPosition, camTarget, camUp);
     float screen = static_cast<float>(m_windowDesc->width) / static_cast<float>(m_windowDesc->height);
     camProjection = XMMatrixPerspectiveFovLH(0.5f * XM_PI, screen, 1.0f, 1000.0f);
-    rot = 0.01;
 
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(sampDesc));
@@ -267,17 +266,8 @@ bool Engine::InitScene() {
 }
 
 void Engine::Update() {
-    rot += .0005f;
-    if (rot > 6.26f)
-        rot = 0.0f;
-
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
-        MeshRenderData& data = *(MeshRenderData*)m_quewe[iterator]->m_renderData;
-        data.m_transformMatrix = XMMatrixIdentity();
-        XMVECTOR rotaxis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-        Rotation = XMMatrixRotationAxis(rotaxis, rot);
-        Translation = XMMatrixTranslation(0.0f, 0.0f, 4.0f);
-        data.m_transformMatrix = Translation * Rotation;
+        m_quewe[iterator]->UpdateMesh();
     }
 }
 
@@ -289,7 +279,7 @@ void Engine::Render() {
         D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
-        MeshRenderData& data = *(MeshRenderData*)m_quewe[iterator]->m_renderData;
+        MeshRenderData& data = *m_quewe[iterator]->m_renderData;
         m_viewProjectionMatrix = data.m_transformMatrix * camView * camProjection;
         cbPerObj.WVP = XMMatrixTranspose(m_viewProjectionMatrix);
         m_deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &cbPerObj, 0, 0);

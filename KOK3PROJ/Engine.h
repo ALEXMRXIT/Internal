@@ -17,20 +17,20 @@ struct cbPerObject {
 	XMMATRIX  WVP;
 };
 
-class RenderObject {
-public:
-	virtual void Render(void* renderData) = 0;
-	virtual void Release() = 0;
-};
-
 class MeshRenderData {
 public:
 	XMMATRIX m_transformMatrix;
 };
 
+class RenderObject {
+public:
+	virtual void Render(MeshRenderData* renderData) = 0;
+	virtual void Release() = 0;
+};
+
 class RenderOperation {
 public:
-	void* m_renderData;
+	MeshRenderData* m_renderData;
 	RenderObject* m_renderObject;
 
 	void CreateRenderOperation() {
@@ -42,6 +42,10 @@ public:
 	RenderOperation* SetRenderOperation(RenderObject* obj) {
 		m_renderObject = obj;
 		return this;
+	}
+
+	void UpdateMesh() {
+		m_renderObject->Render(m_renderData);
 	}
 
 	void Release() {
@@ -71,10 +75,6 @@ private:
 	XMVECTOR camTarget;
 	XMVECTOR camUp;
 	cbPerObject cbPerObj;
-	XMMATRIX Rotation;
-	XMMATRIX Scale;
-	XMMATRIX Translation;
-	float rot;
 	ID3D11ShaderResourceView* CubesTexture;
 	ID3D11SamplerState* CubesTexSamplerState;
 

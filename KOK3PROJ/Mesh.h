@@ -44,12 +44,17 @@ private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
 
+	XMMATRIX Rotation;
+	XMMATRIX Scale;
+	XMMATRIX Translation;
+	float rot;
+
 public:
 	Mesh();
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
 
-	void Render(void* renderData) override;
+	void Render(MeshRenderData* renderData) override;
 
 	bool CreateVertex(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size);
 	bool CreateIndex(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size);
