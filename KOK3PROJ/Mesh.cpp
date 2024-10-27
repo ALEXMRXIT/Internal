@@ -74,8 +74,7 @@ Mesh::Mesh() {
 }
 
 void Mesh::Render(void* renderData) {
-    MeshRenderData& meshRenderData = *(MeshRenderData*)renderData;
-    *::engine.m_viewProjectionMatrix *= meshRenderData.m_transformMatrix;
+    
 }
 
 bool Mesh::CreateVertex(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size) {

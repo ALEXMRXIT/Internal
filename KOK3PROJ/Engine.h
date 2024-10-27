@@ -83,7 +83,7 @@ public:
 	Engine();
 	~Engine();
 
-	XMMATRIX* m_viewProjectionMatrix;
+	XMMATRIX m_viewProjectionMatrix;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;

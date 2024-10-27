@@ -276,6 +276,7 @@ void Engine::Update() {
         data.m_transformMatrix = XMMatrixIdentity();
         XMVECTOR rotaxis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         Rotation = XMMatrixRotationAxis(rotaxis, rot);
+        Translation = XMMatrixTranslation(0.0f, 0.0f, 4.0f);
         data.m_transformMatrix = Translation * Rotation;
     }
 }
@@ -289,8 +290,8 @@ void Engine::Render() {
 
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
         MeshRenderData& data = *(MeshRenderData*)m_quewe[iterator]->m_renderData;
-        *m_viewProjectionMatrix = data.m_transformMatrix * camView * camProjection;
-        cbPerObj.WVP = XMMatrixTranspose(*m_viewProjectionMatrix);
+        m_viewProjectionMatrix = data.m_transformMatrix * camView * camProjection;
+        cbPerObj.WVP = XMMatrixTranspose(m_viewProjectionMatrix);
         m_deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &cbPerObj, 0, 0);
         m_deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
         m_deviceContext->PSSetShaderResources(0, 1, &CubesTexture);
