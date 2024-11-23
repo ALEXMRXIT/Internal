@@ -82,44 +82,6 @@ HRESULT Font::InitScreen(ID3D11Device* device, IDXGIAdapter1* adapter) {
 
 	m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-	Vertex v[] = {
-		Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-		Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-		Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-		Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
-	};
-
-	DWORD indices[] = {
-		0,  1,  2,
-		0,  2,  3,
-	};
-
-	D3D11_BUFFER_DESC indexBufferDesc;
-	ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(DWORD) * 2 * 3;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA iinitData;
-	ZeroMemory(&iinitData, sizeof(D3D11_SUBRESOURCE_DATA));
-	iinitData.pSysMem = indices;
-	device->CreateBuffer(&indexBufferDesc, &iinitData, &m_indexBuffer);
-
-	D3D11_BUFFER_DESC vertexBufferDesc;
-	ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * 4;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA vertexBufferData;
-	ZeroMemory(&vertexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
-	vertexBufferData.pSysMem = v;
-	hr = device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer);
-
 	device->CreateShaderResourceView(m_textureDesc, NULL, &m_sharedResource);
 	return hr;
 }
@@ -144,13 +106,6 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 
 	m_keyedmutex1->ReleaseSync(1);
 	m_keyedmutex2->AcquireSync(1, 5);
-
-	deviceContext->OMSetBlendState(::engine.m_transparency, NULL, 0xffffffff);
-	deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
 	::engine.cbPerObj.WVP = XMMatrixIdentity();
 	::engine.cbPerObj.WVP = XMMatrixTranspose(::engine.cbPerObj.WVP);

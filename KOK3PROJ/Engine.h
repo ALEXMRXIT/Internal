@@ -73,9 +73,12 @@ private:
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
 	std::vector<RenderOperation*> m_quewe;
+	ID3D11RasterizerState* m_cWcullMode;
+	ID3D11BlendState* m_transparency;
 
 	XMMATRIX camView;
 	XMMATRIX camProjection;
+	XMMATRIX m_viewProjectionMatrix;
 
 	XMVECTOR camPosition;
 	XMVECTOR camTarget;
@@ -87,13 +90,9 @@ public:
 	Engine();
 	~Engine();
 
-	XMMATRIX m_viewProjectionMatrix;
 	cbPerObject cbPerObj;
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11SamplerState* m_textureSamplerState;
-	ID3D11BlendState* m_transparency;
-	ID3D11RasterizerState* m_ccWcullMode;
-	ID3D11RasterizerState* m_cWcullMode;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;

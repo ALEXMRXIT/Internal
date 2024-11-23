@@ -313,8 +313,6 @@ bool Engine::InitScene() {
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
     cmdesc.FillMode = D3D11_FILL_SOLID;
     cmdesc.CullMode = D3D11_CULL_BACK;
-    cmdesc.FrontCounterClockwise = true;
-    handleResult = m_device->CreateRasterizerState(&cmdesc, &m_ccWcullMode);
     cmdesc.FrontCounterClockwise = false;
     handleResult = m_device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
 
