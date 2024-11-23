@@ -5,7 +5,7 @@ VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
 }
 
-bool VertexBuffer::Create(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size) {
+bool VertexBuffer::Create(ID3D11Device* device, void* pBuffer, unsigned int size) {
 	CHECK_ASSERT(m_vertexBuffer == NULL, "VertexBuffer already created!");
 
     HRESULT handleResult{};
@@ -24,10 +24,6 @@ bool VertexBuffer::Create(ID3D11Device* device, ID3D11DeviceContext* context, vo
         ERROR_MSG("Failed to create vertex buffer. %d error code.", handleResult);
         return false;
     }
-
-    UINT stride = sizeof(Vertex);
-    UINT offset = 0;
-    context->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 	
 	return true;
 }
@@ -40,7 +36,7 @@ IndexBuffer::IndexBuffer() {
 	m_indexBuffer = nullptr;
 }
 
-bool IndexBuffer::Create(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size) {
+bool IndexBuffer::Create(ID3D11Device* device, void* pBuffer, unsigned int size) {
     CHECK_ASSERT(m_indexBuffer == NULL, "IndexBuffer already created!");
 
     HRESULT handleResult{};
@@ -59,7 +55,6 @@ bool IndexBuffer::Create(ID3D11Device* device, ID3D11DeviceContext* context, voi
         ERROR_MSG("Failed to create index buffer. %d error code.", handleResult);
         return false;
     }
-    context->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     
     return true;
 }
@@ -76,7 +71,7 @@ Mesh::Mesh() {
 
 void Mesh::Render(MeshRenderData* renderData) {
     MeshRenderData& data = *renderData;
-    rot += .0005f;
+    rot += .001f;
     if (rot > 6.26f)
         rot = 0.0f;
 
@@ -87,19 +82,33 @@ void Mesh::Render(MeshRenderData* renderData) {
     data.m_transformMatrix = Translation * Rotation;
 }
 
-bool Mesh::CreateVertex(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size) {
+bool Mesh::CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size) {
     if (m_vertexBuffer = new VertexBuffer())
-        return m_vertexBuffer->Create(device, context, pBuffer, size);
+        return m_vertexBuffer->Create(device, pBuffer, size);
     return false;
 }
 
-bool Mesh::CreateIndex(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size) {
+bool Mesh::CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size) {
     if (m_indexBuffer = new IndexBuffer())
-        return m_indexBuffer->Create(device, context, pBuffer, size);
+        return m_indexBuffer->Create(device, pBuffer, size);
     return false;
+}
+
+void Mesh::IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
+    context->IASetIndexBuffer(*m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    ID3D11Buffer* vertex = *m_vertexBuffer;
+    context->IASetVertexBuffers(0, 1, &vertex, &stride, &offset);
 }
 
 void Mesh::Release() {
-    if (m_vertexBuffer) m_vertexBuffer->Release();
-    if (m_indexBuffer) m_indexBuffer->Release();
+    if (m_vertexBuffer) {
+        m_vertexBuffer->Release();
+        delete m_vertexBuffer;
+    }
+    if (m_indexBuffer) {
+        m_indexBuffer->Release();
+        delete m_indexBuffer;
+    }
 }

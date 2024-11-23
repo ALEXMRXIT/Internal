@@ -18,7 +18,7 @@ public:
 	VertexBuffer(const VertexBuffer&) = delete;
 	VertexBuffer& operator=(const VertexBuffer&) = delete;
 
-	bool Create(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size);
+	bool Create(ID3D11Device* device, void* pBuffer, unsigned int size);
 	void Release();
 
 	operator ID3D11Buffer*() const { return m_vertexBuffer; }
@@ -33,10 +33,10 @@ public:
 	IndexBuffer(const IndexBuffer&) = delete;
 	IndexBuffer& operator=(const IndexBuffer&) = delete;
 
-	bool Create(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size);
+	bool Create(ID3D11Device* device, void* pBuffer, unsigned int size);
 	void Release();
 
-	operator ID3D11Buffer* () const { return m_indexBuffer; }
+	operator ID3D11Buffer*() const { return m_indexBuffer; }
 };
 
 class Mesh : public RenderObject {
@@ -56,8 +56,10 @@ public:
 
 	void Render(MeshRenderData* renderData) override;
 
-	bool CreateVertex(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size);
-	bool CreateIndex(ID3D11Device* device, ID3D11DeviceContext* context, void* pBuffer, unsigned int size);
+	bool CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size);
+	bool CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size);
+
+	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) override;
 
 	void Release() override;
 };

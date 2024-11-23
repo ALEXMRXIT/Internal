@@ -69,14 +69,15 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
     handleResult = D3D11CreateDeviceAndSwapChain(
-        NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL, D3D11_SDK_VERSION,
-        &swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext);
+        NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+        NULL, 0, D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext);
     if (FAILED(handleResult)) {
         ERROR_MSG("Error creating swap chain and device. %d error code.", handleResult);
         return false;
     }
 
     ID3D11Texture2D* backBuffer;
+    ZeroMemory(&backBuffer, sizeof(ID3D11Texture2D));
     handleResult = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
     if (FAILED(handleResult)) {
         ERROR_MSG("Error getting back buffer. %d error code.", handleResult);
@@ -118,48 +119,21 @@ bool Engine::InitRenderDevice() {
 
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
+    IDXGIFactory1* dxgiFactory = nullptr;
+    handleResult = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
+
+    IDXGIAdapter1* adapter = nullptr;
+    handleResult = dxgiFactory->EnumAdapters1(0, &adapter);
+    dxgiFactory->Release();
+
     m_shader = new Shader();
     m_font = new Font();
 
-    IDXGIFactory1* DXGIFactory{};
-    handleResult = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&DXGIFactory);
+    handleResult = m_font->InitScreen(m_device, adapter);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Error creating DXGI factory. %d error code.", handleResult);
-        delete m_shader;
-        delete m_font;
+        ERROR_MSG("Failed to init fonts. %d error code.", handleResult);
         return false;
     }
-
-    IDXGIAdapter1* adapter;
-    handleResult = DXGIFactory->EnumAdapters1(0, &adapter);
-    DXGIFactory->Release();
-    if (FAILED(handleResult)) {
-        ERROR_MSG("Error enumerating adapters. %d error code.", handleResult);
-        delete m_shader;
-        delete m_font;
-        return false;
-    }
-
-    handleResult = D3D11CreateDeviceAndSwapChain(adapter,
-        D3D_DRIVER_TYPE_UNKNOWN, NULL, D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-        NULL, NULL, D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext);
-    if (FAILED(handleResult)) {
-        ERROR_MSG("Error creating device and swap chain with adapter. %d error code.", handleResult);
-        delete m_shader;
-        delete m_font;
-        adapter->Release();
-        return false;
-    }
-
-    handleResult = m_font->InitFontDevice(adapter, m_device);
-    if (FAILED(handleResult)) {
-        ERROR_MSG("Error initializing font device. %d error code.", handleResult);
-        delete m_shader;
-        delete m_font;
-        adapter->Release();
-        return false;
-    }
-    adapter->Release();
 
     if (!InitScene()) {
         ERROR_MSG("Error initializing scene.");
@@ -241,17 +215,11 @@ bool Engine::InitScene() {
         20, 22, 23
     };
 
-    handleResult = m_font->InitScreen(m_device);
-    if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to init fonts. %d error code.", handleResult);
-        return false;
-    }
-
     RenderOperation* rendOp = new RenderOperation();
     rendOp->CreateRenderOperation();
     Mesh* cube1 = new Mesh();
-    if (!cube1->CreateVertex(m_device, m_deviceContext, vertex, 24)) return false;
-    if (!cube1->CreateIndex(m_device, m_deviceContext, indices, 36)) return false;
+    if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
+    if (!cube1->CreateIndex(m_device, indices, 36)) return false;
     m_quewe.emplace_back(rendOp->SetRenderOperation(cube1));
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
@@ -316,8 +284,10 @@ bool Engine::InitScene() {
 
     D3D11_BLEND_DESC blendDesc;
     ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+
     D3D11_RENDER_TARGET_BLEND_DESC rtbd;
-    ZeroMemory(&rtbd, sizeof(rtbd));
+    ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
+
     rtbd.BlendEnable = true;
     rtbd.SrcBlend = D3D11_BLEND_SRC_COLOR;
     rtbd.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
@@ -330,18 +300,21 @@ bool Engine::InitScene() {
     blendDesc.AlphaToCoverageEnable = false;
     blendDesc.RenderTarget[0] = rtbd;
 
-    handleResult = D3DX11CreateShaderResourceViewFromFile(m_device, "box.jpg", NULL, NULL, &CubesTexture, NULL);
+    handleResult = D3DX11CreateShaderResourceViewFromFile(m_device, "box.jpg", NULL, NULL, &m_sharedResourceView, NULL);
 
-    handleResult = m_device->CreateSamplerState(&sampDesc, &CubesTexSamplerState);
+    handleResult = m_device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
     handleResult = m_device->CreateBlendState(&blendDesc, &m_transparency);
+    if (FAILED(handleResult)) {
+        ERROR_MSG("Failed to create blend state. %d error code.", handleResult);
+        return false;
+    }
 
     D3D11_RASTERIZER_DESC cmdesc;
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
     cmdesc.FillMode = D3D11_FILL_SOLID;
     cmdesc.CullMode = D3D11_CULL_BACK;
     cmdesc.FrontCounterClockwise = true;
-    handleResult = m_device->CreateRasterizerState(&cmdesc, &m_cCWcullMode);
-
+    handleResult = m_device->CreateRasterizerState(&cmdesc, &m_ccWcullMode);
     cmdesc.FrontCounterClockwise = false;
     handleResult = m_device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
 
@@ -350,7 +323,7 @@ bool Engine::InitScene() {
 
 void Engine::Update() {
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
-        m_quewe[iterator]->UpdateMesh();
+        m_quewe[iterator]->Render();
     }
 }
 
@@ -361,16 +334,22 @@ void Engine::Render() {
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, 
         D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+    float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
+
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
         MeshRenderData& data = *m_quewe[iterator]->m_renderData;
+        m_quewe[iterator]->IASetVertexAndIndexBuffer(m_deviceContext);
         m_viewProjectionMatrix = data.m_transformMatrix * camView * camProjection;
         cbPerObj.WVP = XMMatrixTranspose(m_viewProjectionMatrix);
         m_deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &cbPerObj, 0, 0);
         m_deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
-        m_deviceContext->PSSetShaderResources(0, 1, &CubesTexture);
-        m_deviceContext->PSSetSamplers(0, 1, &CubesTexSamplerState);
+        m_deviceContext->PSSetShaderResources(0, 1, &m_sharedResourceView);
+        m_deviceContext->PSSetSamplers(0, 1, &m_textureSamplerState);
+        m_deviceContext->RSSetState(m_cWcullMode);
         m_deviceContext->DrawIndexed(36, 0, 0);
     }
+    m_font->Render(m_deviceContext, L"Hello, World!");
 
     m_swapChain->Present(0, 0);
 }
@@ -389,6 +368,8 @@ void Engine::Release() {
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
         m_quewe[iterator]->Release();
     m_quewe.clear();
+
+    if (m_font) m_font->Release();
 }
 
 int Engine::messageWindow() {

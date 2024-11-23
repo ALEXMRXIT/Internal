@@ -26,6 +26,7 @@ public:
 class RenderObject {
 public:
 	virtual void Render(MeshRenderData* renderData) = 0;
+	virtual void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) = 0;
 	virtual void Release() = 0;
 };
 
@@ -45,7 +46,11 @@ public:
 		return this;
 	}
 
-	void UpdateMesh() {
+	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
+		m_renderObject->IASetVertexAndIndexBuffer(context);
+	}
+
+	void Render() {
 		m_renderObject->Render(m_renderData);
 	}
 
@@ -67,11 +72,7 @@ private:
 	ID3D11InputLayout* m_layout;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
-	ID3D11Buffer* m_preObjectBuffer;
 	std::vector<RenderOperation*> m_quewe;
-	ID3D11RasterizerState* m_cCWcullMode;
-	ID3D11RasterizerState* m_cWcullMode;
-	ID3D11BlendState* m_transparency;
 
 	XMMATRIX camView;
 	XMMATRIX camProjection;
@@ -79,9 +80,7 @@ private:
 	XMVECTOR camPosition;
 	XMVECTOR camTarget;
 	XMVECTOR camUp;
-	cbPerObject cbPerObj;
-	ID3D11ShaderResourceView* CubesTexture;
-	ID3D11SamplerState* CubesTexSamplerState;
+	ID3D11ShaderResourceView* m_sharedResourceView;
 
 	static LRESULT WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 public:
@@ -89,6 +88,12 @@ public:
 	~Engine();
 
 	XMMATRIX m_viewProjectionMatrix;
+	cbPerObject cbPerObj;
+	ID3D11Buffer* m_preObjectBuffer;
+	ID3D11SamplerState* m_textureSamplerState;
+	ID3D11BlendState* m_transparency;
+	ID3D11RasterizerState* m_ccWcullMode;
+	ID3D11RasterizerState* m_cWcullMode;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
