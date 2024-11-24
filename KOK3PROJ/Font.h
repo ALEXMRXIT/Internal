@@ -11,8 +11,6 @@ private:
 	IDWriteTextFormat* m_textFormat;
 	ID3D11Texture2D* m_textureDesc;
 	ID3D11ShaderResourceView* m_sharedResource;
-	IDXGIKeyedMutex* m_keyedmutex1;
-	IDXGIKeyedMutex* m_keyedmutex2;
 	ID3D11RasterizerState* m_cWcullMode;
 
 public:
