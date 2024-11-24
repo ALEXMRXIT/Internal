@@ -73,8 +73,8 @@ private:
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
 	std::vector<RenderOperation*> m_quewe;
-	ID3D11RasterizerState* m_cWcullMode;
 	ID3D11BlendState* m_transparency;
+	ID3D11RasterizerState* m_cWcullMode;
 
 	XMMATRIX camView;
 	XMMATRIX camProjection;

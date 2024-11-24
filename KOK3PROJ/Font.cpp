@@ -14,11 +14,10 @@ Font::Font() {
 	m_sharedResource = nullptr;
 	m_keyedmutex1 = nullptr;
 	m_keyedmutex2 = nullptr;
-	m_vertexBuffer = nullptr;
-	m_indexBuffer = nullptr;
+	m_cWcullMode = nullptr;
 }
 
-HRESULT Font::InitScreen(ID3D11Device* device, IDXGIAdapter1* adapter) {
+HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
 	HRESULT hr = D3D10CreateDevice1(adapter, D3D10_DRIVER_TYPE_HARDWARE, 
 		NULL, D3D10_CREATE_DEVICE_DEBUG | D3D10_CREATE_DEVICE_BGRA_SUPPORT,
 		D3D10_FEATURE_LEVEL_9_3, D3D10_1_SDK_VERSION, &m_device);
@@ -61,7 +60,7 @@ HRESULT Font::InitScreen(ID3D11Device* device, IDXGIAdapter1* adapter) {
 	sharedSurface10->Release();
 	D2DFactory->Release();
 	
-	hr = m_renderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 0.0f, 1.0f), &m_brush);
+	hr = m_renderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), &m_brush);
 
 	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
 		reinterpret_cast<IUnknown**>(&m_factory));
@@ -81,6 +80,13 @@ HRESULT Font::InitScreen(ID3D11Device* device, IDXGIAdapter1* adapter) {
 	hr = m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
 
 	m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+	D3D11_RASTERIZER_DESC cmdesc;
+	ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
+	cmdesc.FillMode = D3D11_FILL_SOLID;
+	cmdesc.CullMode = D3D11_CULL_BACK;
+	cmdesc.DepthClipEnable = false;
+	hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
 
 	device->CreateShaderResourceView(m_textureDesc, NULL, &m_sharedResource);
 	return hr;
@@ -113,7 +119,9 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 	deviceContext->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
 	deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
 	deviceContext->PSSetSamplers(0, 1, &::engine.m_textureSamplerState);
+	deviceContext->RSSetState(m_cWcullMode);
 	deviceContext->DrawIndexed(6, 0, 0);
+	deviceContext->RSSetState(nullptr);
 }
 
 void Font::Release() {
@@ -127,6 +135,5 @@ void Font::Release() {
 	if (m_sharedResource) m_sharedResource->Release();
 	if (m_keyedmutex1) m_keyedmutex1->Release();
 	if (m_keyedmutex2) m_keyedmutex2->Release();
-	if (m_vertexBuffer) m_vertexBuffer->Release();
-	if (m_indexBuffer) m_indexBuffer->Release();
+	if (m_cWcullMode) m_cWcullMode->Release();
 }

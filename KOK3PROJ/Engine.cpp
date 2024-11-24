@@ -129,7 +129,7 @@ bool Engine::InitRenderDevice() {
     m_shader = new Shader();
     m_font = new Font();
 
-    handleResult = m_font->InitScreen(m_device, adapter);
+    handleResult = m_font->Init(m_device, adapter);
     if (FAILED(handleResult)) {
         ERROR_MSG("Failed to init fonts. %d error code.", handleResult);
         return false;
@@ -314,6 +314,7 @@ bool Engine::InitScene() {
     cmdesc.FillMode = D3D11_FILL_SOLID;
     cmdesc.CullMode = D3D11_CULL_BACK;
     cmdesc.FrontCounterClockwise = false;
+    cmdesc.DepthClipEnable = true;
     handleResult = m_device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
 
     return true;

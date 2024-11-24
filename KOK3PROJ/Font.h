@@ -13,15 +13,14 @@ private:
 	ID3D11ShaderResourceView* m_sharedResource;
 	IDXGIKeyedMutex* m_keyedmutex1;
 	IDXGIKeyedMutex* m_keyedmutex2;
-	ID3D11Buffer* m_vertexBuffer;
-	ID3D11Buffer* m_indexBuffer;
+	ID3D11RasterizerState* m_cWcullMode;
 
 public:
 	Font();
 	Font(const Font&) = delete;
 	Font& operator=(const Font&) = delete;
 
-	HRESULT InitScreen(ID3D11Device* device, IDXGIAdapter1* adapter);
+	HRESULT Init(ID3D11Device* device, IDXGIAdapter1* adapter);
 	void Render(ID3D11DeviceContext* deviceContext, const std::wstring text);
 
 	void Release();
