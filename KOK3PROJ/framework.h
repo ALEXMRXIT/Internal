@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+#include <list>
 #include <iostream>
+#include <algorithm>
 
 #pragma comment(lib, "d3d11.lib")
 #ifdef _DEBUG

@@ -39,7 +39,7 @@ public:
 	operator ID3D11Buffer*() const { return m_indexBuffer; }
 };
 
-class Mesh : public RenderObject {
+class Mesh : public InterfaceRenderObject {
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;

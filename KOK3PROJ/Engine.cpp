@@ -4,8 +4,6 @@
 #include "Mesh.h"
 #include "Font.h"
 
-Engine engine;
-
 Engine::Engine() {
 	m_windowDesc = nullptr;
 }

@@ -4,6 +4,8 @@
 class Shader;
 class Font;
 
+static uint32_t m_components_count = 0;
+
 typedef struct _WindowDescription {
 	const char* title;
 	unsigned int width;
@@ -23,7 +25,7 @@ public:
 	XMMATRIX m_transformMatrix;
 };
 
-class RenderObject {
+class InterfaceRenderObject {
 public:
 	virtual void Render(MeshRenderData* renderData) = 0;
 	virtual void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) = 0;
@@ -33,7 +35,7 @@ public:
 class RenderOperation {
 public:
 	MeshRenderData* m_renderData;
-	RenderObject* m_renderObject;
+	InterfaceRenderObject* m_renderObject;
 
 	void CreateRenderOperation() {
 		MeshRenderData* data = new MeshRenderData();
@@ -41,7 +43,7 @@ public:
 		m_renderData = data;
 	}
 
-	RenderOperation* SetRenderOperation(RenderObject* obj) {
+	RenderOperation* SetRenderOperation(InterfaceRenderObject* obj) {
 		m_renderObject = obj;
 		return this;
 	}
