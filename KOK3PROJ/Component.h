@@ -16,7 +16,7 @@ public:
 	Component(const Component&) = delete;
 	Component& operator=(const Component&) = delete;
 
-	void AddComponent(const Component* component);
-	bool TryGetComponent(const Component* component) const;
+	void AddComponent(Component* component);
+	bool TryGetComponent(Component* component) const;
 	Component* GetComponent(uint32_t uid) const;
 };

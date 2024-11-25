@@ -9,14 +9,14 @@ bool Component::operator==(const Component& component) const {
 	return m_uid == component.m_uid;
 }
 
-void Component::AddComponent(const Component* component) {
+void Component::AddComponent(Component* component) {
 	if (!TryGetComponent(component)) {
 		m_components.emplace_back(component);
 		component->m_uid = ++m_components_count;
 	}
 }
 
-bool Component::TryGetComponent(const Component* component) const {
+bool Component::TryGetComponent(Component* component) const {
 	return std::find(m_components.cbegin(), m_components.cend(), component) != m_components.cend();
 }
 
