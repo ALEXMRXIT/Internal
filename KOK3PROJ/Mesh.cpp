@@ -67,19 +67,35 @@ Mesh::Mesh() {
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
     rot = 0.01f;
+    Position = XMMatrixIdentity();
+    m_sharedResourceView = nullptr;
 }
 
-void Mesh::Render(MeshRenderData* renderData) {
-    MeshRenderData& data = *renderData;
-    rot += .001f;
+void Mesh::Update(float deltaTime) {
+    rot += deltaTime * 1.0f;
     if (rot > 6.26f)
         rot = 0.0f;
 
-    data.m_transformMatrix = XMMatrixIdentity();
+    Position = XMMatrixIdentity();
     XMVECTOR rotaxis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     Rotation = XMMatrixRotationAxis(rotaxis, rot);
     Translation = XMMatrixTranslation(0.0f, 0.0f, 4.0f);
-    data.m_transformMatrix = Translation * Rotation;
+    Position = Translation * Rotation;
+}
+
+void Mesh::Render(ID3D11DeviceContext* context) {
+    IASetVertexAndIndexBuffer(context);
+    ::engine.cbPerObj.WVP = XMMatrixTranspose(Position * ::engine.camView * ::engine.camProjection);
+    context->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.cbPerObj, 0, 0);
+    context->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
+    context->PSSetShaderResources(0, 1, &m_sharedResourceView);
+    context->PSSetSamplers(0, 1, &::engine.m_textureSamplerState);
+    context->RSSetState(::engine.m_cWcullMode);
+    context->DrawIndexed(36, 0, 0);
+}
+
+HRESULT Mesh::LoadMaterial(ID3D11Device* device, const char* name) {
+    return D3DX11CreateShaderResourceViewFromFile(device, name, NULL, NULL, &m_sharedResourceView, NULL);
 }
 
 bool Mesh::CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size) {
@@ -111,4 +127,5 @@ void Mesh::Release() {
         m_indexBuffer->Release();
         delete m_indexBuffer;
     }
+    if (m_sharedResourceView) m_sharedResourceView->Release();
 }

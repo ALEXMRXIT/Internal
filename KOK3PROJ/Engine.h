@@ -6,7 +6,7 @@ class Font;
 
 static uint32_t m_components_count = 0;
 
-typedef struct _WindowDescription {
+typedef struct _windowDescription {
 	const char* title;
 	unsigned int width;
 	unsigned int height;
@@ -16,48 +16,47 @@ typedef struct _WindowDescription {
 	int nCmdShow;
 } WindowDescription, *LPWindowDescription;
 
+typedef struct _perfomanceTimeInfo {
+	LARGE_INTEGER frequency;
+	LARGE_INTEGER start;
+	LARGE_INTEGER end;
+	float deltaTime;
+	int fps;
+	int frameCount;
+	float elapsedTime;
+	float targetFrameTime;
+	float accumulator;
+} PerfomanceTimeInfo, *LPPerfomanceTimeInfo;
+
 struct cbPerObject {
 	XMMATRIX  WVP;
 };
 
-class MeshRenderData {
-public:
-	XMMATRIX m_transformMatrix;
-};
-
 class InterfaceRenderObject {
 public:
-	virtual void Render(MeshRenderData* renderData) = 0;
-	virtual void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) = 0;
+	virtual void Update(float deltaTime) = 0;
+	virtual void Render(ID3D11DeviceContext* context) = 0;
 	virtual void Release() = 0;
 };
 
 class RenderOperation {
 public:
-	MeshRenderData* m_renderData;
 	InterfaceRenderObject* m_renderObject;
-
-	void CreateRenderOperation() {
-		MeshRenderData* data = new MeshRenderData();
-		data->m_transformMatrix = XMMatrixIdentity();
-		m_renderData = data;
-	}
 
 	RenderOperation* SetRenderOperation(InterfaceRenderObject* obj) {
 		m_renderObject = obj;
 		return this;
 	}
 
-	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
-		m_renderObject->IASetVertexAndIndexBuffer(context);
+	void Update(float deltaTime) {
+		m_renderObject->Update(deltaTime);
 	}
 
-	void Render() {
-		m_renderObject->Render(m_renderData);
+	void Render(ID3D11DeviceContext* context) {
+		m_renderObject->Render(context);
 	}
 
 	void Release() {
-		delete m_renderData;
 		if (m_renderObject) m_renderObject->Release();
 	}
 };
@@ -76,18 +75,16 @@ private:
 	ID3D11Texture2D* m_depthTexture;
 	std::vector<RenderOperation*> m_quewe;
 	ID3D11BlendState* m_transparency;
-	ID3D11RasterizerState* m_cWcullMode;
 
-	XMMATRIX camView;
-	XMMATRIX camProjection;
-	XMMATRIX m_viewProjectionMatrix;
+	PerfomanceTimeInfo m_timeInfo;
 
 	XMVECTOR camPosition;
 	XMVECTOR camTarget;
 	XMVECTOR camUp;
-	ID3D11ShaderResourceView* m_sharedResourceView;
 
 	static LRESULT WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+	void UpdateFrequenceTime(PerfomanceTimeInfo& timeInfo) const;
 public:
 	Engine();
 	~Engine();
@@ -95,6 +92,9 @@ public:
 	cbPerObject cbPerObj;
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11SamplerState* m_textureSamplerState;
+	ID3D11RasterizerState* m_cWcullMode;
+	XMMATRIX camView;
+	XMMATRIX camProjection;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
@@ -102,7 +102,8 @@ public:
 	bool InitWindowDevice(const WindowDescription* desc);
 	bool InitRenderDevice();
 	bool InitScene();
-	void Update();
+	void FixedUpdate(float deltaTime);
+	void Update(float deltaTime);
 	void Render();
 	void Release();
 	int messageWindow();

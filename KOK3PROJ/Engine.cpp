@@ -4,6 +4,8 @@
 #include "Mesh.h"
 #include "Font.h"
 
+Engine engine;
+
 Engine::Engine() {
 	m_windowDesc = nullptr;
 }
@@ -214,10 +216,10 @@ bool Engine::InitScene() {
     };
 
     RenderOperation* rendOp = new RenderOperation();
-    rendOp->CreateRenderOperation();
     Mesh* cube1 = new Mesh();
     if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
     if (!cube1->CreateIndex(m_device, indices, 36)) return false;
+    cube1->LoadMaterial(m_device, "box.jpg");
     m_quewe.emplace_back(rendOp->SetRenderOperation(cube1));
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
@@ -298,8 +300,6 @@ bool Engine::InitScene() {
     blendDesc.AlphaToCoverageEnable = false;
     blendDesc.RenderTarget[0] = rtbd;
 
-    handleResult = D3DX11CreateShaderResourceViewFromFile(m_device, "box.jpg", NULL, NULL, &m_sharedResourceView, NULL);
-
     handleResult = m_device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
     handleResult = m_device->CreateBlendState(&blendDesc, &m_transparency);
     if (FAILED(handleResult)) {
@@ -318,37 +318,33 @@ bool Engine::InitScene() {
     return true;
 }
 
-void Engine::Update() {
+void Engine::FixedUpdate(float deltaTime) {
+    
+}
+
+void Engine::Update(float deltaTime) {
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
-        m_quewe[iterator]->Render();
+        m_quewe[iterator]->Update(deltaTime);
     }
 }
 
 void Engine::Render() {
     D3DXCOLOR color(0.0f, 0.0f, 0.0f, 1.0f);
-
+    
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
-    m_deviceContext->ClearDepthStencilView(m_depthStencilView, 
-        D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
+    m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    
     float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
+    
+    for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
+        m_quewe[iterator]->Render(m_deviceContext);
+    
+    wchar_t buffer[64];
+    swprintf_s(buffer, 64, L"Fps: %d", m_timeInfo.fps);
+    m_font->Render(m_deviceContext, buffer);
 
-    for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
-        MeshRenderData& data = *m_quewe[iterator]->m_renderData;
-        m_quewe[iterator]->IASetVertexAndIndexBuffer(m_deviceContext);
-        m_viewProjectionMatrix = data.m_transformMatrix * camView * camProjection;
-        cbPerObj.WVP = XMMatrixTranspose(m_viewProjectionMatrix);
-        m_deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &cbPerObj, 0, 0);
-        m_deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
-        m_deviceContext->PSSetShaderResources(0, 1, &m_sharedResourceView);
-        m_deviceContext->PSSetSamplers(0, 1, &m_textureSamplerState);
-        m_deviceContext->RSSetState(m_cWcullMode);
-        m_deviceContext->DrawIndexed(36, 0, 0);
-    }
-    m_font->Render(m_deviceContext, L"Hello, World!");
-
-    m_swapChain->Present(0, 0);
+    m_swapChain->Present(1, 0);
 }
 
 void Engine::Release() {
@@ -373,6 +369,13 @@ int Engine::messageWindow() {
     MSG message;
     ZeroMemory(&message, sizeof(MSG));
 
+    QueryPerformanceFrequency(&m_timeInfo.frequency);
+    QueryPerformanceCounter(&m_timeInfo.start);
+    m_timeInfo.frameCount = 0;
+    m_timeInfo.elapsedTime = 0.0f;
+    m_timeInfo.targetFrameTime = 1.0f / 30.0f;
+    m_timeInfo.accumulator = 0.0f;
+
     while (true) {
         if (PeekMessage(&message, NULL, NULL, NULL, PM_REMOVE)) {
             if (message.message == WM_QUIT)
@@ -382,7 +385,14 @@ int Engine::messageWindow() {
             DispatchMessage(&message);
         }
         else {
-            Update();
+            UpdateFrequenceTime(m_timeInfo);
+        
+            while (m_timeInfo.accumulator >= m_timeInfo.targetFrameTime) {
+                FixedUpdate(m_timeInfo.targetFrameTime);
+                m_timeInfo.accumulator -= m_timeInfo.targetFrameTime;
+            }
+        
+            Update(m_timeInfo.deltaTime);
             Render();
         }
     }
@@ -405,4 +415,22 @@ LRESULT Engine::WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         return 0;
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+void Engine::UpdateFrequenceTime(PerfomanceTimeInfo& timeInfo) const {
+    QueryPerformanceCounter(&timeInfo.end);
+    const LONGLONG diffQuadTime = timeInfo.end.QuadPart - timeInfo.start.QuadPart;
+    timeInfo.deltaTime = diffQuadTime / static_cast<float>(timeInfo.frequency.QuadPart);
+    timeInfo.start = timeInfo.end;
+
+    timeInfo.frameCount++;
+    timeInfo.elapsedTime += timeInfo.deltaTime;
+
+    if (timeInfo.elapsedTime > 1.0f) {
+        timeInfo.fps = timeInfo.frameCount;
+        timeInfo.frameCount = 0;
+        timeInfo.elapsedTime = 0.0f;
+    }
+
+    timeInfo.accumulator += timeInfo.deltaTime;
 }

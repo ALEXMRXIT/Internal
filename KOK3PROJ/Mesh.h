@@ -43,23 +43,28 @@ class Mesh : public InterfaceRenderObject {
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
+	ID3D11ShaderResourceView* m_sharedResourceView;
 
 	XMMATRIX Rotation;
 	XMMATRIX Scale;
 	XMMATRIX Translation;
+	XMMATRIX Position;
 	float rot;
+
+	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
 
 public:
 	Mesh();
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
 
-	void Render(MeshRenderData* renderData) override;
+	void Update(float deltaTime) override;
+	void Render(ID3D11DeviceContext* context) override;
+
+	HRESULT LoadMaterial(ID3D11Device* device, const char* name);
 
 	bool CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size);
 	bool CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size);
-
-	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) override;
 
 	void Release() override;
 };
