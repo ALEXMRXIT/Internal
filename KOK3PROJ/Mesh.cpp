@@ -69,6 +69,7 @@ Mesh::Mesh() {
     rot = 0.01f;
     Position = XMMatrixIdentity();
     m_sharedResourceView = nullptr;
+    m_cWcullMode = nullptr;
 }
 
 void Mesh::Update(float deltaTime) {
@@ -90,12 +91,24 @@ void Mesh::Render(ID3D11DeviceContext* context) {
     context->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
     context->PSSetShaderResources(0, 1, &m_sharedResourceView);
     context->PSSetSamplers(0, 1, &::engine.m_textureSamplerState);
-    context->RSSetState(::engine.m_cWcullMode);
     context->DrawIndexed(36, 0, 0);
 }
 
 HRESULT Mesh::LoadMaterial(ID3D11Device* device, const char* name) {
     return D3DX11CreateShaderResourceViewFromFile(device, name, NULL, NULL, &m_sharedResourceView, NULL);
+}
+
+HRESULT Mesh::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
+    HRESULT hr;
+    D3D11_RASTERIZER_DESC cmdesc;
+    ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
+    cmdesc.FillMode = D3D11_FILL_SOLID;
+    cmdesc.CullMode = D3D11_CULL_BACK;
+    cmdesc.FrontCounterClockwise = false;
+    cmdesc.DepthClipEnable = true;
+    hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
+    context->RSSetState(m_cWcullMode);
+    return hr;
 }
 
 bool Mesh::CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size) {
@@ -128,4 +141,5 @@ void Mesh::Release() {
         delete m_indexBuffer;
     }
     if (m_sharedResourceView) m_sharedResourceView->Release();
+    if (m_cWcullMode) m_cWcullMode->Release();
 }

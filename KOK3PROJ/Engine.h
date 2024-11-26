@@ -1,10 +1,10 @@
 #pragma once
 #include "framework.h"
+#include "PrimitiveType.h"
 
 class Shader;
 class Font;
-
-static uint32_t m_components_count = 0;
+class GameObject;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -92,7 +92,6 @@ public:
 	cbPerObject cbPerObj;
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11SamplerState* m_textureSamplerState;
-	ID3D11RasterizerState* m_cWcullMode;
 	XMMATRIX camView;
 	XMMATRIX camProjection;
 
@@ -108,4 +107,6 @@ public:
 	void Release();
 	int messageWindow();
 	const WindowDescription* getWindowDesc() const;
+
+	static GameObject* Instantiate(primitive_type_e type, XMVECTOR position);
 } engine;

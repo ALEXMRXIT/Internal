@@ -3,6 +3,8 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Font.h"
+#include "Component.h"
+#include "GameObject.h"
 
 Engine engine;
 
@@ -219,7 +221,8 @@ bool Engine::InitScene() {
     Mesh* cube1 = new Mesh();
     if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
     if (!cube1->CreateIndex(m_device, indices, 36)) return false;
-    cube1->LoadMaterial(m_device, "box.jpg");
+    if (FAILED(cube1->LoadMaterial(m_device, "box.jpg"))) return false;
+    if (FAILED(cube1->Init(m_device, m_deviceContext))) return false;
     m_quewe.emplace_back(rendOp->SetRenderOperation(cube1));
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
@@ -306,14 +309,6 @@ bool Engine::InitScene() {
         ERROR_MSG("Failed to create blend state. %d error code.", handleResult);
         return false;
     }
-
-    D3D11_RASTERIZER_DESC cmdesc;
-    ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
-    cmdesc.FillMode = D3D11_FILL_SOLID;
-    cmdesc.CullMode = D3D11_CULL_BACK;
-    cmdesc.FrontCounterClockwise = false;
-    cmdesc.DepthClipEnable = true;
-    handleResult = m_device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
 
     return true;
 }
@@ -402,6 +397,10 @@ int Engine::messageWindow() {
 
 const WindowDescription* Engine::getWindowDesc() const {
     return m_windowDesc;
+}
+
+GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {
+    
 }
 
 LRESULT Engine::WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {

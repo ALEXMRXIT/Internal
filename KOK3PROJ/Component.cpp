@@ -1,18 +1,13 @@
 #include "Component.h"
 #include "Engine.h"
 
-Component::Component() {
-	m_uid = 0;
-}
-
 bool Component::operator==(const Component& component) const {
-	return m_uid == component.m_uid;
+	return true;
 }
 
 void Component::AddComponent(Component* component) {
 	if (!TryGetComponent(component)) {
 		m_components.emplace_back(component);
-		component->m_uid = ++m_components_count;
 	}
 }
 

@@ -5,12 +5,7 @@ class Component {
 private:
 	std::list<Component*> m_components;
 
-protected:
-	mutable uint32_t m_uid;
-
 public:
-	Component();
-
 	bool operator ==(const Component& component) const;
 
 	Component(const Component&) = delete;

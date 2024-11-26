@@ -44,6 +44,7 @@ private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
 	ID3D11ShaderResourceView* m_sharedResourceView;
+	ID3D11RasterizerState* m_cWcullMode;
 
 	XMMATRIX Rotation;
 	XMMATRIX Scale;
@@ -62,6 +63,7 @@ public:
 	void Render(ID3D11DeviceContext* context) override;
 
 	HRESULT LoadMaterial(ID3D11Device* device, const char* name);
+	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
 
 	bool CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size);
 	bool CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size);
