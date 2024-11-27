@@ -24,6 +24,7 @@
     <ProjectGuid>{b45b8a29-dd95-4bb6-8926-ea2bc694bc5c}</ProjectGuid>
     <RootNamespace>KOK3PROJ</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Internal Engine</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
