@@ -59,8 +59,8 @@ HRESULT Engine::BuildMultiSampleQualityList(DXGI_FORMAT format) {
         return hr;
     }
 
-    for (int iterator = 0; iterator < D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; ++iterator) {
-        uint32_t quality = 0;
+    for (int iterator = 2; iterator < D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; ++iterator) {
+        uint32_t quality;
         if (SUCCEEDED(pd3dDevice->CheckMultisampleQualityLevels(format, iterator, &quality))) {
             if (quality) m_qualityLevels.emplace_back(MultisampleQualityLevel(iterator, quality));
         }
@@ -96,11 +96,11 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.BufferDesc = backBufferDesc;
     if (!m_qualityLevels.empty()) {
         swapChainDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
-        swapChainDesc.SampleDesc.Quality = m_qualityLevels[0].QualityLevel;
+        swapChainDesc.SampleDesc.Quality = D3D10_STANDARD_MULTISAMPLE_PATTERN;
     }
     else {
         swapChainDesc.SampleDesc.Count = 1;
-        swapChainDesc.SampleDesc.Quality = D3D11_STANDARD_MULTISAMPLE_PATTERN;
+        swapChainDesc.SampleDesc.Quality = 0;
     }
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 1;
