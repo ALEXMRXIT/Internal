@@ -3,10 +3,6 @@
 
 #define BUFFER_SIZE 512
 
-__forceinline HRESULT DXUTTrace(const CHAR* strFile, DWORD dwLine, HRESULT hr, const char* strMsg, bool bPopMsgBox) {
-    return DXTrace(strFile, dwLine, hr, strMsg, bPopMsgBox);
-}
-
 __forceinline void DXUTOutputDebugStringW(LPCWSTR strMsg, ...) {
 #if defined(DEBUG) || defined(_DEBUG)
     wchar_t strBuffer[BUFFER_SIZE];
@@ -46,8 +42,8 @@ __forceinline void DXUTOutputDebugStringA(LPCSTR strMsg, ...) {
 #endif
 
 #if defined(DEBUG) || defined(_DEBUG)
-#define DXUT_ERR(str,hr)           DXUTTrace(__FILE__, (DWORD)__LINE__, hr, str, false)
-#define DXUT_ERR_MSGBOX(str,hr)    DXUTTrace(__FILE__, (DWORD)__LINE__, hr, str, true)
+#define DXUT_ERR(str,hr)           DXTRACE_ERR(__FILE__, (DWORD)__LINE__, hr, str, false)
+#define DXUT_ERR_MSGBOX(str,hr)    DXTRACE_ERR_MSGBOX(__FILE__, (DWORD)__LINE__, hr, str, true)
 #define DXUTTRACE                  DXUTOutputDebugString
 #else
 #define DXUT_ERR(str,hr)           (hr)

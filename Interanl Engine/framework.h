@@ -11,6 +11,7 @@
 #include <list>
 #include <iostream>
 #include <algorithm>
+#include <typeinfo>
 
 #pragma comment(lib, "d3d11.lib")
 #ifdef _DEBUG

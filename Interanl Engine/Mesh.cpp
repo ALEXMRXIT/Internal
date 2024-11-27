@@ -100,6 +100,7 @@ HRESULT Mesh::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
     cmdesc.FillMode = D3D11_FILL_SOLID;
     cmdesc.CullMode = D3D11_CULL_BACK;
+    cmdesc.MultisampleEnable = true;
     cmdesc.FrontCounterClockwise = false;
     cmdesc.DepthClipEnable = true;
     hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);

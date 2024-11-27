@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractBaseComponent.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Font.cpp" />
@@ -147,6 +148,7 @@
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractBaseComponent.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="Engine.h" />

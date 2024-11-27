@@ -88,15 +88,15 @@ bool Engine::InitRenderDevice() {
     backBufferDesc.RefreshRate.Numerator = 60;
     backBufferDesc.RefreshRate.Denominator = 1;
     backBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    backBufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-    backBufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+    backBufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
+    backBufferDesc.Scaling = DXGI_MODE_SCALING_CENTERED;
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
     swapChainDesc.BufferDesc = backBufferDesc;
     if (!m_qualityLevels.empty()) {
         swapChainDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
-        swapChainDesc.SampleDesc.Quality = D3D11_STANDARD_MULTISAMPLE_PATTERN;
+        swapChainDesc.SampleDesc.Quality = 0;
     }
     else {
         swapChainDesc.SampleDesc.Count = 1;
@@ -108,9 +108,23 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.Windowed = TRUE;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
+    D3D_FEATURE_LEVEL featureLevels[] = {
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_10_0,
+        D3D_FEATURE_LEVEL_9_3,
+        D3D_FEATURE_LEVEL_9_2,
+        D3D_FEATURE_LEVEL_9_1
+    };
+    UINT numFeatureLevels = ARRAYSIZE(featureLevels);
+    D3D_FEATURE_LEVEL createdFeatureLevel;
+
     handleResult = D3D11CreateDeviceAndSwapChain(
-        nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-        nullptr, 0, D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, nullptr, &m_deviceContext);
+        nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
+        D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+        featureLevels, numFeatureLevels, D3D11_SDK_VERSION, 
+        &swapChainDesc, &m_swapChain, &m_device, &createdFeatureLevel, &m_deviceContext);
+
     if (FAILED(handleResult)) {
         DXUT_ERR_MSGBOX("Error creating swap chain and device. %d error code.", handleResult);
         return false;
@@ -138,7 +152,7 @@ bool Engine::InitRenderDevice() {
     depthStencilDesc.MipLevels = 1;
     depthStencilDesc.ArraySize = 1;
     depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilDesc.SampleDesc.Count = 1;
+    depthStencilDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
     depthStencilDesc.SampleDesc.Quality = 0;
     depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
     depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -151,7 +165,12 @@ bool Engine::InitRenderDevice() {
         return false;
     }
 
-    handleResult = m_device->CreateDepthStencilView(m_depthTexture, NULL, &m_depthStencilView);
+    D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+    ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+    depthStencilViewDesc.Format = depthStencilDesc.Format;
+    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+
+    handleResult = m_device->CreateDepthStencilView(m_depthTexture, &depthStencilViewDesc, &m_depthStencilView);
     if (FAILED(handleResult)) {
         DXUT_ERR_MSGBOX("Error creating depth stencil view. %d error code.", handleResult);
         return false;
@@ -438,6 +457,13 @@ const WindowDescription* Engine::getWindowDesc() const {
 }
 
 GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {
+    switch (type) {
+    case PT_SPHERE:
+    case PT_CUBE:
+
+        break;
+    }
+
     return nullptr;
 }
 
