@@ -16,9 +16,6 @@ bool Component::TryGetComponent(Component* component) const {
 }
 
 Component* Component::GetComponent(uint32_t uid) const {
-    auto it = std::find_if(m_components.cbegin(), m_components.cend(), 
-		[uid](const Component* comp) { return comp->m_uid == uid; });
-    if (it != m_components.cend())
-        return *it;
+    
 	return nullptr;
 }

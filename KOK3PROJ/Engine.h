@@ -61,6 +61,14 @@ public:
 	}
 };
 
+typedef struct _multisampleityLevel {
+	uint32_t SampleCount;
+	uint32_t QualityLevel;
+
+	_multisampleityLevel(uint32_t count, uint32_t quality) :
+		SampleCount(count), QualityLevel(quality) { };
+} MultisampleQualityLevel, LPMultisampleQualityLevel;
+
 extern class Engine {
 private:
 	WindowDescription* m_windowDesc;
@@ -75,6 +83,7 @@ private:
 	ID3D11Texture2D* m_depthTexture;
 	std::vector<RenderOperation*> m_quewe;
 	ID3D11BlendState* m_transparency;
+	std::vector<MultisampleQualityLevel> m_qualityLevels;
 
 	PerfomanceTimeInfo m_timeInfo;
 
@@ -85,6 +94,7 @@ private:
 	static LRESULT WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	void UpdateFrequenceTime(PerfomanceTimeInfo& timeInfo) const;
+	HRESULT BuildMultiSampleQualityList(DXGI_FORMAT format);
 public:
 	Engine();
 	~Engine();

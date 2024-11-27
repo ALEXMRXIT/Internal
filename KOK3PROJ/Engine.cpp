@@ -46,8 +46,37 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
 	return true;
 }
 
+HRESULT Engine::BuildMultiSampleQualityList(DXGI_FORMAT format) {
+    ID3D11Device* pd3dDevice = nullptr;
+    ID3D11DeviceContext* pd3dDeviceContext = nullptr;
+
+    D3D_FEATURE_LEVEL featureLevel;
+    const uint32_t numFeatureLevels = 1;
+    HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE,
+        nullptr, 0, nullptr, numFeatureLevels, D3D11_SDK_VERSION, 
+        &pd3dDevice, &featureLevel, &pd3dDeviceContext);
+
+    for (int iterator = 0; iterator < D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; ++iterator) {
+        uint32_t quality = 0;
+        if (SUCCEEDED(pd3dDevice->CheckMultisampleQualityLevels(format, iterator, &quality))) {
+            if (quality) m_qualityLevels.emplace_back(MultisampleQualityLevel(iterator, quality));
+        }
+    }
+
+    if (pd3dDevice) pd3dDevice->Release();
+    if (pd3dDeviceContext) pd3dDeviceContext->Release();
+
+    return hr;
+}
+
 bool Engine::InitRenderDevice() {
     HRESULT handleResult{};
+
+    handleResult = BuildMultiSampleQualityList(DXGI_FORMAT_R8G8B8A8_UNORM);
+    if (FAILED(handleResult)) {
+        ERROR_MSG("Error build sample quality list. %d error code.", handleResult);
+        return false;
+    }
 
     DXGI_MODE_DESC backBufferDesc;
     ZeroMemory(&backBufferDesc, sizeof(DXGI_MODE_DESC));
@@ -62,8 +91,8 @@ bool Engine::InitRenderDevice() {
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
     swapChainDesc.BufferDesc = backBufferDesc;
-    swapChainDesc.SampleDesc.Count = 1;
-    swapChainDesc.SampleDesc.Quality = 0;
+    swapChainDesc.SampleDesc.Count = m_qualityLevels[m_qualityLevels.size() - 1].SampleCount;
+    swapChainDesc.SampleDesc.Quality = m_qualityLevels[m_qualityLevels.size() - 1].QualityLevel;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 1;
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
@@ -71,8 +100,8 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
     handleResult = D3D11CreateDeviceAndSwapChain(
-        NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-        NULL, 0, D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext);
+        nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+        nullptr, 0, D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, nullptr, &m_deviceContext);
     if (FAILED(handleResult)) {
         ERROR_MSG("Error creating swap chain and device. %d error code.", handleResult);
         return false;
@@ -400,7 +429,7 @@ const WindowDescription* Engine::getWindowDesc() const {
 }
 
 GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {
-    
+    return nullptr;
 }
 
 LRESULT Engine::WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
