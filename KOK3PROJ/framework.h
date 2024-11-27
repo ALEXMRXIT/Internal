@@ -26,6 +26,7 @@
 #pragma comment (lib, "DXGI.lib")
 #pragma comment (lib, "D2D1.lib")
 #pragma comment (lib, "dwrite.lib")
+#pragma comment (lib, "DxErr.lib")
 
 #include <d3d11.h>
 #include <d3dx11.h>
@@ -41,3 +42,4 @@
 #include <d2d1.h>
 #include <sstream>
 #include <dwrite.h>
+#include <DxErr.h>

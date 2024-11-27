@@ -34,11 +34,10 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
     wndClassEx.lpszClassName = m_windowDesc->title;
     wndClassEx.hIconSm = LoadIcon(NULL, IDI_WINLOGO);
 
-    CHECK_ASSERT(RegisterClassEx(&wndClassEx), "Error register window class");
+    RegisterClassEx(&wndClassEx);
     m_windowDesc->hWnd = CreateWindowEx(NULL, m_windowDesc->title, m_windowDesc->title,
         WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, m_windowDesc->width,
         m_windowDesc->height, NULL, NULL, m_windowDesc->hInstance, NULL);
-    CHECK_ASSERT(m_windowDesc->hWnd, "Error create window");
 
     ShowWindow(m_windowDesc->hWnd, m_windowDesc->nCmdShow);
     UpdateWindow(m_windowDesc->hWnd);
@@ -51,10 +50,14 @@ HRESULT Engine::BuildMultiSampleQualityList(DXGI_FORMAT format) {
     ID3D11DeviceContext* pd3dDeviceContext = nullptr;
 
     D3D_FEATURE_LEVEL featureLevel;
-    const uint32_t numFeatureLevels = 1;
     HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE,
-        nullptr, 0, nullptr, numFeatureLevels, D3D11_SDK_VERSION, 
+        nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, 
         &pd3dDevice, &featureLevel, &pd3dDeviceContext);
+
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error create dive for build multysample", hr);
+        return hr;
+    }
 
     for (int iterator = 0; iterator < D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; ++iterator) {
         uint32_t quality = 0;
@@ -74,7 +77,7 @@ bool Engine::InitRenderDevice() {
 
     handleResult = BuildMultiSampleQualityList(DXGI_FORMAT_R8G8B8A8_UNORM);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Error build sample quality list. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error build sample quality list. %d error code.", handleResult);
         return false;
     }
 
@@ -91,8 +94,14 @@ bool Engine::InitRenderDevice() {
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
     swapChainDesc.BufferDesc = backBufferDesc;
-    swapChainDesc.SampleDesc.Count = m_qualityLevels[m_qualityLevels.size() - 1].SampleCount;
-    swapChainDesc.SampleDesc.Quality = m_qualityLevels[m_qualityLevels.size() - 1].QualityLevel;
+    if (!m_qualityLevels.empty()) {
+        swapChainDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
+        swapChainDesc.SampleDesc.Quality = m_qualityLevels[0].QualityLevel;
+    }
+    else {
+        swapChainDesc.SampleDesc.Count = 1;
+        swapChainDesc.SampleDesc.Quality = D3D11_STANDARD_MULTISAMPLE_PATTERN;
+    }
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 1;
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
@@ -103,7 +112,7 @@ bool Engine::InitRenderDevice() {
         nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
         nullptr, 0, D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, nullptr, &m_deviceContext);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Error creating swap chain and device. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error creating swap chain and device. %d error code.", handleResult);
         return false;
     }
 
@@ -111,14 +120,14 @@ bool Engine::InitRenderDevice() {
     ZeroMemory(&backBuffer, sizeof(ID3D11Texture2D));
     handleResult = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Error getting back buffer. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error getting back buffer. %d error code.", handleResult);
         return false;
     }
 
     handleResult = m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView);
     backBuffer->Release();
     if (FAILED(handleResult)) {
-        ERROR_MSG("Error creating render target view. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error creating render target view. %d error code.", handleResult);
         return false;
     }
 
@@ -138,13 +147,13 @@ bool Engine::InitRenderDevice() {
 
     handleResult = m_device->CreateTexture2D(&depthStencilDesc, NULL, &m_depthTexture);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Error creating depth stencil texture. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error creating depth stencil texture. %d error code.", handleResult);
         return false;
     }
 
     handleResult = m_device->CreateDepthStencilView(m_depthTexture, NULL, &m_depthStencilView);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Error creating depth stencil view. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error creating depth stencil view. %d error code.", handleResult);
         return false;
     }
 
@@ -162,12 +171,12 @@ bool Engine::InitRenderDevice() {
 
     handleResult = m_font->Init(m_device, adapter);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to init fonts. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to init fonts. %d error code.", handleResult);
         return false;
     }
 
     if (!InitScene()) {
-        ERROR_MSG("Error initializing scene.");
+        DXUT_ERR_MSGBOX("Error initializing scene.", handleResult);
         delete m_shader;
         delete m_font;
         return false;
@@ -264,7 +273,7 @@ bool Engine::InitScene() {
     SIZE_T size = m_shader->getVertexBlob()->GetBufferSize();
     handleResult = m_device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create input layout. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to create input layout. %d error code.", handleResult);
         return false;
     }
 
@@ -292,7 +301,7 @@ bool Engine::InitScene() {
 
     handleResult = m_device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create buffer. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to create buffer. %d error code.", handleResult);
         return false;
     }
 
@@ -335,7 +344,7 @@ bool Engine::InitScene() {
     handleResult = m_device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
     handleResult = m_device->CreateBlendState(&blendDesc, &m_transparency);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create blend state. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to create blend state. %d error code.", handleResult);
         return false;
     }
 

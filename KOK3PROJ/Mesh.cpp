@@ -6,8 +6,6 @@ VertexBuffer::VertexBuffer() {
 }
 
 bool VertexBuffer::Create(ID3D11Device* device, void* pBuffer, unsigned int size) {
-	CHECK_ASSERT(m_vertexBuffer == NULL, "VertexBuffer already created!");
-
     HRESULT handleResult{};
     D3D11_BUFFER_DESC vertexBufferDesc;
     ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -21,7 +19,7 @@ bool VertexBuffer::Create(ID3D11Device* device, void* pBuffer, unsigned int size
     vertexBufferData.pSysMem = pBuffer;
     handleResult = device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create vertex buffer. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to create vertex buffer. %d error code.", handleResult);
         return false;
     }
 	
@@ -37,8 +35,6 @@ IndexBuffer::IndexBuffer() {
 }
 
 bool IndexBuffer::Create(ID3D11Device* device, void* pBuffer, unsigned int size) {
-    CHECK_ASSERT(m_indexBuffer == NULL, "IndexBuffer already created!");
-
     HRESULT handleResult{};
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -52,7 +48,7 @@ bool IndexBuffer::Create(ID3D11Device* device, void* pBuffer, unsigned int size)
     indexBufferData.pSysMem = pBuffer;
     handleResult = device->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer);
     if (FAILED(handleResult)) {
-        ERROR_MSG("Failed to create index buffer. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to create index buffer. %d error code.", handleResult);
         return false;
     }
     

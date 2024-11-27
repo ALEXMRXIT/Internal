@@ -20,7 +20,7 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
         NULL, D3D10_CREATE_DEVICE_DEBUG | D3D10_CREATE_DEVICE_BGRA_SUPPORT,
         D3D10_FEATURE_LEVEL_9_3, D3D10_1_SDK_VERSION, &m_device);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create D3D10 Device1. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create D3D10 Device1. %d error code.", hr);
         return hr;
     }
 
@@ -36,14 +36,14 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
     sharedTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
     hr = device->CreateTexture2D(&sharedTexDesc, NULL, &m_textureDesc);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create texture2D. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create texture2D. %d error code.", hr);
         return hr;
     }
 
     ID2D1Factory* D2DFactory = nullptr;
     hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), (void**)&D2DFactory);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create D2D1 factory. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create D2D1 factory. %d error code.", hr);
         return hr;
     }
 
@@ -55,14 +55,14 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
     IDXGISurface* d2dSurface = nullptr;
     hr = m_textureDesc->QueryInterface(__uuidof(IDXGISurface), (void**)&d2dSurface);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to query IDXGISurface. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to query IDXGISurface. %d error code.", hr);
         D2DFactory->Release();
         return hr;
     }
 
     hr = D2DFactory->CreateDxgiSurfaceRenderTarget(d2dSurface, &renderTargetProperties, &m_renderTarget);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create DXGI surface render target. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create DXGI surface render target. %d error code.", hr);
         D2DFactory->Release();
         return hr;
     }
@@ -70,14 +70,14 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
 
     hr = m_renderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), &m_brush);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create solid color brush. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create solid color brush. %d error code.", hr);
         return hr;
     }
 
     hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
         reinterpret_cast<IUnknown**>(&m_factory));
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create DWrite factory. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create DWrite factory. %d error code.", hr);
         return hr;
     }
 
@@ -92,19 +92,19 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
         &m_textFormat
     );
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create text format. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create text format. %d error code.", hr);
         return hr;
     }
 
     hr = m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to set text alignment. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to set text alignment. %d error code.", hr);
         return hr;
     }
 
     hr = m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to set paragraph alignment. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to set paragraph alignment. %d error code.", hr);
         return hr;
     }
 
@@ -117,13 +117,13 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
     cmdesc.DepthClipEnable = false;
     hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create rasterizer state. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create rasterizer state. %d error code.", hr);
         return hr;
     }
 
     hr = device->CreateShaderResourceView(m_textureDesc, NULL, &m_sharedResource);
     if (FAILED(hr)) {
-        ERROR_MSG("Failed to create shader resource view. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create shader resource view. %d error code.", hr);
         return hr;
     }
 

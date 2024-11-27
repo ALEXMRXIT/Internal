@@ -19,8 +19,8 @@ int APIENTRY WinMain(
 	wndDesc.hInstance = hInstance;
 	wndDesc.fullScreen = true;
 	wndDesc.nCmdShow = nCmdShow;
-	CHECK_ASSERT(engine.InitWindowDevice(&wndDesc), "Error Init window desc");
-	CHECK_ASSERT(engine.InitRenderDevice(), "Error Init render desc");
+	engine.InitWindowDevice(&wndDesc);
+	engine.InitRenderDevice();
 
 	int wParam = engine.messageWindow();
 	engine.Release();
