@@ -96,7 +96,7 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.BufferDesc = backBufferDesc;
     if (!m_qualityLevels.empty()) {
         swapChainDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
-        swapChainDesc.SampleDesc.Quality = D3D10_STANDARD_MULTISAMPLE_PATTERN;
+        swapChainDesc.SampleDesc.Quality = D3D11_STANDARD_MULTISAMPLE_PATTERN;
     }
     else {
         swapChainDesc.SampleDesc.Count = 1;
