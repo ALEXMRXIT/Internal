@@ -1,2 +1,2 @@
-# King of Kings 3
- 
+# Internal Game Engine
+For MMORPG games
