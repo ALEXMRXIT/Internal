@@ -2,8 +2,10 @@
 class Config {
 public:
 	Config() {
-		resolution = 0;
+		resolution = 7;
+		multiply = 2;
 	}
 
 	int resolution;
+	int multiply;
 } config;

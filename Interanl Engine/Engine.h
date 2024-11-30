@@ -10,6 +10,7 @@ typedef struct _windowDescription {
 	const char* title;
 	HINSTANCE hInstance;
 	HWND hWnd;
+	RECT rect;
 	bool fullScreen;
 	int nCmdShow;
 } WindowDescription, *LPWindowDescription;
@@ -117,6 +118,8 @@ public:
 	void Release();
 	int messageWindow();
 	const WindowDescription* getWindowDesc() const;
+	RECT& getWindowRect();
+	IDXGISwapChain* getChain() const;
 	const DXGI_MODE_DESC& getSupportedResolutin() const;
 
 	static GameObject* Instantiate(primitive_type_e type, XMVECTOR position);

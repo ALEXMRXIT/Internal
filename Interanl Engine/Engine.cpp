@@ -45,6 +45,10 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
     SetWindowPos(m_windowDesc->hWnd, HWND_TOP, 0, 0, 
         GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
 
+    RECT windowRect;
+    GetWindowRect(m_windowDesc->hWnd, &windowRect);
+    m_windowDesc->rect = windowRect;
+
 	return true;
 }
 
@@ -143,7 +147,7 @@ bool Engine::InitRenderDevice() {
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
     swapChainDesc.BufferDesc = m_supportedResolution[config.resolution];
-    swapChainDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
+    swapChainDesc.SampleDesc.Count = m_qualityLevels[config.multiply].SampleCount;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 1;
@@ -195,7 +199,7 @@ bool Engine::InitRenderDevice() {
     depthStencilDesc.MipLevels = 1;
     depthStencilDesc.ArraySize = 1;
     depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
+    depthStencilDesc.SampleDesc.Count = m_qualityLevels[config.multiply].SampleCount;
     depthStencilDesc.SampleDesc.Quality = 0;
     depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
     depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -499,6 +503,14 @@ const WindowDescription* Engine::getWindowDesc() const {
     return m_windowDesc;
 }
 
+RECT& Engine::getWindowRect() {
+    return m_windowDesc->rect;
+}
+
+IDXGISwapChain* Engine::getChain() const {
+    return m_swapChain;
+}
+
 const DXGI_MODE_DESC& Engine::getSupportedResolutin() const {
     return m_supportedResolution[config.resolution];
 }
@@ -519,6 +531,39 @@ LRESULT Engine::WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_KEYDOWN:
         if (wParam == VK_ESCAPE)
             DestroyWindow(hWnd);
+        else if (wParam == VK_SPACE) {
+            static bool isFullScreen = true;
+            if (!isFullScreen) {
+                RECT windowRect;
+                GetWindowRect(hWnd, &windowRect);
+                engine.getWindowRect() = windowRect;
+
+                SetWindowLongPtr(hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+                SetWindowPos(hWnd, HWND_TOP, 0, 0, 
+                    GetSystemMetrics(SM_CXSCREEN), 
+                    GetSystemMetrics(SM_CYSCREEN), 
+                    SWP_FRAMECHANGED | SWP_NOACTIVATE);
+                ShowWindow(hWnd, SW_NORMAL);
+            }
+            else {
+                SetWindowLongPtr(hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
+                RECT rect{};
+                if (IDXGISwapChain* chain = engine.getChain()) {
+                    IDXGIOutput* output = nullptr;
+                    chain->GetContainingOutput(&output);
+                    DXGI_OUTPUT_DESC desc;
+                    ZeroMemory(&desc, sizeof(DXGI_OUTPUT_DESC));
+                    output->GetDesc(&desc);
+                    rect = desc.DesktopCoordinates;
+                }
+                SetWindowPos(hWnd, HWND_NOTOPMOST,
+                    rect.left, rect.top,
+                    rect.right, rect.bottom,
+                    SWP_FRAMECHANGED | SWP_NOACTIVATE);
+                ShowWindow(hWnd, SW_MAXIMIZE);
+            }
+            isFullScreen = !isFullScreen;
+        }
         return 0;
     case WM_DESTROY:
         PostQuitMessage(0);
