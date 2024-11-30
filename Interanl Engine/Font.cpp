@@ -20,14 +20,14 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
         NULL, D3D10_CREATE_DEVICE_DEBUG | D3D10_CREATE_DEVICE_BGRA_SUPPORT,
         D3D10_FEATURE_LEVEL_9_3, D3D10_1_SDK_VERSION, &m_device);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create D3D10 Device1. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create D3D10 Device1.", hr);
         return hr;
     }
 
     D3D11_TEXTURE2D_DESC sharedTexDesc;
     ZeroMemory(&sharedTexDesc, sizeof(D3D11_TEXTURE2D_DESC));
-    sharedTexDesc.Width = ::engine.getWindowDesc()->width;
-    sharedTexDesc.Height = ::engine.getWindowDesc()->height;
+    sharedTexDesc.Width = ::engine.getSupportedResolutin().Width;
+    sharedTexDesc.Height = ::engine.getSupportedResolutin().Height;
     sharedTexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     sharedTexDesc.MipLevels = 1;
     sharedTexDesc.ArraySize = 1;
@@ -36,14 +36,14 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
     sharedTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
     hr = device->CreateTexture2D(&sharedTexDesc, NULL, &m_textureDesc);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create texture2D. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create texture2D.", hr);
         return hr;
     }
 
     ID2D1Factory* D2DFactory = nullptr;
     hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), (void**)&D2DFactory);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create D2D1 factory. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create D2D1 factory.", hr);
         return hr;
     }
 
@@ -55,14 +55,14 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
     IDXGISurface* d2dSurface = nullptr;
     hr = m_textureDesc->QueryInterface(__uuidof(IDXGISurface), (void**)&d2dSurface);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to query IDXGISurface. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to query IDXGISurface.", hr);
         D2DFactory->Release();
         return hr;
     }
 
     hr = D2DFactory->CreateDxgiSurfaceRenderTarget(d2dSurface, &renderTargetProperties, &m_renderTarget);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create DXGI surface render target. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create DXGI surface render target.", hr);
         D2DFactory->Release();
         return hr;
     }
@@ -70,14 +70,14 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
 
     hr = m_renderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), &m_brush);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create solid color brush. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create solid color brush.", hr);
         return hr;
     }
 
     hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
         reinterpret_cast<IUnknown**>(&m_factory));
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create DWrite factory. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create DWrite factory.", hr);
         return hr;
     }
 
@@ -92,19 +92,19 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
         &m_textFormat
     );
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create text format. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create text format.", hr);
         return hr;
     }
 
     hr = m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to set text alignment. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to set text alignment.", hr);
         return hr;
     }
 
     hr = m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to set paragraph alignment. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to set paragraph alignment.", hr);
         return hr;
     }
 
@@ -117,13 +117,13 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
     cmdesc.DepthClipEnable = false;
     hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create rasterizer state. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create rasterizer state.", hr);
         return hr;
     }
 
     hr = device->CreateShaderResourceView(m_textureDesc, NULL, &m_sharedResource);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create shader resource view. %d error code.", hr);
+        DXUT_ERR_MSGBOX("Failed to create shader resource view.", hr);
         return hr;
     }
 
@@ -136,8 +136,8 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 	D2D1_COLOR_F FontColor = D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f);
 	m_brush->SetColor(FontColor);
 	D2D1_RECT_F layoutRect = D2D1::RectF(0, 0,
-		::engine.getWindowDesc()->width,
-		::engine.getWindowDesc()->height);
+		::engine.getSupportedResolutin().Width,
+		::engine.getSupportedResolutin().Height);
 
 	m_renderTarget->DrawText(
 		text.c_str(), wcslen(text.c_str()),

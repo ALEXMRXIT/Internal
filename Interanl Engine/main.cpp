@@ -13,12 +13,11 @@ int APIENTRY WinMain(
 
 	WindowDescription wndDesc;
 	ZeroMemory(&wndDesc, sizeof(WindowDescription));
-	wndDesc.title = "King of Kings 3";
-	wndDesc.width = 800;
-	wndDesc.height = 600;
+	wndDesc.title = "Internal Engine - Beta Test v1.0.3 DirectX 11";
 	wndDesc.hInstance = hInstance;
 	wndDesc.fullScreen = true;
 	wndDesc.nCmdShow = nCmdShow;
+	engine.GetSupportedResolutions();
 	engine.InitWindowDevice(&wndDesc);
 	engine.InitRenderDevice();
 

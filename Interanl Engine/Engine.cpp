@@ -5,6 +5,7 @@
 #include "Font.h"
 #include "Component.h"
 #include "GameObject.h"
+#include "Config.h"
 
 Engine engine;
 
@@ -36,11 +37,13 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
 
     RegisterClassEx(&wndClassEx);
     m_windowDesc->hWnd = CreateWindowEx(NULL, m_windowDesc->title, m_windowDesc->title,
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, m_windowDesc->width,
-        m_windowDesc->height, NULL, NULL, m_windowDesc->hInstance, NULL);
+        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, m_supportedResolution[config.resolution].Width,
+        m_supportedResolution[config.resolution].Height, NULL, NULL, m_windowDesc->hInstance, NULL);
 
     ShowWindow(m_windowDesc->hWnd, m_windowDesc->nCmdShow);
     UpdateWindow(m_windowDesc->hWnd);
+    SetWindowPos(m_windowDesc->hWnd, HWND_TOP, 0, 0, 
+        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
 
 	return true;
 }
@@ -72,36 +75,76 @@ HRESULT Engine::BuildMultiSampleQualityList(DXGI_FORMAT format) {
     return hr;
 }
 
+HRESULT Engine::GetSupportedResolutions() {
+    IDXGIFactory1* dxgiFactory = nullptr;
+    HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create DXGI factory.", hr);
+        return hr;
+    }
+
+    IDXGIAdapter1* adapter = nullptr;
+    hr = dxgiFactory->EnumAdapters1(0, &adapter);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to enumerate adapters.", hr);
+        dxgiFactory->Release();
+        return hr;
+    }
+
+    IDXGIOutput* output = nullptr;
+    hr = adapter->EnumOutputs(0, &output);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to enumerate outputs.", hr);
+        adapter->Release();
+        dxgiFactory->Release();
+        return hr;
+    }
+
+    UINT numModes = 0;
+    hr = output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 
+        DXGI_ENUM_MODES_INTERLACED, &numModes, nullptr);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to get display mode list.", hr);
+        output->Release();
+        adapter->Release();
+        dxgiFactory->Release();
+        return hr;
+    }
+
+    std::vector<DXGI_MODE_DESC> displayModes(numModes);
+    hr = output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 
+        DXGI_ENUM_MODES_INTERLACED, &numModes, displayModes.data());
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to get display mode list. %d error code.", hr);
+        output->Release();
+        adapter->Release();
+        dxgiFactory->Release();
+        return hr;
+    }
+
+    m_supportedResolution.assign(displayModes.begin(), displayModes.end());
+
+    output->Release();
+    adapter->Release();
+    dxgiFactory->Release();
+
+    return hr;
+}
+
 bool Engine::InitRenderDevice() {
     HRESULT handleResult{};
 
     handleResult = BuildMultiSampleQualityList(DXGI_FORMAT_R8G8B8A8_UNORM);
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error build sample quality list. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error build sample quality list.", handleResult);
         return false;
     }
 
-    DXGI_MODE_DESC backBufferDesc;
-    ZeroMemory(&backBufferDesc, sizeof(DXGI_MODE_DESC));
-    backBufferDesc.Width = m_windowDesc->width;
-    backBufferDesc.Height = m_windowDesc->height;
-    backBufferDesc.RefreshRate.Numerator = 60;
-    backBufferDesc.RefreshRate.Denominator = 1;
-    backBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    backBufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
-    backBufferDesc.Scaling = DXGI_MODE_SCALING_CENTERED;
-
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
-    swapChainDesc.BufferDesc = backBufferDesc;
-    if (!m_qualityLevels.empty()) {
-        swapChainDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
-        swapChainDesc.SampleDesc.Quality = 0;
-    }
-    else {
-        swapChainDesc.SampleDesc.Count = 1;
-        swapChainDesc.SampleDesc.Quality = 0;
-    }
+    swapChainDesc.BufferDesc = m_supportedResolution[config.resolution];
+    swapChainDesc.SampleDesc.Count = m_qualityLevels[0].SampleCount;
+    swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 1;
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
@@ -126,7 +169,7 @@ bool Engine::InitRenderDevice() {
         &swapChainDesc, &m_swapChain, &m_device, &createdFeatureLevel, &m_deviceContext);
 
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error creating swap chain and device. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error creating swap chain and device.", handleResult);
         return false;
     }
 
@@ -134,21 +177,21 @@ bool Engine::InitRenderDevice() {
     ZeroMemory(&backBuffer, sizeof(ID3D11Texture2D));
     handleResult = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error getting back buffer. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error getting back buffer.", handleResult);
         return false;
     }
 
     handleResult = m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView);
     backBuffer->Release();
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error creating render target view. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error creating render target view.", handleResult);
         return false;
     }
 
     D3D11_TEXTURE2D_DESC depthStencilDesc;
     ZeroMemory(&depthStencilDesc, sizeof(D3D11_TEXTURE2D_DESC));
-    depthStencilDesc.Width = m_windowDesc->width;
-    depthStencilDesc.Height = m_windowDesc->height;
+    depthStencilDesc.Width = m_supportedResolution[config.resolution].Width;
+    depthStencilDesc.Height = m_supportedResolution[config.resolution].Height;
     depthStencilDesc.MipLevels = 1;
     depthStencilDesc.ArraySize = 1;
     depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -161,7 +204,7 @@ bool Engine::InitRenderDevice() {
 
     handleResult = m_device->CreateTexture2D(&depthStencilDesc, NULL, &m_depthTexture);
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error creating depth stencil texture. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error creating depth stencil texture.", handleResult);
         return false;
     }
 
@@ -172,7 +215,7 @@ bool Engine::InitRenderDevice() {
 
     handleResult = m_device->CreateDepthStencilView(m_depthTexture, &depthStencilViewDesc, &m_depthStencilView);
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error creating depth stencil view. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Error creating depth stencil view.", handleResult);
         return false;
     }
 
@@ -190,7 +233,7 @@ bool Engine::InitRenderDevice() {
 
     handleResult = m_font->Init(m_device, adapter);
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Failed to init fonts. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to init fonts.", handleResult);
         return false;
     }
 
@@ -292,7 +335,7 @@ bool Engine::InitScene() {
     SIZE_T size = m_shader->getVertexBlob()->GetBufferSize();
     handleResult = m_device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Failed to create input layout. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to create input layout.", handleResult);
         return false;
     }
 
@@ -303,11 +346,10 @@ bool Engine::InitScene() {
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
-    viewport.Width = m_windowDesc->width;
-    viewport.Height = m_windowDesc->height;
+    viewport.Width = (FLOAT)m_supportedResolution[config.resolution].Width;
+    viewport.Height = (FLOAT)m_supportedResolution[config.resolution].Height;
     viewport.MinDepth = 0.0f;
     viewport.MaxDepth = 1.0f;
-
     m_deviceContext->RSSetViewports(1, &viewport);
 
     D3D11_BUFFER_DESC bufferDesc;
@@ -320,7 +362,7 @@ bool Engine::InitScene() {
 
     handleResult = m_device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Failed to create buffer. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to create buffer.", handleResult);
         return false;
     }
 
@@ -329,15 +371,17 @@ bool Engine::InitScene() {
     camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
     camView = XMMatrixLookAtLH(camPosition, camTarget, camUp);
-    float screen = static_cast<float>(m_windowDesc->width) / static_cast<float>(m_windowDesc->height);
-    camProjection = XMMatrixPerspectiveFovLH(0.5f * XM_PI, screen, 1.0f, 1000.0f);
+    float screen = (float)m_supportedResolution[config.resolution].Width / 
+        (float)m_supportedResolution[config.resolution].Height;
+    camProjection = XMMatrixPerspectiveFovLH(0.45f * XM_PI, screen, 1.0f, 1000.0f);
 
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
-    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+    sampDesc.MaxAnisotropy = 16;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
     sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
@@ -347,13 +391,12 @@ bool Engine::InitScene() {
 
     D3D11_RENDER_TARGET_BLEND_DESC rtbd;
     ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
-
     rtbd.BlendEnable = true;
-    rtbd.SrcBlend = D3D11_BLEND_SRC_COLOR;
+    rtbd.SrcBlend = D3D11_BLEND_SRC_ALPHA;
     rtbd.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
     rtbd.BlendOp = D3D11_BLEND_OP_ADD;
     rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
-    rtbd.DestBlendAlpha = D3D11_BLEND_ZERO;
+    rtbd.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
     rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
     rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
 
@@ -363,7 +406,7 @@ bool Engine::InitScene() {
     handleResult = m_device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
     handleResult = m_device->CreateBlendState(&blendDesc, &m_transparency);
     if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Failed to create blend state. %d error code.", handleResult);
+        DXUT_ERR_MSGBOX("Failed to create blend state.", handleResult);
         return false;
     }
 
@@ -454,6 +497,10 @@ int Engine::messageWindow() {
 
 const WindowDescription* Engine::getWindowDesc() const {
     return m_windowDesc;
+}
+
+const DXGI_MODE_DESC& Engine::getSupportedResolutin() const {
+    return m_supportedResolution[config.resolution];
 }
 
 GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {

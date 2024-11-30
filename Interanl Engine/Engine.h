@@ -8,8 +8,6 @@ class GameObject;
 
 typedef struct _windowDescription {
 	const char* title;
-	unsigned int width;
-	unsigned int height;
 	HINSTANCE hInstance;
 	HWND hWnd;
 	bool fullScreen;
@@ -84,6 +82,7 @@ private:
 	std::vector<RenderOperation*> m_quewe;
 	ID3D11BlendState* m_transparency;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
+	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 
 	PerfomanceTimeInfo m_timeInfo;
 
@@ -110,6 +109,7 @@ public:
 
 	bool InitWindowDevice(const WindowDescription* desc);
 	bool InitRenderDevice();
+	HRESULT GetSupportedResolutions();
 	bool InitScene();
 	void FixedUpdate(float deltaTime);
 	void Update(float deltaTime);
@@ -117,6 +117,7 @@ public:
 	void Release();
 	int messageWindow();
 	const WindowDescription* getWindowDesc() const;
+	const DXGI_MODE_DESC& getSupportedResolutin() const;
 
 	static GameObject* Instantiate(primitive_type_e type, XMVECTOR position);
 } engine;
