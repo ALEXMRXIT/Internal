@@ -10,18 +10,25 @@ Shader::Shader() {
 HRESULT Shader::LoadShader(const char* entryPoint, const char* shaderName, const char* profile, ID3D10Blob** blob) {
     HRESULT hr;
     ID3D10Blob* errorBlob;
+    UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;
+#if defined(DEBUG) || defined(_DEBUG)
+    flags |= D3DCOMPILE_DEBUG;
+#endif
     hr = D3DX11CompileFromFile(shaderName, NULL,
-        NULL, entryPoint, profile, 0, 0, 0, blob, &errorBlob, 0);
+        NULL, entryPoint, profile, flags, 0, 0, blob, &errorBlob, 0);
     if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Error loading shader", hr);
-        errorBlob->Release();
+        if (errorBlob) {
+            DXUT_ERR_MSGBOX("Error compiling shader %s", hr, (char*)errorBlob->GetBufferPointer());
+            errorBlob->Release();
+        }
+        else DXUT_ERR_MSGBOX("Error compiling shader", hr);
     }
     return hr;
 }
 
 HRESULT Shader::LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* shaderName) {
     ID3D10Blob* vertexShader = nullptr;
-    HRESULT hr = LoadShader("VS", shaderName, "vs_4_0", &vertexShader);
+    HRESULT hr = LoadShader("VS", shaderName, "vs_5_0", &vertexShader);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Error compiling vertex shader", hr);
         return hr;
@@ -40,7 +47,7 @@ HRESULT Shader::LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* cont
 
 HRESULT Shader::LoadPixelShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* shaderName) {
     ID3D10Blob* pixelShader = nullptr;
-    HRESULT hr = LoadShader("PS", shaderName, "ps_4_0", &pixelShader);
+    HRESULT hr = LoadShader("PS", shaderName, "ps_5_0", &pixelShader);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Error compiling pixel shader", hr);
         return hr;

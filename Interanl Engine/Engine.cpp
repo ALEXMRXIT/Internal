@@ -449,7 +449,7 @@ void Engine::Render() {
     swprintf_s(buffer, 64, L"Fps: %d", m_timeInfo.fps);
     m_font->Render(m_deviceContext, buffer);
 
-    m_swapChain->Present(1, 0);
+    m_swapChain->Present(config.vSync, 0);
 }
 
 void Engine::Release() {
@@ -491,12 +491,12 @@ int Engine::messageWindow() {
         }
         else {
             UpdateFrequenceTime(m_timeInfo);
-        
+
             while (m_timeInfo.accumulator >= m_timeInfo.targetFrameTime) {
                 FixedUpdate(m_timeInfo.targetFrameTime);
                 m_timeInfo.accumulator -= m_timeInfo.targetFrameTime;
             }
-        
+
             Update(m_timeInfo.deltaTime);
             Render();
         }
@@ -566,21 +566,22 @@ GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {
 
 LRESULT Engine::WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-    case WM_CREATE: {
-        LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
-    } break;
-    case WM_KEYDOWN:
-        if (wParam == VK_ESCAPE)
-            DestroyWindow(hWnd);
-        else if (wParam == VK_SPACE) {
-            config.fullscreen = !config.fullscreen;
-            engine.setFullScreen(hWnd, config.fullscreen);
+        case WM_CREATE: {
+            LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
+            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+        } return 0;
+        case WM_KEYDOWN: {
+            if (wParam == VK_ESCAPE)
+                DestroyWindow(hWnd);
+            else if (wParam == VK_SPACE) {
+                config.fullscreen = !config.fullscreen;
+                engine.setFullScreen(hWnd, config.fullscreen);
+            }
+        } return 0;
+        case WM_DESTROY: {
+            PostQuitMessage(0);
+            return 0;
         }
-        return 0;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }

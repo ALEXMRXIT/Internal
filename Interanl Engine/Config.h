@@ -6,10 +6,12 @@ public:
 		multiply = 0;
 		qualityTexture = 0;
 		fullscreen = true;
+		vSync = 2;
 	}
 
 	int resolution;
 	int multiply;
 	int qualityTexture;
 	bool fullscreen;
+	int vSync;
 } config;
