@@ -5,6 +5,7 @@
 class Shader;
 class Font;
 class GameObject;
+class Camera;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -88,10 +89,6 @@ private:
 
 	PerfomanceTimeInfo m_timeInfo;
 
-	XMVECTOR camPosition;
-	XMVECTOR camTarget;
-	XMVECTOR camUp;
-
 	static LRESULT WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	void UpdateFrequenceTime(PerfomanceTimeInfo& timeInfo) const;
@@ -103,7 +100,6 @@ public:
 	cbPerObject cbPerObj;
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11SamplerState* m_textureSamplerState;
-	XMMATRIX camView;
 	XMMATRIX camProjection;
 
 	Engine(const Engine&) = delete;

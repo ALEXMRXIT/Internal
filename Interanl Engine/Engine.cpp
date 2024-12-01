@@ -6,8 +6,10 @@
 #include "Component.h"
 #include "GameObject.h"
 #include "Config.h"
+#include "Camera.h"
 
 Engine engine;
+Camera camera;
 
 Engine::Engine() {
 	m_windowDesc = nullptr;
@@ -24,7 +26,7 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
     ZeroMemory(&wndClassEx, sizeof(WNDCLASSEX));
     wndClassEx.cbSize = sizeof(WNDCLASSEX);
     wndClassEx.style = CS_HREDRAW | CS_VREDRAW;
-    wndClassEx.lpfnWndProc = WindowProcessor;
+    wndClassEx.lpfnWndProc = windowProcessor;
     wndClassEx.cbClsExtra = NULL;
     wndClassEx.cbWndExtra = NULL;
     wndClassEx.hInstance = m_windowDesc->hInstance;
@@ -155,6 +157,7 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
     swapChainDesc.Windowed = TRUE;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
     D3D_DRIVER_TYPE driverTypes[] = {
         D3D_DRIVER_TYPE_HARDWARE,
@@ -173,6 +176,7 @@ bool Engine::InitRenderDevice() {
     UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #if defined(DEBUG) || defined(_DEBUG)
     flags |= D3D11_CREATE_DEVICE_DEBUG;
+    flags |= D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
 #endif
     for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
         hr = D3D11CreateDeviceAndSwapChain(nullptr, driverTypes[driverTypeIndex], nullptr,
@@ -226,6 +230,7 @@ bool Engine::InitRenderDevice() {
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
     depthStencilViewDesc.Format = depthStencilDesc.Format;
     depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+    depthStencilViewDesc.Texture2D.MipSlice = 0;
 
     hr = m_device->CreateDepthStencilView(m_depthTexture, &depthStencilViewDesc, &m_depthStencilView);
     if (FAILED(hr)) {
@@ -382,11 +387,6 @@ bool Engine::InitScene() {
         return false;
     }
 
-    camPosition = XMVectorSet(0.0f, 3.0f, -8.0f, 0.0f);
-    camTarget = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-    camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-    camView = XMMatrixLookAtLH(camPosition, camTarget, camUp);
     float screen = (float)m_supportedResolution[config.resolution].Width / 
         (float)m_supportedResolution[config.resolution].Height;
     camProjection = XMMatrixPerspectiveFovLH(0.45f * XM_PI, screen, 1.0f, 1000.0f);
@@ -438,6 +438,7 @@ void Engine::FixedUpdate(float deltaTime) {
 }
 
 void Engine::Update(float deltaTime) {
+    camera.Update();
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
         m_quewe[iterator]->Update(deltaTime);
     }
@@ -574,24 +575,29 @@ GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {
     return nullptr;
 }
 
-LRESULT Engine::WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-        case WM_CREATE: {
-            LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
-        } return 0;
-        case WM_KEYDOWN: {
-            if (wParam == VK_ESCAPE)
-                DestroyWindow(hWnd);
-            else if (wParam == VK_SPACE) {
-                config.fullscreen = !config.fullscreen;
-                engine.setFullScreen(hWnd, config.fullscreen);
-            }
-        } return 0;
-        case WM_DESTROY: {
-            PostQuitMessage(0);
-            return 0;
+    case WM_CREATE: {
+        LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+    } return 0;
+    case WM_KEYDOWN: {
+        if (wParam == VK_ESCAPE) {
+            DestroyWindow(hWnd);
         }
+        else if (wParam == VK_SPACE) {
+            config.fullscreen = !config.fullscreen;
+            engine.setFullScreen(hWnd, config.fullscreen);
+        }
+        else if (wParam == 'W') { camera.horizontalBackForward += 1.0f; }
+        else if (wParam == 'A') { camera.verticalLeftRight -= 1.0f; }
+        else if (wParam == 'S') { camera.horizontalBackForward -= 1.0f; }
+        else if (wParam == 'D') { camera.verticalLeftRight += 1.0f; }
+    } return 0;
+    case WM_DESTROY: {
+        PostQuitMessage(0);
+        return 0;
+    }
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
