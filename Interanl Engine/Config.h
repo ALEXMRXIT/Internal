@@ -2,10 +2,10 @@
 class Config {
 public:
 	Config() {
-		resolution = 0;
+		resolution = 2;
 		multiply = 0;
 		qualityTexture = 0;
-		fullscreen = true;
+		fullscreen = false;
 		vSync = 2;
 	}
 

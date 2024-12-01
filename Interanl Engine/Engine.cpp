@@ -18,10 +18,10 @@ Engine::~Engine() {
 }
 
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
-	m_windowDesc = const_cast<WindowDescription*>(desc);
+    m_windowDesc = const_cast<WindowDescription*>(desc);
 
-	WNDCLASSEX wndClassEx;
-	ZeroMemory(&wndClassEx, sizeof(WNDCLASSEX));
+    WNDCLASSEX wndClassEx;
+    ZeroMemory(&wndClassEx, sizeof(WNDCLASSEX));
     wndClassEx.cbSize = sizeof(WNDCLASSEX);
     wndClassEx.style = CS_HREDRAW | CS_VREDRAW;
     wndClassEx.lpfnWndProc = WindowProcessor;
@@ -36,20 +36,21 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
     wndClassEx.hIconSm = LoadIcon(NULL, IDI_WINLOGO);
 
     RegisterClassEx(&wndClassEx);
+
+    m_windowDesc->windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
+
     m_windowDesc->hWnd = CreateWindowEx(NULL, m_windowDesc->title, m_windowDesc->title,
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, m_supportedResolution[config.resolution].Width,
+        m_windowDesc->windowStyle, CW_USEDEFAULT, CW_USEDEFAULT, m_supportedResolution[config.resolution].Width,
         m_supportedResolution[config.resolution].Height, NULL, NULL, m_windowDesc->hInstance, NULL);
 
     ShowWindow(m_windowDesc->hWnd, m_windowDesc->nCmdShow);
     UpdateWindow(m_windowDesc->hWnd);
-    SetWindowPos(m_windowDesc->hWnd, HWND_TOP, 0, 0, 
-        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
 
     RECT windowRect;
     GetWindowRect(m_windowDesc->hWnd, &windowRect);
     m_windowDesc->rect = windowRect;
 
-	return true;
+    return true;
 }
 
 HRESULT Engine::BuildMultiSampleQualityList(DXGI_FORMAT format) {
@@ -520,15 +521,15 @@ void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
         GetWindowRect(hwnd, &windowRect);
         engine.getWindowRect() = windowRect;
 
-        SetWindowLongPtr(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+        SetWindowLongPtr(hwnd, GWL_STYLE, m_windowDesc->windowStyle);
         SetWindowPos(hwnd, HWND_TOP, 0, 0,
-            GetSystemMetrics(SM_CXSCREEN),
-            GetSystemMetrics(SM_CYSCREEN),
+            m_supportedResolution[config.resolution].Width,
+            m_supportedResolution[config.resolution].Height,
             SWP_FRAMECHANGED | SWP_NOACTIVATE);
         ShowWindow(hwnd, SW_NORMAL);
     }
     else {
-        SetWindowLongPtr(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
+        SetWindowLongPtr(hwnd, GWL_STYLE, m_windowDesc->windowStyle & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
         RECT rect{};
         if (IDXGISwapChain* chain = engine.getChain()) {
             IDXGIOutput* output = nullptr;

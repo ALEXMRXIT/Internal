@@ -9,6 +9,7 @@ class GameObject;
 typedef struct _windowDescription {
 	const char* title;
 	HINSTANCE hInstance;
+	DWORD windowStyle;
 	HWND hWnd;
 	RECT rect;
 	bool fullScreen;
