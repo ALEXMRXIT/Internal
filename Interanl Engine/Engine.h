@@ -117,6 +117,7 @@ public:
 	void Render();
 	void Release();
 	int messageWindow();
+	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
 	RECT& getWindowRect();
 	IDXGISwapChain* getChain() const;

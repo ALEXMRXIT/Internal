@@ -2,10 +2,14 @@
 class Config {
 public:
 	Config() {
-		resolution = 7;
-		multiply = 2;
+		resolution = 0;
+		multiply = 0;
+		qualityTexture = 0;
+		fullscreen = true;
 	}
 
 	int resolution;
 	int multiply;
+	int qualityTexture;
+	bool fullscreen;
 } config;

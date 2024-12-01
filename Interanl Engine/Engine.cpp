@@ -228,6 +228,8 @@ bool Engine::InitRenderDevice() {
     IDXGIFactory1* dxgiFactory = nullptr;
     handleResult = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
 
+    dxgiFactory->MakeWindowAssociation(m_windowDesc->hWnd, DXGI_MWA_NO_ALT_ENTER);
+
     IDXGIAdapter1* adapter = nullptr;
     handleResult = dxgiFactory->EnumAdapters1(0, &adapter);
     dxgiFactory->Release();
@@ -381,11 +383,13 @@ bool Engine::InitScene() {
 
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
-    sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-    sampDesc.MaxAnisotropy = 16;
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    if (config.qualityTexture == 0) sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    else if (config.qualityTexture == 10) sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+    else sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.MaxAnisotropy = 1 + (config.qualityTexture * 2);
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
     sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
@@ -413,6 +417,8 @@ bool Engine::InitScene() {
         DXUT_ERR_MSGBOX("Failed to create blend state.", handleResult);
         return false;
     }
+
+    setFullScreen(m_windowDesc->hWnd, config.fullscreen);
 
     return true;
 }
@@ -499,6 +505,38 @@ int Engine::messageWindow() {
     return message.wParam;
 }
 
+void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
+    if (!fullscreen) {
+        RECT windowRect;
+        GetWindowRect(hwnd, &windowRect);
+        engine.getWindowRect() = windowRect;
+
+        SetWindowLongPtr(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+        SetWindowPos(hwnd, HWND_TOP, 0, 0,
+            GetSystemMetrics(SM_CXSCREEN),
+            GetSystemMetrics(SM_CYSCREEN),
+            SWP_FRAMECHANGED | SWP_NOACTIVATE);
+        ShowWindow(hwnd, SW_NORMAL);
+    }
+    else {
+        SetWindowLongPtr(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
+        RECT rect{};
+        if (IDXGISwapChain* chain = engine.getChain()) {
+            IDXGIOutput* output = nullptr;
+            chain->GetContainingOutput(&output);
+            DXGI_OUTPUT_DESC desc;
+            ZeroMemory(&desc, sizeof(DXGI_OUTPUT_DESC));
+            output->GetDesc(&desc);
+            rect = desc.DesktopCoordinates;
+        }
+        SetWindowPos(hwnd, HWND_NOTOPMOST,
+            rect.left, rect.top,
+            rect.right, rect.bottom,
+            SWP_FRAMECHANGED | SWP_NOACTIVATE);
+        ShowWindow(hwnd, SW_MAXIMIZE);
+    }
+}
+
 const WindowDescription* Engine::getWindowDesc() const {
     return m_windowDesc;
 }
@@ -528,41 +566,16 @@ GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {
 
 LRESULT Engine::WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+    case WM_CREATE: {
+        LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+    } break;
     case WM_KEYDOWN:
         if (wParam == VK_ESCAPE)
             DestroyWindow(hWnd);
         else if (wParam == VK_SPACE) {
-            static bool isFullScreen = true;
-            if (!isFullScreen) {
-                RECT windowRect;
-                GetWindowRect(hWnd, &windowRect);
-                engine.getWindowRect() = windowRect;
-
-                SetWindowLongPtr(hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
-                SetWindowPos(hWnd, HWND_TOP, 0, 0, 
-                    GetSystemMetrics(SM_CXSCREEN), 
-                    GetSystemMetrics(SM_CYSCREEN), 
-                    SWP_FRAMECHANGED | SWP_NOACTIVATE);
-                ShowWindow(hWnd, SW_NORMAL);
-            }
-            else {
-                SetWindowLongPtr(hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
-                RECT rect{};
-                if (IDXGISwapChain* chain = engine.getChain()) {
-                    IDXGIOutput* output = nullptr;
-                    chain->GetContainingOutput(&output);
-                    DXGI_OUTPUT_DESC desc;
-                    ZeroMemory(&desc, sizeof(DXGI_OUTPUT_DESC));
-                    output->GetDesc(&desc);
-                    rect = desc.DesktopCoordinates;
-                }
-                SetWindowPos(hWnd, HWND_NOTOPMOST,
-                    rect.left, rect.top,
-                    rect.right, rect.bottom,
-                    SWP_FRAMECHANGED | SWP_NOACTIVATE);
-                ShowWindow(hWnd, SW_MAXIMIZE);
-            }
-            isFullScreen = !isFullScreen;
+            config.fullscreen = !config.fullscreen;
+            engine.setFullScreen(hWnd, config.fullscreen);
         }
         return 0;
     case WM_DESTROY:
