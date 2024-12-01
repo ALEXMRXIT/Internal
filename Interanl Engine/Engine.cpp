@@ -136,11 +136,11 @@ HRESULT Engine::GetSupportedResolutions() {
 }
 
 bool Engine::InitRenderDevice() {
-    HRESULT handleResult{};
+    HRESULT hr{};
 
-    handleResult = BuildMultiSampleQualityList(DXGI_FORMAT_R8G8B8A8_UNORM);
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error build sample quality list.", handleResult);
+    hr = BuildMultiSampleQualityList(DXGI_FORMAT_R8G8B8A8_UNORM);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error build sample quality list.", hr);
         return false;
     }
 
@@ -174,30 +174,30 @@ bool Engine::InitRenderDevice() {
     flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
     for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
-        handleResult = D3D11CreateDeviceAndSwapChain(nullptr, driverTypes[driverTypeIndex], nullptr,
+        hr = D3D11CreateDeviceAndSwapChain(nullptr, driverTypes[driverTypeIndex], nullptr,
             flags, featureLevels, numFeatureLevels, D3D11_SDK_VERSION, &swapChainDesc, 
             &m_swapChain, &m_device, &createdFeatureLevel, &m_deviceContext);
-        if (SUCCEEDED(handleResult))
+        if (SUCCEEDED(hr))
             break;
     }
 
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error creating swap chain and device.", handleResult);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error creating swap chain and device.", hr);
         return false;
     }
 
     ID3D11Texture2D* backBuffer;
     ZeroMemory(&backBuffer, sizeof(ID3D11Texture2D));
-    handleResult = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error getting back buffer.", handleResult);
+    hr = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error getting back buffer.", hr);
         return false;
     }
 
-    handleResult = m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView);
+    hr = m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView);
     backBuffer->Release();
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error creating render target view.", handleResult);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error creating render target view.", hr);
         return false;
     }
 
@@ -215,9 +215,9 @@ bool Engine::InitRenderDevice() {
     depthStencilDesc.CPUAccessFlags = 0;
     depthStencilDesc.MiscFlags = 0;
 
-    handleResult = m_device->CreateTexture2D(&depthStencilDesc, NULL, &m_depthTexture);
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error creating depth stencil texture.", handleResult);
+    hr = m_device->CreateTexture2D(&depthStencilDesc, NULL, &m_depthTexture);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error creating depth stencil texture.", hr);
         return false;
     }
 
@@ -226,34 +226,34 @@ bool Engine::InitRenderDevice() {
     depthStencilViewDesc.Format = depthStencilDesc.Format;
     depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 
-    handleResult = m_device->CreateDepthStencilView(m_depthTexture, &depthStencilViewDesc, &m_depthStencilView);
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Error creating depth stencil view.", handleResult);
+    hr = m_device->CreateDepthStencilView(m_depthTexture, &depthStencilViewDesc, &m_depthStencilView);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error creating depth stencil view.", hr);
         return false;
     }
 
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
     IDXGIFactory1* dxgiFactory = nullptr;
-    handleResult = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
+    hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
 
     dxgiFactory->MakeWindowAssociation(m_windowDesc->hWnd, DXGI_MWA_NO_ALT_ENTER);
 
     IDXGIAdapter1* adapter = nullptr;
-    handleResult = dxgiFactory->EnumAdapters1(0, &adapter);
+    hr = dxgiFactory->EnumAdapters1(0, &adapter);
     dxgiFactory->Release();
 
     m_shader = new Shader();
     m_font = new Font();
 
-    handleResult = m_font->Init(m_device, adapter);
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Failed to init fonts.", handleResult);
+    hr = m_font->Init(m_device, adapter);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to init fonts.", hr);
         return false;
     }
 
     if (!InitScene()) {
-        DXUT_ERR_MSGBOX("Error initializing scene.", handleResult);
+        DXUT_ERR_MSGBOX("Error initializing scene.", hr);
         delete m_shader;
         delete m_font;
         return false;
