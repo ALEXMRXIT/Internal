@@ -145,12 +145,12 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 	);
 	m_renderTarget->EndDraw();
 
-	::engine.cbPerObj.WVP = XMMatrixIdentity();
-	::engine.cbPerObj.WVP = XMMatrixTranspose(::engine.cbPerObj.WVP);
-	deviceContext->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.cbPerObj, 0, 0);
-	deviceContext->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
+	engine.cbPerObj.WVP = XMMatrixIdentity();
+	engine.cbPerObj.WVP = XMMatrixTranspose(engine.cbPerObj.WVP);
+	deviceContext->UpdateSubresource(engine.m_preObjectBuffer, 0, NULL, &engine.cbPerObj, 0, 0);
+	deviceContext->VSSetConstantBuffers(0, 1, &engine.m_preObjectBuffer);
 	deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
-	deviceContext->PSSetSamplers(0, 1, &::engine.m_textureSamplerState);
+	deviceContext->PSSetSamplers(0, 1, &engine.m_textureSamplerState);
 	deviceContext->RSSetState(m_cWcullMode);
 	deviceContext->DrawIndexed(6, 0, 0);
 	deviceContext->RSSetState(nullptr);

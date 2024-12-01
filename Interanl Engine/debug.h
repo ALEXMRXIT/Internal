@@ -89,10 +89,10 @@ __forceinline void writeLog(const char* errorMessage) {
                 DWORD64 address = (DWORD64)stack[i];
                 if (!SymFromAddr(hProcess, address, NULL, symbol)) {
                     DWORD error = GetLastError();
-                    fprintf(logFile, "%u: \tUnable to retrieve symbol for address 0x%016llX (Error: 0x%08X)\n", frames - i - 1, address, error);
+                    fprintf(logFile, "%u: Unable to retrieve symbol for address 0x%016llX (Error: 0x%08X)\n", frames - i - 1, address, error);
                 }
                 else
-                    fprintf(logFile, "%u: \t%s - 0x%016llX\n", frames - i - 1, symbol->Name, symbol->Address);
+                    fprintf(logFile, "%u: %s - 0x%016llX\n", frames - i - 1, symbol->Name, symbol->Address);
             }
             free(symbol);
         }
@@ -110,7 +110,10 @@ __forceinline void handleErrorLog(const char* file, int line, HRESULT hr, const 
     va_end(args);
 
     char finalMessage[2048];
-    snprintf(finalMessage, sizeof(finalMessage), "File: %s\nLine: %d\nHRESULT: 0x%08X\nMessage: %s", file, line, hr, errorMessage);
+    const char* errorString = DXGetErrorString(hr);
+    const char* errorDescription = DXGetErrorDescription(hr);
+    snprintf(finalMessage, sizeof(finalMessage), "File: %s\nLine: %d\nHRESULT: 0x%08X\nError System String: %s\nError System Description: %s\nMessage: %s\n",
+        file, line, hr, errorString, errorDescription, errorMessage);
     writeLog(finalMessage);
 }
 
@@ -122,7 +125,10 @@ __forceinline void handleErrorLogAndShow(const char* file, int line, HRESULT hr,
     va_end(args);
 
     char finalMessage[2048];
-    snprintf(finalMessage, sizeof(finalMessage), "File: %s\nLine: %d\nHRESULT: 0x%08X\nMessage: %s", file, line, hr, errorMessage);
+    const char* errorString = DXGetErrorString(hr);
+    const char* errorDescription = DXGetErrorDescription(hr);
+    snprintf(finalMessage, sizeof(finalMessage), "File: %s\nLine: %d\nHRESULT: 0x%08X\nError System String: %s\nError System Description: %s\nMessage: %s\n",
+        file, line, hr, errorString, errorDescription, errorMessage);
 
     writeLog(finalMessage);
 

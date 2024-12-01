@@ -66,7 +66,7 @@ HRESULT Engine::BuildMultiSampleQualityList(DXGI_FORMAT format) {
         return hr;
     }
 
-    for (int iterator = 2; iterator < D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; ++iterator) {
+    for (int iterator = 1; iterator < D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; ++iterator) {
         uint32_t quality;
         if (SUCCEEDED(pd3dDevice->CheckMultisampleQualityLevels(format, iterator, &quality))) {
             if (quality) m_qualityLevels.emplace_back(MultisampleQualityLevel(iterator, quality));
@@ -148,29 +148,38 @@ bool Engine::InitRenderDevice() {
     ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
     swapChainDesc.BufferDesc = m_supportedResolution[config.resolution];
     swapChainDesc.SampleDesc.Count = m_qualityLevels[config.multiply].SampleCount;
-    swapChainDesc.SampleDesc.Quality = 0;
+    swapChainDesc.SampleDesc.Quality = m_qualityLevels[config.multiply].QualityLevel - 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 1;
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
     swapChainDesc.Windowed = TRUE;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
+    D3D_DRIVER_TYPE driverTypes[] = {
+        D3D_DRIVER_TYPE_HARDWARE,
+        D3D_DRIVER_TYPE_WARP,
+        D3D_DRIVER_TYPE_REFERENCE,
+    };
+    UINT numDriverTypes = ARRAYSIZE(driverTypes);
+
     D3D_FEATURE_LEVEL featureLevels[] = {
         D3D_FEATURE_LEVEL_11_0,
         D3D_FEATURE_LEVEL_10_1,
         D3D_FEATURE_LEVEL_10_0,
-        D3D_FEATURE_LEVEL_9_3,
-        D3D_FEATURE_LEVEL_9_2,
-        D3D_FEATURE_LEVEL_9_1
     };
     UINT numFeatureLevels = ARRAYSIZE(featureLevels);
     D3D_FEATURE_LEVEL createdFeatureLevel;
-
-    handleResult = D3D11CreateDeviceAndSwapChain(
-        nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
-        D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-        featureLevels, numFeatureLevels, D3D11_SDK_VERSION, 
-        &swapChainDesc, &m_swapChain, &m_device, &createdFeatureLevel, &m_deviceContext);
+    UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+#if defined(DEBUG) || defined(_DEBUG)
+    flags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+    for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
+        handleResult = D3D11CreateDeviceAndSwapChain(nullptr, driverTypes[driverTypeIndex], nullptr,
+            flags, featureLevels, numFeatureLevels, D3D11_SDK_VERSION, &swapChainDesc, 
+            &m_swapChain, &m_device, &createdFeatureLevel, &m_deviceContext);
+        if (SUCCEEDED(handleResult))
+            break;
+    }
 
     if (FAILED(handleResult)) {
         DXUT_ERR_MSGBOX("Error creating swap chain and device.", handleResult);
@@ -200,7 +209,7 @@ bool Engine::InitRenderDevice() {
     depthStencilDesc.ArraySize = 1;
     depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     depthStencilDesc.SampleDesc.Count = m_qualityLevels[config.multiply].SampleCount;
-    depthStencilDesc.SampleDesc.Quality = 0;
+    depthStencilDesc.SampleDesc.Quality = m_qualityLevels[config.multiply].QualityLevel - 1;
     depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
     depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
     depthStencilDesc.CPUAccessFlags = 0;
@@ -455,7 +464,7 @@ void Engine::Render() {
 void Engine::Release() {
     if (m_swapChain) m_swapChain->Release();
     if (m_device) m_device->Release();
-    if (m_deviceContext) m_deviceContext->Release();
+    if (m_deviceContext) m_deviceContext->ClearState();
     if (m_renderTargetView) m_renderTargetView->Release();
     if (m_shader) m_shader->Release();
     if (m_layout) m_layout->Release();
