@@ -82,6 +82,23 @@ HRESULT Engine::BuildMultiSampleQualityList(DXGI_FORMAT format) {
     return hr;
 }
 
+HRESULT Engine::InitDirectInput(HINSTANCE hInstance) {
+    HRESULT hr{};
+    hr = DirectInput8Create(hInstance, DIRECTINPUT_VERSION,
+        IID_IDirectInput8, (void**)&m_directInput, NULL);
+
+    hr = m_directInput->CreateDevice(GUID_SysKeyboard, &m_keyboard, NULL);
+    hr = m_directInput->CreateDevice(GUID_SysMouse, &m_mouse, NULL);
+
+    hr = m_keyboard->SetDataFormat(&c_dfDIKeyboard);
+    hr = m_keyboard->SetCooperativeLevel(m_windowDesc->hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+
+    hr = m_mouse->SetDataFormat(&c_dfDIMouse);
+    hr = m_mouse->SetCooperativeLevel(m_windowDesc->hWnd, DISCL_NONEXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
+
+    return hr;
+}
+
 HRESULT Engine::GetSupportedResolutions() {
     IDXGIFactory1* dxgiFactory = nullptr;
     HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
@@ -144,6 +161,12 @@ bool Engine::InitRenderDevice() {
     hr = BuildMultiSampleQualityList(DXGI_FORMAT_R8G8B8A8_UNORM);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Error build sample quality list.", hr);
+        return false;
+    }
+
+    hr = InitDirectInput(m_windowDesc->hInstance);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error create Direct Input system.", hr);
         return false;
     }
 
@@ -433,6 +456,39 @@ bool Engine::InitScene() {
     return true;
 }
 
+void Engine::UpdateInput(float deltaTime) {
+    DIMOUSESTATE mouseCurrState{};
+    BYTE keyboardState[256]{};
+
+    m_keyboard->Acquire();
+    m_mouse->Acquire();
+
+    m_keyboard->GetDeviceState(sizeof(BYTE) * 256, (LPVOID)&keyboardState);
+    m_mouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrState);
+
+    if (keyboardState[DIK_ESCAPE] & 0x80)
+        PostMessage(m_windowDesc->hWnd, WM_DESTROY, 0, 0);
+
+    const float speed = 15.0f * deltaTime;
+    const float intensivity = 0.25f * deltaTime;
+
+    if (keyboardState[DIK_A] & 0x80)
+        camera.verticalLeftRight -= speed;
+    if (keyboardState[DIK_D] & 0x80)
+        camera.verticalLeftRight += speed;
+    if (keyboardState[DIK_W] & 0x80)
+        camera.horizontalBackForward += speed;
+    if (keyboardState[DIK_S] & 0x80)
+        camera.horizontalBackForward -= speed;
+    if (mouseCurrState.rgbButtons[1] & 0x80) {
+        if ((mouseCurrState.lX != m_mouseState.lX) || (mouseCurrState.lY != m_mouseState.lY)) {
+            camera.yaw += mouseCurrState.lX * intensivity;
+            camera.pitch += mouseCurrState.lY * intensivity;
+            m_mouseState = mouseCurrState;
+        }
+    }
+}
+
 void Engine::FixedUpdate(float deltaTime) {
     
 }
@@ -508,6 +564,7 @@ int Engine::messageWindow() {
                 m_timeInfo.accumulator -= m_timeInfo.targetFrameTime;
             }
 
+            UpdateInput(m_timeInfo.deltaTime);
             Update(m_timeInfo.deltaTime);
             Render();
         }
@@ -577,27 +634,23 @@ GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {
 
 LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-    case WM_CREATE: {
-        LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
-    } return 0;
-    case WM_KEYDOWN: {
-        if (wParam == VK_ESCAPE) {
-            DestroyWindow(hWnd);
+        case WM_CREATE: {
+            LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
+            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+        } return 0;
+        case WM_KEYDOWN: {
+            if (wParam == VK_ESCAPE) {
+                DestroyWindow(hWnd);
+            }
+            else if (wParam == VK_SPACE) {
+                config.fullscreen = !config.fullscreen;
+                engine.setFullScreen(hWnd, config.fullscreen);
+            }
+        } return 0;
+        case WM_DESTROY: {
+            PostQuitMessage(0);
+            return 0;
         }
-        else if (wParam == VK_SPACE) {
-            config.fullscreen = !config.fullscreen;
-            engine.setFullScreen(hWnd, config.fullscreen);
-        }
-        else if (wParam == 'W') { camera.horizontalBackForward += 1.0f; }
-        else if (wParam == 'A') { camera.verticalLeftRight -= 1.0f; }
-        else if (wParam == 'S') { camera.horizontalBackForward -= 1.0f; }
-        else if (wParam == 'D') { camera.verticalLeftRight += 1.0f; }
-    } return 0;
-    case WM_DESTROY: {
-        PostQuitMessage(0);
-        return 0;
-    }
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }

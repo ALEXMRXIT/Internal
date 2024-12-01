@@ -86,13 +86,19 @@ private:
 	ID3D11BlendState* m_transparency;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
+	IDirectInputDevice8* m_keyboard;
+	IDirectInputDevice8* m_mouse;
+	DIMOUSESTATE m_mouseState;
+	LPDIRECTINPUT8 m_directInput;
 
 	PerfomanceTimeInfo m_timeInfo;
 
-	static LRESULT WindowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	void UpdateFrequenceTime(PerfomanceTimeInfo& timeInfo) const;
 	HRESULT BuildMultiSampleQualityList(DXGI_FORMAT format);
+	HRESULT InitDirectInput(HINSTANCE hInstance);
+	void UpdateInput(float deltaTime);
 public:
 	Engine();
 	~Engine();

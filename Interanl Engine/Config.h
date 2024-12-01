@@ -6,7 +6,7 @@ public:
 		multiply = 0;
 		qualityTexture = 0;
 		fullscreen = false;
-		vSync = 2;
+		vSync = 1;
 	}
 
 	int resolution;

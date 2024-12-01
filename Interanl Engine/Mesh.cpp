@@ -70,7 +70,7 @@ Mesh::Mesh() {
 }
 
 void Mesh::Update(float deltaTime) {
-    rot += deltaTime * 1.0f;
+    //rot += deltaTime * 1.0f;
     if (rot > 6.26f)
         rot = 0.0f;
 

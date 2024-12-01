@@ -11,9 +11,6 @@ private:
 	XMVECTOR forward;
 	XMVECTOR right;
 
-	float yaw;
-	float pitch;
-
 public:
 	Camera();
 	Camera(const Camera&) = delete;
@@ -21,6 +18,9 @@ public:
 
 	float verticalLeftRight;
 	float horizontalBackForward;
+
+	float yaw;
+	float pitch;
 
 	void Update();
 
