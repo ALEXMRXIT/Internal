@@ -14,16 +14,10 @@ public:
 
 	struct TextureMapInfo {
 		ID3D11ShaderResourceView* m_shaderView;
+		ID3D11SamplerState* m_textureSamplerState;
 		const char* name;
-		void Load(ID3D11Device* device) { 
-			HRESULT hr = D3DX11CreateShaderResourceViewFromFile(device, name, NULL, NULL, &m_shaderView, NULL);
-			if (FAILED(hr)) {
-				DXUT_ERR_MSGBOX("Failed to load texture.", hr);
-			}
-		}
-		void Release() {
-			if (m_shaderView) m_shaderView->Release();
-		}
+		void Load(ID3D11Device* device);
+		void Release();
 	};
 };
 

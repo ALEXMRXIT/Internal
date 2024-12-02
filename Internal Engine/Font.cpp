@@ -110,7 +110,7 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdap
         return hr;
     }
 
-    m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
+    m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST); // ???
 
     D3D11_RASTERIZER_DESC cmdesc;
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -134,6 +134,18 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdap
         return hr;
     if (FAILED(m_fontShader->LoadPixelShader(device, context, "shaders\\label.fx")))
         return hr;
+
+    D3D11_SAMPLER_DESC sampDesc;
+    ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    hr = device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
+    if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
 
     return hr;
 }
@@ -161,7 +173,7 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 	deviceContext->UpdateSubresource(engine.m_preObjectBuffer, 0, NULL, &engine.cbPerObj, 0, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &engine.m_preObjectBuffer);
 	deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
-	deviceContext->PSSetSamplers(0, 1, &engine.m_textureSamplerState);
+	deviceContext->PSSetSamplers(0, 1, &m_textureSamplerState);
 	deviceContext->RSSetState(m_cWcullMode);
 	deviceContext->DrawIndexed(6, 0, 0);
 	deviceContext->RSSetState(nullptr);

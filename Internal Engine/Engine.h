@@ -1,6 +1,7 @@
 #pragma once
 #include "framework.h"
 #include "PrimitiveType.h"
+#include "Config.h"
 
 class Shader;
 class Font;
@@ -77,7 +78,6 @@ private:
 	ID3D11Device* m_device;
 	ID3D11DeviceContext* m_deviceContext;
 	ID3D11RenderTargetView* m_renderTargetView;
-	Font* m_font;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
 	std::vector<RenderOperation*> m_quewe;
@@ -87,6 +87,7 @@ private:
 	IDirectInputDevice8* m_keyboard;
 	IDirectInputDevice8* m_mouse;
 	LPDIRECTINPUT8 m_directInput;
+	Font* m_font;
 
 	PerfomanceTimeInfo m_timeInfo;
 
@@ -102,7 +103,6 @@ public:
 
 	cbPerObject cbPerObj;
 	ID3D11Buffer* m_preObjectBuffer;
-	ID3D11SamplerState* m_textureSamplerState;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
@@ -124,3 +124,5 @@ public:
 
 	static GameObject* Instantiate(primitive_type_e type, XMVECTOR position);
 } engine;
+
+extern Config config;

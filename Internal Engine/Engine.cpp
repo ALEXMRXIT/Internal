@@ -5,11 +5,12 @@
 #include "Font.h"
 #include "Component.h"
 #include "GameObject.h"
-#include "Config.h"
 #include "Camera.h"
+#include "Config.h"
 
 Engine engine;
 Camera camera;
+Config config;
 
 Engine::Engine() {
 	m_windowDesc = nullptr;
@@ -387,19 +388,6 @@ bool Engine::InitScene() {
         return false;
     }
 
-    D3D11_SAMPLER_DESC sampDesc;
-    ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
-    if (config.qualityTexture == 0) sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-    else if (config.qualityTexture == 10) sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-    else sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    sampDesc.MaxAnisotropy = 1 + (config.qualityTexture * 2);
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    sampDesc.MinLOD = 0;
-    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
     D3D11_BLEND_DESC blendDesc;
     ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
 
@@ -417,7 +405,6 @@ bool Engine::InitScene() {
     blendDesc.AlphaToCoverageEnable = false;
     blendDesc.RenderTarget[0] = rtbd;
 
-    hr = m_device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
     hr = m_device->CreateBlendState(&blendDesc, &m_transparency);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to create blend state.", hr);

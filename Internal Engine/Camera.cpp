@@ -39,5 +39,5 @@ void Camera::Update() {
 
 void Camera::SetProjection() {
 	float screen = (float)engine.getSupportedResolutin().Width / (float)engine.getSupportedResolutin().Height;
-	projection = XMMatrixPerspectiveFovLH(0.35f * XM_PI, screen, 1.0f, 100.0f);
+	projection = XMMatrixPerspectiveFovLH(0.35f * XM_PI, screen, 0.3f, 100.0f);
 }

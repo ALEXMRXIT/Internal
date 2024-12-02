@@ -86,7 +86,6 @@ void Mesh::Render(ID3D11DeviceContext* context) {
     context->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.cbPerObj, 0, 0);
     context->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
     m_material->Bind(context);
-    context->PSSetSamplers(0, 1, &::engine.m_textureSamplerState);
     context->DrawIndexed(36, 0, 0);
 }
 

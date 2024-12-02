@@ -22,4 +22,4 @@ public:
 	float cameraSpeed;
 	float mouseIntensive;
 	float additionalLShiftSpeed;
-} config;
+};

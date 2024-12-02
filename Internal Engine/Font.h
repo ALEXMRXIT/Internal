@@ -15,6 +15,7 @@ private:
 	ID3D11ShaderResourceView* m_sharedResource;
 	ID3D11RasterizerState* m_cWcullMode;
 	Shader* m_fontShader;
+	ID3D11SamplerState* m_textureSamplerState;
 
 public:
 	Font();
