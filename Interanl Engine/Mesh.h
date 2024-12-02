@@ -2,6 +2,8 @@
 #include "framework.h"
 #include "Engine.h"
 
+class MeshMaterial;
+
 typedef struct _Vertex {
 	XMFLOAT3 position;
 	XMFLOAT2 texCoord;
@@ -43,14 +45,10 @@ class Mesh : public InterfaceRenderObject {
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
-	ID3D11ShaderResourceView* m_sharedResourceView;
 	ID3D11RasterizerState* m_cWcullMode;
+	MeshMaterial* m_material;
 
-	XMMATRIX Rotation;
-	XMMATRIX Scale;
-	XMMATRIX Translation;
 	XMMATRIX Position;
-	float rot;
 
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
 
@@ -62,7 +60,6 @@ public:
 	void Update(float deltaTime) override;
 	void Render(ID3D11DeviceContext* context) override;
 
-	HRESULT LoadMaterial(ID3D11Device* device, const char* name);
 	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
 
 	bool CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size);

@@ -92,9 +92,11 @@ HRESULT Engine::InitDirectInput(HINSTANCE hInstance) {
 
     hr = m_keyboard->SetDataFormat(&c_dfDIKeyboard);
     hr = m_keyboard->SetCooperativeLevel(m_windowDesc->hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+    hr = m_keyboard->Acquire();
 
     hr = m_mouse->SetDataFormat(&c_dfDIMouse);
-    hr = m_mouse->SetCooperativeLevel(m_windowDesc->hWnd, DISCL_NONEXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
+    hr = m_mouse->SetCooperativeLevel(m_windowDesc->hWnd, config.showCursor ? DISCL_NONEXCLUSIVE : DISCL_EXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
+    hr = m_mouse->Acquire();
 
     return hr;
 }
@@ -365,7 +367,6 @@ bool Engine::InitScene() {
     Mesh* cube1 = new Mesh();
     if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
     if (!cube1->CreateIndex(m_device, indices, 36)) return false;
-    if (FAILED(cube1->LoadMaterial(m_device, "box.jpg"))) return false;
     if (FAILED(cube1->Init(m_device, m_deviceContext))) return false;
     m_quewe.emplace_back(rendOp->SetRenderOperation(cube1));
 
@@ -420,9 +421,9 @@ bool Engine::InitScene() {
     else if (config.qualityTexture == 10) sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
     else sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
     sampDesc.MaxAnisotropy = 1 + (config.qualityTexture * 2);
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
     sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
@@ -460,9 +461,6 @@ void Engine::UpdateInput(float deltaTime) {
     DIMOUSESTATE mouseCurrState{};
     BYTE keyboardState[256]{};
 
-    m_keyboard->Acquire();
-    m_mouse->Acquire();
-
     m_keyboard->GetDeviceState(sizeof(BYTE) * 256, (LPVOID)&keyboardState);
     m_mouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrState);
 
@@ -481,11 +479,8 @@ void Engine::UpdateInput(float deltaTime) {
     if (keyboardState[DIK_S] & 0x80)
         camera.horizontalBackForward -= speed;
     if (mouseCurrState.rgbButtons[1] & 0x80) {
-        if ((mouseCurrState.lX != m_mouseState.lX) || (mouseCurrState.lY != m_mouseState.lY)) {
-            camera.yaw += mouseCurrState.lX * intensivity;
-            camera.pitch += mouseCurrState.lY * intensivity;
-            m_mouseState = mouseCurrState;
-        }
+        camera.yaw += mouseCurrState.lX * intensivity;
+        camera.pitch += mouseCurrState.lY * intensivity;
     }
 }
 

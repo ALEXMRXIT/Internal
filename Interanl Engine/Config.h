@@ -2,11 +2,12 @@
 class Config {
 public:
 	Config() {
-		resolution = 2;
-		multiply = 0;
-		qualityTexture = 0;
-		fullscreen = false;
+		resolution = 19;
+		multiply = 3;
+		qualityTexture = 10;
+		fullscreen = true;
 		vSync = 1;
+		showCursor = true;
 	}
 
 	int resolution;
@@ -14,4 +15,5 @@ public:
 	int qualityTexture;
 	bool fullscreen;
 	int vSync;
+	bool showCursor;
 } config;

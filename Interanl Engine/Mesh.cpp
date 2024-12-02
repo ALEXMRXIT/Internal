@@ -1,6 +1,7 @@
 #include "Mesh.h"
 #include "debug.h"
 #include "Camera.h"
+#include "Material.h"
 
 VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
@@ -63,22 +64,13 @@ void IndexBuffer::Release() {
 Mesh::Mesh() {
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
-    rot = 0.01f;
     Position = XMMatrixIdentity();
-    m_sharedResourceView = nullptr;
     m_cWcullMode = nullptr;
+    m_material = nullptr;
 }
 
 void Mesh::Update(float deltaTime) {
-    //rot += deltaTime * 1.0f;
-    if (rot > 6.26f)
-        rot = 0.0f;
-
-    Position = XMMatrixIdentity();
-    XMVECTOR rotaxis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    Rotation = XMMatrixRotationAxis(rotaxis, rot);
-    Translation = XMMatrixTranslation(0.0f, 0.0f, 4.0f);
-    Position = Translation * Rotation;
+    
 }
 
 void Mesh::Render(ID3D11DeviceContext* context) {
@@ -86,13 +78,9 @@ void Mesh::Render(ID3D11DeviceContext* context) {
     ::engine.cbPerObj.WVP = XMMatrixTranspose(Position * camera.getView() * ::engine.camProjection);
     context->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.cbPerObj, 0, 0);
     context->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
-    context->PSSetShaderResources(0, 1, &m_sharedResourceView);
+    m_material->Bind(context);
     context->PSSetSamplers(0, 1, &::engine.m_textureSamplerState);
     context->DrawIndexed(36, 0, 0);
-}
-
-HRESULT Mesh::LoadMaterial(ID3D11Device* device, const char* name) {
-    return D3DX11CreateShaderResourceViewFromFile(device, name, NULL, NULL, &m_sharedResourceView, NULL);
 }
 
 HRESULT Mesh::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
@@ -106,6 +94,12 @@ HRESULT Mesh::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     cmdesc.DepthClipEnable = true;
     hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
     context->RSSetState(m_cWcullMode);
+
+    m_material = new MeshMaterial();
+    m_material->diffuseTex = new Material::TextureMapInfo();
+    m_material->diffuseTex->name = "box.jpg";
+    m_material->Load(device);
+
     return hr;
 }
 
@@ -138,6 +132,9 @@ void Mesh::Release() {
         m_indexBuffer->Release();
         delete m_indexBuffer;
     }
-    if (m_sharedResourceView) m_sharedResourceView->Release();
     if (m_cWcullMode) m_cWcullMode->Release();
+    if (m_material) {
+        m_material->Release();
+        delete m_material;
+    }
 }

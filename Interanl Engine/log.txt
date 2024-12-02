@@ -1,0 +1,64 @@
+File: D:\Internal Engine\Interanl Engine\Shader.cpp
+Line: 25
+HRESULT: 0x887C0002
+Error System String: D3D11_ERROR_FILE_NOT_FOUND
+Error System Description: File not found
+Message: Error compiling shader
+
+Registers:
+    RAX: 0x0000000000000001, RBX: 0x0000000000000000, RCX: 0x00000025F4B5C8A0, RDX: 0x00007FF7580EEF10
+    RSI: 0x000001C9B8824674, RDI: 0x00000025F4B5D0A8, RBP: 0x00000025F4B5C870, RSP: 0x00000025F4B5C840
+    RIP: 0x00007FF757FD4195
+
+Flags:
+    RFLAGS: 0x0000000000000246
+
+Thread and Process Information:
+    Current Thread ID: 24048
+    Current Process ID: 4344
+
+12: writeLog - 0x00007FF757FD4100
+11: handleErrorLogAndShow - 0x00007FF757FD32D0
+10: Shader::LoadShader - 0x00007FF757FD8ED0
+9: Shader::LoadVertexShader - 0x00007FF757FD90A0
+8: Engine::InitScene - 0x00007FF757FCD370
+7: Engine::InitRenderDevice - 0x00007FF757FCC820
+6: WinMain - 0x00007FF757FD65F0
+5: invoke_main - 0x00007FF757FDB0F0
+4: __scrt_common_main_seh - 0x00007FF757FDAEE0
+3: __scrt_common_main - 0x00007FF757FDAEC0
+2: WinMainCRTStartup - 0x00007FF757FDB1B0
+1: BaseThreadInitThunk - 0x00007FF91D1E2580
+0: RtlUserThreadStart - 0x00007FF91E62AF10
+File: D:\Internal Engine\Interanl Engine\Shader.cpp
+Line: 25
+HRESULT: 0x887C0002
+Error System String: D3D11_ERROR_FILE_NOT_FOUND
+Error System Description: File not found
+Message: Error compiling shader
+
+Registers:
+    RAX: 0x0000000000000001, RBX: 0x0000000000000000, RCX: 0x00000005EA16C930, RDX: 0x00007FF6D505EF10
+    RSI: 0x0000011BF2B7A960, RDI: 0x00000005EA16D138, RBP: 0x00000005EA16C900, RSP: 0x00000005EA16C8D0
+    RIP: 0x00007FF6D4F44195
+
+Flags:
+    RFLAGS: 0x0000000000000246
+
+Thread and Process Information:
+    Current Thread ID: 11304
+    Current Process ID: 11592
+
+12: writeLog - 0x00007FF6D4F44100
+11: handleErrorLogAndShow - 0x00007FF6D4F432D0
+10: Shader::LoadShader - 0x00007FF6D4F48ED0
+9: Shader::LoadVertexShader - 0x00007FF6D4F490A0
+8: Engine::InitScene - 0x00007FF6D4F3D370
+7: Engine::InitRenderDevice - 0x00007FF6D4F3C820
+6: WinMain - 0x00007FF6D4F465F0
+5: invoke_main - 0x00007FF6D4F4B0F0
+4: __scrt_common_main_seh - 0x00007FF6D4F4AEE0
+3: __scrt_common_main - 0x00007FF6D4F4AEC0
+2: WinMainCRTStartup - 0x00007FF6D4F4B1B0
+1: BaseThreadInitThunk - 0x00007FF91D1E2580
+0: RtlUserThreadStart - 0x00007FF91E62AF10

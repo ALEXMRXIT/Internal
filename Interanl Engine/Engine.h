@@ -88,7 +88,6 @@ private:
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 	IDirectInputDevice8* m_keyboard;
 	IDirectInputDevice8* m_mouse;
-	DIMOUSESTATE m_mouseState;
 	LPDIRECTINPUT8 m_directInput;
 
 	PerfomanceTimeInfo m_timeInfo;
