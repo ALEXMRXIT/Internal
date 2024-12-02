@@ -2,7 +2,7 @@
 class Config {
 public:
 	Config() {
-		resolution = 19;
+		resolution = 7;
 		multiply = 3;
 		qualityTexture = 10;
 		fullscreen = true;
@@ -10,7 +10,7 @@ public:
 		showCursor = true;
 		cameraSpeed = 15.0f;
 		mouseIntensive = 25.0f;
-		additionalLShiftSpeed = 2.0f;
+		additionalLShiftSpeed = 3.0f;
 	}
 
 	int resolution;
