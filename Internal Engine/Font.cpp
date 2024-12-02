@@ -164,12 +164,11 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 	);
 	m_renderTarget->EndDraw();
 
-    XMMATRIX& wvp = engine.m_bufferWVP.WVP;
-	wvp = XMMatrixIdentity();
-	wvp = XMMatrixTranspose(wvp);
+    m_bufferWVP->WVP = XMMatrixIdentity();
+    m_bufferWVP->WVP = XMMatrixTranspose(m_bufferWVP->WVP);
     m_fontShader->setVertexShader(deviceContext);
     m_fontShader->setPiexlShader(deviceContext);
-	deviceContext->UpdateSubresource(engine.m_preObjectBuffer, 0, NULL, &engine.m_bufferWVP, 0, 0);
+	deviceContext->UpdateSubresource(engine.m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &engine.m_preObjectBuffer);
 	deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
 	deviceContext->PSSetSamplers(0, 1, &m_textureSamplerState);

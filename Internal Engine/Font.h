@@ -3,6 +3,10 @@
 
 class Shader;
 
+typedef struct _cbufferFont {
+	XMMATRIX WVP;
+} cBuffer, *LPcBuffer;
+
 class Font {
 private:
 	ID3D10Device1* m_device;
@@ -16,6 +20,8 @@ private:
 	ID3D11RasterizerState* m_cWcullMode;
 	Shader* m_fontShader;
 	ID3D11SamplerState* m_textureSamplerState;
+
+	cBuffer* m_bufferWVP;
 
 public:
 	Font();

@@ -1,32 +1,25 @@
 #pragma once
 #include "framework.h"
+#include "Transform.h"
 
 class AbstractBaseComponent;
 
 class Component {
 private:
 	std::list<AbstractBaseComponent*> m_components;
+	Transform* m_transform;
 
 public:
+	Component();
+
 	Component(const Component&) = delete;
 	Component& operator=(const Component&) = delete;
 
 	template<typename TComponent>
-	TComponent* AddComponent() {
-		if (GetComponentByType<TComponent>())
-			return nullptr;
-
-		TComponent* component = new TComponent();
-		m_components.emplace_back(component);
-		return component;
-	}
+	TComponent* AddComponent();
 
 	template<typename TComponent>
-	TComponent* GetComponentByType() const {
-		for (Component& component : m_components) {
-			if (typeid(*component) == typeid(TComponent))
-				return static_cast<TComponent*>(component);
-		}
-		return nullptr;
-	}
+	TComponent* GetComponentByType() const;
+
+	Transform& transform() const { return *m_transform; }
 };

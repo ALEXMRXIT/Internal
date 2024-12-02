@@ -60,6 +60,7 @@ private:
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 
 	PerfomanceTimeInfo m_timeInfo;
+	WorldViewProjection m_bufferWVP;
 	Font* m_font;
 
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -71,7 +72,6 @@ private:
 public:
 	Engine() {}
 
-	WorldViewProjection m_bufferWVP;
 	ID3D11Buffer* m_preObjectBuffer;
 
 	Engine(const Engine&) = delete;

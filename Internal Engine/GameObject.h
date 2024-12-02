@@ -1,6 +1,6 @@
 #pragma once
-
-class Component;
+#include "framework.h"
+#include "Component.h"
 
 class GameObject {
 private:
@@ -11,4 +11,9 @@ public:
 
 	GameObject(const GameObject&) = delete;
 	GameObject& operator=(const GameObject&) = delete;
+
+	Transform& transform() const { return m_components->transform(); }
+	void setTransform(const Transform& trans) const;
+
+	
 };
