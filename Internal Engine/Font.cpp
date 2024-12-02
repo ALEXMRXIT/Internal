@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include "debug.h"
 #include "Mesh.h"
+#include "Shader.h"
 
 Font::Font() {
 	m_device = nullptr;
@@ -13,9 +14,10 @@ Font::Font() {
 	m_textureDesc = nullptr;
 	m_sharedResource = nullptr;
 	m_cWcullMode = nullptr;
+    m_fontShader = nullptr;
 }
 
-HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
+HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdapter1* adapter) {
     HRESULT hr = D3D10CreateDevice1(adapter, D3D10_DRIVER_TYPE_HARDWARE,
         NULL, D3D10_CREATE_DEVICE_DEBUG | D3D10_CREATE_DEVICE_BGRA_SUPPORT,
         D3D10_FEATURE_LEVEL_9_3, D3D10_1_SDK_VERSION, &m_device);
@@ -26,8 +28,8 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
 
     D3D11_TEXTURE2D_DESC sharedTexDesc;
     ZeroMemory(&sharedTexDesc, sizeof(D3D11_TEXTURE2D_DESC));
-    sharedTexDesc.Width = ::engine.getSupportedResolutin().Width;
-    sharedTexDesc.Height = ::engine.getSupportedResolutin().Height;
+    sharedTexDesc.Width = engine.getSupportedResolutin().Width;
+    sharedTexDesc.Height = engine.getSupportedResolutin().Height;
     sharedTexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     sharedTexDesc.MipLevels = 1;
     sharedTexDesc.ArraySize = 1;
@@ -127,6 +129,12 @@ HRESULT Font::Init(ID3D11Device* device, IDXGIAdapter1* adapter) {
         return hr;
     }
 
+    m_fontShader = new Shader();
+    if (FAILED(m_fontShader->LoadVertexShader(device, context, "shaders\\label.fx")))
+        return hr;
+    if (FAILED(m_fontShader->LoadPixelShader(device, context, "shaders\\label.fx")))
+        return hr;
+
     return hr;
 }
 
@@ -136,8 +144,8 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 	D2D1_COLOR_F FontColor = D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f);
 	m_brush->SetColor(FontColor);
 	D2D1_RECT_F layoutRect = D2D1::RectF(0, 0,
-		::engine.getSupportedResolutin().Width,
-		::engine.getSupportedResolutin().Height);
+		engine.getSupportedResolutin().Width,
+		engine.getSupportedResolutin().Height);
 
 	m_renderTarget->DrawText(
 		text.c_str(), wcslen(text.c_str()),
@@ -145,8 +153,11 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 	);
 	m_renderTarget->EndDraw();
 
-	engine.cbPerObj.WVP = XMMatrixIdentity();
-	engine.cbPerObj.WVP = XMMatrixTranspose(engine.cbPerObj.WVP);
+    XMMATRIX& wvp = engine.cbPerObj.WVP;
+	wvp = XMMatrixIdentity();
+	wvp = XMMatrixTranspose(wvp);
+    m_fontShader->setVertexShader(deviceContext);
+    m_fontShader->setPiexlShader(deviceContext);
 	deviceContext->UpdateSubresource(engine.m_preObjectBuffer, 0, NULL, &engine.cbPerObj, 0, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &engine.m_preObjectBuffer);
 	deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
@@ -166,4 +177,8 @@ void Font::Release() {
 	if (m_textureDesc) m_textureDesc->Release();
 	if (m_sharedResource) m_sharedResource->Release();
 	if (m_cWcullMode) m_cWcullMode->Release();
+    if (m_fontShader) {
+        m_fontShader->Release();
+        delete m_fontShader;
+    }
 }

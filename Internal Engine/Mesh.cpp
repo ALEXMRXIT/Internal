@@ -108,9 +108,9 @@ HRESULT Mesh::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     m_material->Load(device);
 
     m_meshShader = new Shader();
-    if (FAILED(m_meshShader->LoadVertexShader(device, context, "mesh.fx")))
+    if (FAILED(m_meshShader->LoadVertexShader(device, context, "shaders\\mesh.fx")))
         return hr;
-    if (FAILED(m_meshShader->LoadPixelShader(device, context, "mesh.fx")))
+    if (FAILED(m_meshShader->LoadPixelShader(device, context, "shaders\\mesh.fx")))
         return hr;
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {

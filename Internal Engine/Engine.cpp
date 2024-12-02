@@ -276,7 +276,7 @@ bool Engine::InitRenderDevice() {
 
     m_font = new Font();
 
-    hr = m_font->Init(m_device, adapter);
+    hr = m_font->Init(m_device, m_deviceContext, adapter);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to init fonts.", hr);
         return false;
