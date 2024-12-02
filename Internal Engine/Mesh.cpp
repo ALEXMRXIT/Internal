@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "Camera.h"
 #include "Material.h"
+#include "Shader.h"
 
 VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
@@ -67,6 +68,8 @@ Mesh::Mesh() {
     Position = XMMatrixIdentity();
     m_cWcullMode = nullptr;
     m_material = nullptr;
+    m_meshShader = nullptr;
+    m_layout = nullptr;
 }
 
 void Mesh::Update(float deltaTime) {
@@ -75,6 +78,10 @@ void Mesh::Update(float deltaTime) {
 
 void Mesh::Render(ID3D11DeviceContext* context) {
     IASetVertexAndIndexBuffer(context);
+    m_meshShader->setVertexShader(context);
+    m_meshShader->setPiexlShader(context);
+    context->IASetInputLayout(m_layout);
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     engine.cbPerObj.WVP = XMMatrixTranspose(Position * camera.getView() * camera.getProjection());
     context->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.cbPerObj, 0, 0);
     context->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
@@ -99,6 +106,26 @@ HRESULT Mesh::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     m_material->diffuseTex = new Material::TextureMapInfo();
     m_material->diffuseTex->name = "box.jpg";
     m_material->Load(device);
+
+    m_meshShader = new Shader();
+    if (FAILED(m_meshShader->LoadVertexShader(device, context, "mesh.fx")))
+        return hr;
+    if (FAILED(m_meshShader->LoadPixelShader(device, context, "mesh.fx")))
+        return hr;
+
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+    };
+    UINT numElements = ARRAYSIZE(layout);
+
+    LPVOID buffPtr = m_meshShader->getVertexBlob()->GetBufferPointer();
+    SIZE_T size = m_meshShader->getVertexBlob()->GetBufferSize();
+    hr = device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
+        return hr;
+    }
 
     return hr;
 }
@@ -137,4 +164,9 @@ void Mesh::Release() {
         m_material->Release();
         delete m_material;
     }
+    if (m_meshShader) {
+        m_meshShader->Release();
+        delete m_meshShader;
+    }
+    if (m_layout) m_layout->Release();
 }

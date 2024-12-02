@@ -274,7 +274,6 @@ bool Engine::InitRenderDevice() {
     hr = dxgiFactory->EnumAdapters1(0, &adapter);
     dxgiFactory->Release();
 
-    m_shader = new Shader();
     m_font = new Font();
 
     hr = m_font->Init(m_device, adapter);
@@ -285,7 +284,6 @@ bool Engine::InitRenderDevice() {
 
     if (!InitScene()) {
         DXUT_ERR_MSGBOX("Error initializing scene.", hr);
-        delete m_shader;
         delete m_font;
         return false;
     }
@@ -293,12 +291,7 @@ bool Engine::InitRenderDevice() {
 }
 
 bool Engine::InitScene() {
-    HRESULT handleResult{};
-    
-    if (FAILED(m_shader->LoadVertexShader(m_device, m_deviceContext, "shader.fx")))
-        return false;
-    if (FAILED(m_shader->LoadPixelShader(m_device, m_deviceContext, "shader.fx")))
-        return false;
+    HRESULT hr{};
 
     Vertex vertex[] = {
         Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
@@ -370,23 +363,6 @@ bool Engine::InitScene() {
     if (FAILED(cube1->Init(m_device, m_deviceContext))) return false;
     m_quewe.emplace_back(rendOp->SetRenderOperation(cube1));
 
-    D3D11_INPUT_ELEMENT_DESC layout[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-    };
-    UINT numElements = ARRAYSIZE(layout);
-
-    LPVOID buffPtr = m_shader->getVertexBlob()->GetBufferPointer();
-    SIZE_T size = m_shader->getVertexBlob()->GetBufferSize();
-    handleResult = m_device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Failed to create input layout.", handleResult);
-        return false;
-    }
-
-    m_deviceContext->IASetInputLayout(m_layout);
-    m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
     D3D11_VIEWPORT viewport;
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
     viewport.TopLeftX = 0;
@@ -405,9 +381,9 @@ bool Engine::InitScene() {
     bufferDesc.CPUAccessFlags = 0;
     bufferDesc.MiscFlags = 0;
 
-    handleResult = m_device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Failed to create buffer.", handleResult);
+    hr = m_device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
         return false;
     }
 
@@ -441,10 +417,10 @@ bool Engine::InitScene() {
     blendDesc.AlphaToCoverageEnable = false;
     blendDesc.RenderTarget[0] = rtbd;
 
-    handleResult = m_device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
-    handleResult = m_device->CreateBlendState(&blendDesc, &m_transparency);
-    if (FAILED(handleResult)) {
-        DXUT_ERR_MSGBOX("Failed to create blend state.", handleResult);
+    hr = m_device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
+    hr = m_device->CreateBlendState(&blendDesc, &m_transparency);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create blend state.", hr);
         return false;
     }
 
@@ -516,8 +492,6 @@ void Engine::Release() {
     if (m_device) m_device->Release();
     if (m_deviceContext) m_deviceContext->ClearState();
     if (m_renderTargetView) m_renderTargetView->Release();
-    if (m_shader) m_shader->Release();
-    if (m_layout) m_layout->Release();
     if (m_depthStencilView) m_depthStencilView->Release();
     if (m_depthTexture) m_depthTexture->Release();
     if (m_preObjectBuffer) m_preObjectBuffer->Release();

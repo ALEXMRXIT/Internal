@@ -17,6 +17,9 @@ public:
 	HRESULT LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* shaderName);
 	HRESULT LoadPixelShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* shaderName);
 
+	void setVertexShader(ID3D11DeviceContext* context) const;
+	void setPiexlShader(ID3D11DeviceContext* context) const;
+
 	ID3D10Blob* getVertexBlob() const { return m_vertexBlob; }
 
 	void Release();

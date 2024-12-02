@@ -47,6 +47,8 @@ private:
 	IndexBuffer* m_indexBuffer;
 	ID3D11RasterizerState* m_cWcullMode;
 	MeshMaterial* m_material;
+	ID3D11InputLayout* m_layout;
+	Shader* m_meshShader;
 
 	XMMATRIX Position;
 

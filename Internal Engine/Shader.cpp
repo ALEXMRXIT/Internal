@@ -41,7 +41,6 @@ HRESULT Shader::LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* cont
         DXUT_ERR_MSGBOX("Failed to create vertex shader.", hr);
         return hr;
     }
-    context->VSSetShader(m_vertexShader, 0, 0);
     m_vertexBlob = vertexShader;
     return hr;
 }
@@ -60,9 +59,16 @@ HRESULT Shader::LoadPixelShader(ID3D11Device* device, ID3D11DeviceContext* conte
         DXUT_ERR_MSGBOX("Failed to create pixel shader.", hr);
         return hr;
     }
-    context->PSSetShader(m_pixelShader, 0, 0);
     pixelShader->Release();
     return hr;
+}
+
+void Shader::setVertexShader(ID3D11DeviceContext* context) const {
+    context->VSSetShader(m_vertexShader, 0, 0);
+}
+
+void Shader::setPiexlShader(ID3D11DeviceContext* context) const {
+    context->PSSetShader(m_pixelShader, 0, 0);
 }
 
 void Shader::Release() {

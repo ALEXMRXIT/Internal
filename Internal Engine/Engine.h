@@ -77,9 +77,7 @@ private:
 	ID3D11Device* m_device;
 	ID3D11DeviceContext* m_deviceContext;
 	ID3D11RenderTargetView* m_renderTargetView;
-	Shader* m_shader;
 	Font* m_font;
-	ID3D11InputLayout* m_layout;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
 	std::vector<RenderOperation*> m_quewe;
