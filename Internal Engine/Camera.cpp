@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "Engine.h"
 
 Camera::Camera() {
 	position = XMVectorSet(0.0f, 5.0f, -8.0f, 0.0f);
@@ -34,4 +35,9 @@ void Camera::Update() {
 
 	target = position + target;
 	view = XMMatrixLookAtLH(position, target, up);
+}
+
+void Camera::SetProjection() {
+	float screen = (float)engine.getSupportedResolutin().Width / (float)engine.getSupportedResolutin().Height;
+	projection = XMMatrixPerspectiveFovLH(0.3f * XM_PI, screen, 1.0f, 100.0f);
 }

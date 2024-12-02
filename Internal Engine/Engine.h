@@ -105,7 +105,6 @@ public:
 	cbPerObject cbPerObj;
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11SamplerState* m_textureSamplerState;
-	XMMATRIX camProjection;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;

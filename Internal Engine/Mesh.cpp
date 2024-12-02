@@ -75,7 +75,7 @@ void Mesh::Update(float deltaTime) {
 
 void Mesh::Render(ID3D11DeviceContext* context) {
     IASetVertexAndIndexBuffer(context);
-    ::engine.cbPerObj.WVP = XMMatrixTranspose(Position * camera.getView() * ::engine.camProjection);
+    engine.cbPerObj.WVP = XMMatrixTranspose(Position * camera.getView() * camera.getProjection());
     context->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.cbPerObj, 0, 0);
     context->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
     m_material->Bind(context);

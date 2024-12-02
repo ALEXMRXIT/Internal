@@ -411,10 +411,6 @@ bool Engine::InitScene() {
         return false;
     }
 
-    float screen = (float)m_supportedResolution[config.resolution].Width / 
-        (float)m_supportedResolution[config.resolution].Height;
-    camProjection = XMMatrixPerspectiveFovLH(0.45f * XM_PI, screen, 1.0f, 1000.0f);
-
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
     if (config.qualityTexture == 0) sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -453,6 +449,7 @@ bool Engine::InitScene() {
     }
 
     setFullScreen(m_windowDesc->hWnd, config.fullscreen);
+    camera.SetProjection();
 
     return true;
 }

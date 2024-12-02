@@ -10,6 +10,7 @@ private:
 	XMVECTOR up;
 	XMVECTOR forward;
 	XMVECTOR right;
+	XMMATRIX projection;
 
 public:
 	Camera();
@@ -23,6 +24,8 @@ public:
 	float pitch;
 
 	void Update();
+	void SetProjection();
 
 	XMMATRIX getView() const { return view; }
+	XMMATRIX getProjection() const { return projection; }
 } camera;
