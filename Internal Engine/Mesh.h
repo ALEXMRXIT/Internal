@@ -1,7 +1,6 @@
 #pragma once
 #include "framework.h"
 #include "Engine.h"
-#include "AbstractBaseComponent.h"
 
 class MeshMaterial;
 
@@ -42,7 +41,7 @@ public:
 	operator ID3D11Buffer*() const { return m_indexBuffer; }
 };
 
-class MeshComponent : public AbstractBaseComponent {
+class Mesh {
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
@@ -56,9 +55,9 @@ private:
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
 
 public:
-	MeshComponent();
-	MeshComponent(const MeshComponent&) = delete;
-	MeshComponent& operator=(const MeshComponent&) = delete;
+	Mesh();
+	Mesh(const Mesh&) = delete;
+	Mesh& operator=(const Mesh&) = delete;
 
 	void Update(float deltaTime);
 	void Render(ID3D11DeviceContext* context);

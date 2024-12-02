@@ -1,7 +1,7 @@
 #include "Engine.h"
 #include "debug.h"
 #include "Shader.h"
-#include "MeshComponent.h"
+#include "Mesh.h"
 #include "Font.h"
 #include "Component.h"
 #include "GameObject.h"
@@ -349,7 +349,7 @@ bool Engine::InitScene() {
         20, 22, 23
     };
 
-    MeshComponent* cube1 = new MeshComponent();
+    Mesh* cube1 = new Mesh();
     if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
     if (!cube1->CreateIndex(m_device, indices, 36)) return false;
     if (FAILED(cube1->Init(m_device, m_deviceContext))) return false;
@@ -368,7 +368,7 @@ bool Engine::InitScene() {
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
     bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth = sizeof(_worldViewProjectionBuffer);
+    bufferDesc.ByteWidth = sizeof(cbPerObject);
     bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
     bufferDesc.MiscFlags = 0;
@@ -565,6 +565,17 @@ IDXGISwapChain* Engine::getChain() const {
 
 const DXGI_MODE_DESC& Engine::getSupportedResolutin() const {
     return m_supportedResolution[config.resolution];
+}
+
+GameObject* Engine::Instantiate(primitive_type_e type, XMVECTOR position) {
+    switch (type) {
+    case PT_SPHERE:
+    case PT_CUBE:
+
+        break;
+    }
+
+    return nullptr;
 }
 
 LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {

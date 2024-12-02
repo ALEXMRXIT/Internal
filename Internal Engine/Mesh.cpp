@@ -1,4 +1,4 @@
-#include "MeshComponent.h"
+#include "Mesh.h"
 #include "debug.h"
 #include "Camera.h"
 #include "Material.h"
@@ -62,7 +62,7 @@ void IndexBuffer::Release() {
 	if (m_indexBuffer) m_indexBuffer->Release();
 }
 
-MeshComponent::MeshComponent() {
+Mesh::Mesh() {
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
     Position = XMMatrixIdentity();
@@ -72,24 +72,24 @@ MeshComponent::MeshComponent() {
     m_layout = nullptr;
 }
 
-void MeshComponent::Update(float deltaTime) {
+void Mesh::Update(float deltaTime) {
     
 }
 
-void MeshComponent::Render(ID3D11DeviceContext* context) {
+void Mesh::Render(ID3D11DeviceContext* context) {
     IASetVertexAndIndexBuffer(context);
     m_meshShader->setVertexShader(context);
     m_meshShader->setPiexlShader(context);
     context->IASetInputLayout(m_layout);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    engine.m_bufferWVP.WVP = XMMatrixTranspose(Position * camera.getView() * camera.getProjection());
-    context->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.m_bufferWVP, 0, 0);
+    engine.cbPerObj.WVP = XMMatrixTranspose(Position * camera.getView() * camera.getProjection());
+    context->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.cbPerObj, 0, 0);
     context->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
     m_material->Bind(context);
     context->DrawIndexed(36, 0, 0);
 }
 
-HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
+HRESULT Mesh::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     HRESULT hr;
     D3D11_RASTERIZER_DESC cmdesc;
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -129,19 +129,19 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     return hr;
 }
 
-bool MeshComponent::CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size) {
+bool Mesh::CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size) {
     if (m_vertexBuffer = new VertexBuffer())
         return m_vertexBuffer->Create(device, pBuffer, size);
     return false;
 }
 
-bool MeshComponent::CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size) {
+bool Mesh::CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size) {
     if (m_indexBuffer = new IndexBuffer())
         return m_indexBuffer->Create(device, pBuffer, size);
     return false;
 }
 
-void MeshComponent::IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
+void Mesh::IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
     context->IASetIndexBuffer(*m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
@@ -149,7 +149,7 @@ void MeshComponent::IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
     context->IASetVertexBuffers(0, 1, &vertex, &stride, &offset);
 }
 
-void MeshComponent::Release() {
+void Mesh::Release() {
     if (m_vertexBuffer) {
         m_vertexBuffer->Release();
         delete m_vertexBuffer;
