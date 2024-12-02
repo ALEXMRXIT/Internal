@@ -62,3 +62,36 @@ Thread and Process Information:
 2: WinMainCRTStartup - 0x00007FF6D4F4B1B0
 1: BaseThreadInitThunk - 0x00007FF91D1E2580
 0: RtlUserThreadStart - 0x00007FF91E62AF10
+File: C:\Users\varya\source\repos\King-of-Kings-3\Internal Engine\Material.cpp
+Line: 27
+HRESULT: 0x887C0002
+Error System String: D3D11_ERROR_FILE_NOT_FOUND
+Error System Description: File not found
+Message: Failed to load texture.
+
+Registers:
+    RAX: 0x0000000000000001, RBX: 0x0000000000000000, RCX: 0x000000112E7FC500, RDX: 0x00007FF78BD3E1A0
+    RSI: 0x0000012A9DC49690, RDI: 0x000000112E7FCD08, RBP: 0x000000112E7FC4D0, RSP: 0x000000112E7FC4A0
+    RIP: 0x00007FF78BC23DA8
+
+Flags:
+    RFLAGS: 0x0000000000000246
+
+Thread and Process Information:
+    Current Thread ID: 7916
+    Current Process ID: 6392
+
+13: writeLog - 0x00007FF78BC23D10
+12: handleErrorLogAndShow - 0x00007FF78BC22EB0
+11: Material::TextureMapInfo::Load - 0x00007FF78BC268A0
+10: MeshMaterial::Load - 0x00007FF78BC26840
+9: Mesh::Init - 0x00007FF78BC27580
+8: Engine::InitScene - 0x00007FF78BC1DD70
+7: Engine::InitRenderDevice - 0x00007FF78BC1D2B0
+6: WinMain - 0x00007FF78BC26540
+5: invoke_main - 0x00007FF78BC2B170
+4: __scrt_common_main_seh - 0x00007FF78BC2AF60
+3: __scrt_common_main - 0x00007FF78BC2AF40
+2: WinMainCRTStartup - 0x00007FF78BC2B230
+1: BaseThreadInitThunk - 0x00007FFFA4C87360
+0: RtlUserThreadStart - 0x00007FFFA587CC70

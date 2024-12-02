@@ -1,13 +1,11 @@
 #pragma once
 #include "framework.h"
-#include "PrimitiveType.h"
 #include "Config.h"
 
 class Shader;
 class Font;
-class GameObject;
 class Camera;
-class Mesh;
+class MeshComponent;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -31,9 +29,9 @@ typedef struct _perfomanceTimeInfo {
 	float accumulator;
 } PerfomanceTimeInfo, *LPPerfomanceTimeInfo;
 
-struct cbPerObject {
-	XMMATRIX  WVP;
-};
+typedef struct _worldViewProjectionBuffer {
+	XMMATRIX WVP;
+} WorldViewProjection, *LPWorldViewProjection;
 
 typedef struct _multisampleityLevel {
 	uint32_t SampleCount;
@@ -52,16 +50,17 @@ private:
 	ID3D11RenderTargetView* m_renderTargetView;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
-	std::vector<Mesh*> m_quewe;
 	ID3D11BlendState* m_transparency;
-	std::vector<MultisampleQualityLevel> m_qualityLevels;
-	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 	IDirectInputDevice8* m_keyboard;
 	IDirectInputDevice8* m_mouse;
 	LPDIRECTINPUT8 m_directInput;
-	Font* m_font;
+
+	std::vector<MeshComponent*> m_quewe;
+	std::vector<MultisampleQualityLevel> m_qualityLevels;
+	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 
 	PerfomanceTimeInfo m_timeInfo;
+	Font* m_font;
 
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -72,7 +71,7 @@ private:
 public:
 	Engine() {}
 
-	cbPerObject cbPerObj;
+	WorldViewProjection m_bufferWVP;
 	ID3D11Buffer* m_preObjectBuffer;
 
 	Engine(const Engine&) = delete;
@@ -92,8 +91,6 @@ public:
 	RECT& getWindowRect();
 	IDXGISwapChain* getChain() const;
 	const DXGI_MODE_DESC& getSupportedResolutin() const;
-
-	static GameObject* Instantiate(primitive_type_e type, XMVECTOR position);
 };
 
 extern Engine engine;
