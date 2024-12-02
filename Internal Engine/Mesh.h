@@ -41,7 +41,7 @@ public:
 	operator ID3D11Buffer*() const { return m_indexBuffer; }
 };
 
-class Mesh : public InterfaceRenderObject {
+class Mesh {
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
@@ -59,13 +59,13 @@ public:
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
 
-	void Update(float deltaTime) override;
-	void Render(ID3D11DeviceContext* context) override;
+	void Update(float deltaTime);
+	void Render(ID3D11DeviceContext* context);
 
 	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
 
 	bool CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size);
 	bool CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size);
 
-	void Release() override;
+	void Release();
 };

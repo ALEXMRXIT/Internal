@@ -12,14 +12,6 @@ Engine engine;
 Camera camera;
 Config config;
 
-Engine::Engine() {
-	m_windowDesc = nullptr;
-}
-
-Engine::~Engine() {
-
-}
-
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
     m_windowDesc = const_cast<WindowDescription*>(desc);
 
@@ -357,12 +349,11 @@ bool Engine::InitScene() {
         20, 22, 23
     };
 
-    RenderOperation* rendOp = new RenderOperation();
     Mesh* cube1 = new Mesh();
     if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
     if (!cube1->CreateIndex(m_device, indices, 36)) return false;
     if (FAILED(cube1->Init(m_device, m_deviceContext))) return false;
-    m_quewe.emplace_back(rendOp->SetRenderOperation(cube1));
+    m_quewe.emplace_back(cube1);
 
     D3D11_VIEWPORT viewport;
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));

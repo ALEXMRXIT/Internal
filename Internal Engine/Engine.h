@@ -7,6 +7,7 @@ class Shader;
 class Font;
 class GameObject;
 class Camera;
+class Mesh;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -34,35 +35,6 @@ struct cbPerObject {
 	XMMATRIX  WVP;
 };
 
-class InterfaceRenderObject {
-public:
-	virtual void Update(float deltaTime) = 0;
-	virtual void Render(ID3D11DeviceContext* context) = 0;
-	virtual void Release() = 0;
-};
-
-class RenderOperation {
-public:
-	InterfaceRenderObject* m_renderObject;
-
-	RenderOperation* SetRenderOperation(InterfaceRenderObject* obj) {
-		m_renderObject = obj;
-		return this;
-	}
-
-	void Update(float deltaTime) {
-		m_renderObject->Update(deltaTime);
-	}
-
-	void Render(ID3D11DeviceContext* context) {
-		m_renderObject->Render(context);
-	}
-
-	void Release() {
-		if (m_renderObject) m_renderObject->Release();
-	}
-};
-
 typedef struct _multisampleityLevel {
 	uint32_t SampleCount;
 	uint32_t QualityLevel;
@@ -80,7 +52,7 @@ private:
 	ID3D11RenderTargetView* m_renderTargetView;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
-	std::vector<RenderOperation*> m_quewe;
+	std::vector<Mesh*> m_quewe;
 	ID3D11BlendState* m_transparency;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
@@ -98,8 +70,7 @@ private:
 	HRESULT InitDirectInput(HINSTANCE hInstance);
 	void UpdateInput(float deltaTime);
 public:
-	Engine();
-	~Engine();
+	Engine() {}
 
 	cbPerObject cbPerObj;
 	ID3D11Buffer* m_preObjectBuffer;
