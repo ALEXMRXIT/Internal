@@ -71,7 +71,7 @@ typedef struct _multisampleityLevel {
 		SampleCount(count), QualityLevel(quality) { };
 } MultisampleQualityLevel, LPMultisampleQualityLevel;
 
-extern class Engine {
+class Engine {
 private:
 	WindowDescription* m_windowDesc;
 	IDXGISwapChain* m_swapChain;
@@ -123,6 +123,7 @@ public:
 	const DXGI_MODE_DESC& getSupportedResolutin() const;
 
 	static GameObject* Instantiate(primitive_type_e type, XMVECTOR position);
-} engine;
+};
 
+extern Engine engine;
 extern Config config;
