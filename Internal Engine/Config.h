@@ -8,6 +8,9 @@ public:
 		fullscreen = true;
 		vSync = 1;
 		showCursor = true;
+		cameraSpeed = 15.0f;
+		mouseIntensive = 25.0f;
+		additionalLShiftSpeed = 2.0f;
 	}
 
 	int resolution;
@@ -16,4 +19,7 @@ public:
 	bool fullscreen;
 	int vSync;
 	bool showCursor;
+	float cameraSpeed;
+	float mouseIntensive;
+	float additionalLShiftSpeed;
 } config;

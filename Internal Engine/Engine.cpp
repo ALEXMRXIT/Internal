@@ -440,8 +440,10 @@ void Engine::UpdateInput(float deltaTime) {
     if (keyboardState[DIK_ESCAPE] & 0x80)
         PostMessage(m_windowDesc->hWnd, WM_DESTROY, 0, 0);
 
-    const float speed = 15.0f * deltaTime;
-    const float intensivity = 0.25f * deltaTime;
+#define LSHIFTSPEED (keyboardState[DIK_LSHIFT] & 0x80) ? config.additionalLShiftSpeed : 1.0f
+    const float speed = config.cameraSpeed * (LSHIFTSPEED) * deltaTime;
+    const float intensivity = (config.mouseIntensive / 100.0f) * deltaTime;
+#undef LSHIFTSPEED
 
     if (keyboardState[DIK_A] & 0x80)
         camera.verticalLeftRight -= speed;
