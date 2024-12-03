@@ -29,10 +29,6 @@ typedef struct _perfomanceTimeInfo {
 	float accumulator;
 } PerfomanceTimeInfo, *LPPerfomanceTimeInfo;
 
-typedef struct _worldViewProjectionBuffer {
-	XMMATRIX WVP;
-} WorldViewProjection, *LPWorldViewProjection;
-
 typedef struct _multisampleityLevel {
 	uint32_t SampleCount;
 	uint32_t QualityLevel;
@@ -60,7 +56,6 @@ private:
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 
 	PerfomanceTimeInfo m_timeInfo;
-	WorldViewProjection m_bufferWVP;
 	Font* m_font;
 
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -71,8 +66,6 @@ private:
 	void UpdateInput(float deltaTime);
 public:
 	Engine() {}
-
-	ID3D11Buffer* m_preObjectBuffer;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
@@ -86,6 +79,7 @@ public:
 	void Render();
 	void Release();
 	int messageWindow();
+	void addMeshRenderer(MeshComponent* mesh);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
 	RECT& getWindowRect();

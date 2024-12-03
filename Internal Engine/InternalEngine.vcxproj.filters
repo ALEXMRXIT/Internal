@@ -39,9 +39,6 @@
     <ClCompile Include="Transform.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="AbstractBaseComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -97,6 +94,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />
   </ItemGroup>

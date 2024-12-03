@@ -65,15 +65,15 @@ void IndexBuffer::Release() {
 MeshComponent::MeshComponent() {
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
-    Position = XMMatrixIdentity();
     m_cWcullMode = nullptr;
     m_material = nullptr;
     m_meshShader = nullptr;
     m_layout = nullptr;
+    m_preObjectBuffer = nullptr;
 }
 
 void MeshComponent::Update(float deltaTime) {
-    
+    m_position = XMMatrixIdentity();
 }
 
 void MeshComponent::Render(ID3D11DeviceContext* context) {
@@ -82,11 +82,15 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     m_meshShader->setPiexlShader(context);
     context->IASetInputLayout(m_layout);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    engine.m_bufferWVP.WVP = XMMatrixTranspose(Position * camera.getView() * camera.getProjection());
-    context->UpdateSubresource(::engine.m_preObjectBuffer, 0, NULL, &::engine.m_bufferWVP, 0, 0);
-    context->VSSetConstantBuffers(0, 1, &::engine.m_preObjectBuffer);
+    m_bufferWVP.WVP = XMMatrixTranspose(m_position * camera.getView() * camera.getProjection());
+    context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
+    context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     m_material->Bind(context);
     context->DrawIndexed(36, 0, 0);
+}
+
+void MeshComponent::setPostion(XMMATRIX& position) {
+    m_position = position;
 }
 
 HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
@@ -100,6 +104,20 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     cmdesc.DepthClipEnable = true;
     hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
     context->RSSetState(m_cWcullMode);
+
+    D3D11_BUFFER_DESC bufferDesc;
+    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth = sizeof(WorldViewProjection);
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags = 0;
+
+    hr = device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
+        return hr;
+    }
 
     m_material = new MeshMaterial();
     m_material->diffuseTex = new Material::TextureMapInfo();
@@ -168,4 +186,5 @@ void MeshComponent::Release() {
         delete m_meshShader;
     }
     if (m_layout) m_layout->Release();
+    if (m_preObjectBuffer) m_preObjectBuffer->Release();
 }

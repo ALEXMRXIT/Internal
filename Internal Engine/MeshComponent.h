@@ -42,6 +42,10 @@ public:
 	operator ID3D11Buffer*() const { return m_indexBuffer; }
 };
 
+typedef struct _worldViewProjectionBuffer {
+	XMMATRIX WVP;
+} WorldViewProjection, * LPWorldViewProjection;
+
 class MeshComponent : public AbstractBaseComponent {
 private:
 	VertexBuffer* m_vertexBuffer;
@@ -50,8 +54,9 @@ private:
 	MeshMaterial* m_material;
 	ID3D11InputLayout* m_layout;
 	Shader* m_meshShader;
-
-	XMMATRIX Position;
+	WorldViewProjection m_bufferWVP;
+	ID3D11Buffer* m_preObjectBuffer;
+	XMMATRIX m_position;
 
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
 
@@ -62,6 +67,8 @@ public:
 
 	void Update(float deltaTime);
 	void Render(ID3D11DeviceContext* context);
+
+	void setPostion(XMMATRIX& position);
 
 	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
 

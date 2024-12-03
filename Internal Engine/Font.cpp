@@ -14,6 +14,8 @@ Font::Font() {
 	m_sharedResource = nullptr;
 	m_cWcullMode = nullptr;
     m_fontShader = nullptr;
+    m_textureSamplerState = nullptr;
+    m_preObjectBuffer = nullptr;
 }
 
 HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdapter1* adapter) {
@@ -109,8 +111,6 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdap
         return hr;
     }
 
-    m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST); // ???
-
     D3D11_RASTERIZER_DESC cmdesc;
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
     cmdesc.FillMode = D3D11_FILL_SOLID;
@@ -146,6 +146,20 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdap
     hr = device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
 
+    D3D11_BUFFER_DESC bufferDesc;
+    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth = sizeof(cBuffer);
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags = 0;
+
+    hr = device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
+        return hr;
+    }
+
     return hr;
 }
 
@@ -164,12 +178,12 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
 	);
 	m_renderTarget->EndDraw();
 
-    m_bufferWVP->WVP = XMMatrixIdentity();
-    m_bufferWVP->WVP = XMMatrixTranspose(m_bufferWVP->WVP);
+    m_bufferWVP.WVP = XMMatrixIdentity();
     m_fontShader->setVertexShader(deviceContext);
     m_fontShader->setPiexlShader(deviceContext);
-	deviceContext->UpdateSubresource(engine.m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
-	deviceContext->VSSetConstantBuffers(0, 1, &engine.m_preObjectBuffer);
+    m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
+	deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
+	deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
 	deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
 	deviceContext->PSSetSamplers(0, 1, &m_textureSamplerState);
 	deviceContext->RSSetState(m_cWcullMode);
@@ -191,4 +205,6 @@ void Font::Release() {
         m_fontShader->Release();
         delete m_fontShader;
     }
+    if (m_textureSamplerState) m_textureSamplerState->Release();
+    if (m_preObjectBuffer) m_preObjectBuffer->Release();
 }

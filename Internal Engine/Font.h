@@ -20,8 +20,9 @@ private:
 	ID3D11RasterizerState* m_cWcullMode;
 	Shader* m_fontShader;
 	ID3D11SamplerState* m_textureSamplerState;
+	ID3D11Buffer* m_preObjectBuffer;
 
-	cBuffer* m_bufferWVP;
+	cBuffer m_bufferWVP;
 
 public:
 	Font();

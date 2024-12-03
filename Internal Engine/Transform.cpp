@@ -1,10 +1,10 @@
 #include "Transform.h"
 
 void Transform::UpdateWorldCoord() {
-    m_worldPosition = 
-        XMMatrixTranslation(m_position.x, m_position.y, m_position.z) *
-        XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z) *
-        XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
+    XMMATRIX translation = XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
+    XMMATRIX scaling = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
+    m_worldPosition = scaling * rotation * translation;
 }
 
 Transform::Transform() {
@@ -23,6 +23,7 @@ Transform& Transform::operator=(const Transform& other) {
         m_rotation = other.m_rotation;
         m_scale = other.m_scale;
         m_worldPosition = other.m_worldPosition;
+        UpdateWorldCoord();
     }
     return *this;
 }

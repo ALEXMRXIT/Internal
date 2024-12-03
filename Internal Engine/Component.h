@@ -2,8 +2,6 @@
 #include "framework.h"
 #include "Transform.h"
 
-class AbstractBaseComponent;
-
 class Component {
 private:
 	std::list<AbstractBaseComponent*> m_components;
@@ -21,5 +19,5 @@ public:
 	template<typename TComponent>
 	TComponent* GetComponentByType() const;
 
-	Transform& transform() const { return *m_transform; }
+	__forceinline Transform& transform() const { return *m_transform; }
 };

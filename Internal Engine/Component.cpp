@@ -17,8 +17,8 @@ inline TComponent* Component::AddComponent() {
 
 template<typename TComponent>
 inline TComponent* Component::GetComponentByType() const {
-	for (Component& component : m_components) {
-		if (typeid(*component) == typeid(TComponent))
+	for (AbstractBaseComponent* component : m_components) {
+		if (dynamic_cast<TComponent*>(component))
 			return static_cast<TComponent*>(component);
 	}
 	return nullptr;

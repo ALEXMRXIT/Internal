@@ -349,11 +349,11 @@ bool Engine::InitScene() {
         20, 22, 23
     };
 
-    MeshComponent* cube1 = new MeshComponent();
-    if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
-    if (!cube1->CreateIndex(m_device, indices, 36)) return false;
-    if (FAILED(cube1->Init(m_device, m_deviceContext))) return false;
-    m_quewe.emplace_back(cube1);
+    //MeshComponent* cube1 = new MeshComponent();
+    //if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
+    //if (!cube1->CreateIndex(m_device, indices, 36)) return false;
+    //if (FAILED(cube1->Init(m_device, m_deviceContext))) return false;
+    //m_quewe.emplace_back(cube1);
 
     D3D11_VIEWPORT viewport;
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
@@ -364,20 +364,6 @@ bool Engine::InitScene() {
     viewport.MinDepth = 0.0f;
     viewport.MaxDepth = 1.0f;
     m_deviceContext->RSSetViewports(1, &viewport);
-
-    D3D11_BUFFER_DESC bufferDesc;
-    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth = sizeof(_worldViewProjectionBuffer);
-    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
-
-    hr = m_device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
-        return false;
-    }
 
     D3D11_BLEND_DESC blendDesc;
     ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
@@ -474,7 +460,6 @@ void Engine::Release() {
     if (m_renderTargetView) m_renderTargetView->Release();
     if (m_depthStencilView) m_depthStencilView->Release();
     if (m_depthTexture) m_depthTexture->Release();
-    if (m_preObjectBuffer) m_preObjectBuffer->Release();
 
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
         m_quewe[iterator]->Release();
@@ -517,6 +502,10 @@ int Engine::messageWindow() {
     }
 
     return message.wParam;
+}
+
+void Engine::addMeshRenderer(MeshComponent* mesh) {
+    m_quewe.emplace_back(mesh);
 }
 
 void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
