@@ -3,7 +3,6 @@
 #include "Config.h"
 
 class Shader;
-class Font;
 class Camera;
 class MeshComponent;
 
@@ -56,7 +55,6 @@ private:
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 
 	PerfomanceTimeInfo m_timeInfo;
-	Font* m_font;
 
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

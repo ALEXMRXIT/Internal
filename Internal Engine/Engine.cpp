@@ -2,7 +2,6 @@
 #include "debug.h"
 #include "Shader.h"
 #include "MeshComponent.h"
-#include "Font.h"
 #include "Component.h"
 #include "GameObject.h"
 #include "Camera.h"
@@ -14,7 +13,7 @@ Config config;
 
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
     m_windowDesc = const_cast<WindowDescription*>(desc);
-
+    
     WNDCLASSEX wndClassEx;
     ZeroMemory(&wndClassEx, sizeof(WNDCLASSEX));
     wndClassEx.cbSize = sizeof(WNDCLASSEX);
@@ -258,26 +257,8 @@ bool Engine::InitRenderDevice() {
 
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
-    IDXGIFactory1* dxgiFactory = nullptr;
-    hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
-
-    dxgiFactory->MakeWindowAssociation(m_windowDesc->hWnd, DXGI_MWA_NO_ALT_ENTER);
-
-    IDXGIAdapter1* adapter = nullptr;
-    hr = dxgiFactory->EnumAdapters1(0, &adapter);
-    dxgiFactory->Release();
-
-    m_font = new Font();
-
-    hr = m_font->Init(m_device, m_deviceContext, adapter);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to init fonts.", hr);
-        return false;
-    }
-
     if (!InitScene()) {
         DXUT_ERR_MSGBOX("Error initializing scene.", hr);
-        delete m_font;
         return false;
     }
     return true;
@@ -286,68 +267,68 @@ bool Engine::InitRenderDevice() {
 bool Engine::InitScene() {
     HRESULT hr{};
 
-    Vertex vertex[] = {
-        Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-            Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-            Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-            Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
-
-            // Back Face
-            Vertex(-1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-            Vertex(1.0f, -1.0f, 1.0f, 0.0f, 1.0f),
-            Vertex(1.0f,  1.0f, 1.0f, 0.0f, 0.0f),
-            Vertex(-1.0f,  1.0f, 1.0f, 1.0f, 0.0f),
-
-            // Top Face
-            Vertex(-1.0f, 1.0f, -1.0f, 0.0f, 1.0f),
-            Vertex(-1.0f, 1.0f,  1.0f, 0.0f, 0.0f),
-            Vertex(1.0f, 1.0f,  1.0f, 1.0f, 0.0f),
-            Vertex(1.0f, 1.0f, -1.0f, 1.0f, 1.0f),
-
-            // Bottom Face
-            Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
-            Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-            Vertex(1.0f, -1.0f,  1.0f, 0.0f, 0.0f),
-            Vertex(-1.0f, -1.0f,  1.0f, 1.0f, 0.0f),
-
-            // Left Face
-            Vertex(-1.0f, -1.0f,  1.0f, 0.0f, 1.0f),
-            Vertex(-1.0f,  1.0f,  1.0f, 0.0f, 0.0f),
-            Vertex(-1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-            Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
-
-            // Right Face
-            Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-            Vertex(1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-            Vertex(1.0f,  1.0f,  1.0f, 1.0f, 0.0f),
-            Vertex(1.0f, -1.0f,  1.0f, 1.0f, 1.0f),
-    };
-
-    DWORD indices[] = {
-        // front face
-        0,  1,  2,
-        0,  2,  3,
-
-        // Back Face
-        4,  5,  6,
-        4,  6,  7,
-
-        // Top Face
-        8,  9, 10,
-        8, 10, 11,
-
-        // Bottom Face
-        12, 13, 14,
-        12, 14, 15,
-
-        // Left Face
-        16, 17, 18,
-        16, 18, 19,
-
-        // Right Face
-        20, 21, 22,
-        20, 22, 23
-    };
+    //Vertex vertex[] = {
+    //    Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+    //        Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
+    //        Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
+    //        Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+    //
+    //        // Back Face
+    //        Vertex(-1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
+    //        Vertex(1.0f, -1.0f, 1.0f, 0.0f, 1.0f),
+    //        Vertex(1.0f,  1.0f, 1.0f, 0.0f, 0.0f),
+    //        Vertex(-1.0f,  1.0f, 1.0f, 1.0f, 0.0f),
+    //
+    //        // Top Face
+    //        Vertex(-1.0f, 1.0f, -1.0f, 0.0f, 1.0f),
+    //        Vertex(-1.0f, 1.0f,  1.0f, 0.0f, 0.0f),
+    //        Vertex(1.0f, 1.0f,  1.0f, 1.0f, 0.0f),
+    //        Vertex(1.0f, 1.0f, -1.0f, 1.0f, 1.0f),
+    //
+    //        // Bottom Face
+    //        Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+    //        Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+    //        Vertex(1.0f, -1.0f,  1.0f, 0.0f, 0.0f),
+    //        Vertex(-1.0f, -1.0f,  1.0f, 1.0f, 0.0f),
+    //
+    //        // Left Face
+    //        Vertex(-1.0f, -1.0f,  1.0f, 0.0f, 1.0f),
+    //        Vertex(-1.0f,  1.0f,  1.0f, 0.0f, 0.0f),
+    //        Vertex(-1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
+    //        Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+    //
+    //        // Right Face
+    //        Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+    //        Vertex(1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
+    //        Vertex(1.0f,  1.0f,  1.0f, 1.0f, 0.0f),
+    //        Vertex(1.0f, -1.0f,  1.0f, 1.0f, 1.0f),
+    //};
+    //
+    //DWORD indices[] = {
+    //    // front face
+    //    0,  1,  2,
+    //    0,  2,  3,
+    //
+    //    // Back Face
+    //    4,  5,  6,
+    //    4,  6,  7,
+    //
+    //    // Top Face
+    //    8,  9, 10,
+    //    8, 10, 11,
+    //
+    //    // Bottom Face
+    //    12, 13, 14,
+    //    12, 14, 15,
+    //
+    //    // Left Face
+    //    16, 17, 18,
+    //    16, 18, 19,
+    //
+    //    // Right Face
+    //    20, 21, 22,
+    //    20, 22, 23
+    //};
 
     //MeshComponent* cube1 = new MeshComponent();
     //if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
@@ -446,9 +427,9 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
         m_quewe[iterator]->Render(m_deviceContext);
     
-    wchar_t buffer[64];
-    swprintf_s(buffer, 64, L"Fps: %d", m_timeInfo.fps);
-    m_font->Render(m_deviceContext, buffer);
+    //wchar_t buffer[64];
+    //swprintf_s(buffer, 64, L"Fps: %d", m_timeInfo.fps);
+    //m_font->Render(m_deviceContext, buffer);
 
     m_swapChain->Present(config.vSync, 0);
 }
@@ -464,8 +445,6 @@ void Engine::Release() {
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
         m_quewe[iterator]->Release();
     m_quewe.clear();
-
-    if (m_font) m_font->Release();
 }
 
 int Engine::messageWindow() {
