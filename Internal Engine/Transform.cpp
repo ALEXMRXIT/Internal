@@ -11,6 +11,7 @@ Transform::Transform() {
     m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
     m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
     m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    UpdateWorldCoord();
 }
 
 Transform::Transform(const Transform& other) {

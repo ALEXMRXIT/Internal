@@ -56,7 +56,7 @@ private:
 	Shader* m_meshShader;
 	WorldViewProjection m_bufferWVP;
 	ID3D11Buffer* m_preObjectBuffer;
-	XMMATRIX m_position;
+	XMMATRIX* m_position;
 
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
 

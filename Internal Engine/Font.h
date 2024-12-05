@@ -9,8 +9,6 @@ typedef struct _cbufferFont {
 
 class Font {
 private:
-	ID3D10Device1* m_device;
-	ID2D1Factory* m_d2dFactory;
 	ID2D1RenderTarget* m_renderTarget;
 	ID2D1SolidColorBrush* m_brush;
 	IDWriteFactory* m_factory;
@@ -21,6 +19,9 @@ private:
 	Shader* m_fontShader;
 	ID3D11SamplerState* m_textureSamplerState;
 	ID3D11Buffer* m_preObjectBuffer;
+	ID3D11InputLayout* m_layout;
+	ID3D11Buffer* m_vertexBuffer;
+	ID3D11Buffer* m_indexBuffer;
 
 	cBuffer m_bufferWVP;
 
@@ -29,7 +30,7 @@ public:
 	Font(const Font&) = delete;
 	Font& operator=(const Font&) = delete;
 
-	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdapter1* adapter);
+	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
 	void Render(ID3D11DeviceContext* deviceContext, const std::wstring text);
 
 	void Release();

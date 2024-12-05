@@ -73,7 +73,7 @@ MeshComponent::MeshComponent() {
 }
 
 void MeshComponent::Update(float deltaTime) {
-    m_position = XMMatrixIdentity();
+    //m_position = XMMatrixIdentity();
 }
 
 void MeshComponent::Render(ID3D11DeviceContext* context) {
@@ -82,7 +82,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     m_meshShader->setPiexlShader(context);
     context->IASetInputLayout(m_layout);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_bufferWVP.WVP = XMMatrixTranspose(m_position * camera.getView() * camera.getProjection());
+    m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     m_material->Bind(context);
@@ -90,7 +90,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 }
 
 void MeshComponent::setPostion(XMMATRIX& position) {
-    m_position = position;
+    m_position = &position;
 }
 
 HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) {

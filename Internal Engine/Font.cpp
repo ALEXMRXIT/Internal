@@ -3,9 +3,14 @@
 #include "debug.h"
 #include "Shader.h"
 
+typedef struct _Vertex {
+    XMFLOAT3 position;
+    XMFLOAT2 texCoord;
+    _Vertex(float x, float y, float z, float tx, float ty) :
+        position(x, y, z), texCoord(tx, ty) {}
+} Vertex, * LPVertex;
+
 Font::Font() {
-	m_device = nullptr;
-	m_d2dFactory = nullptr;
 	m_renderTarget = nullptr;
 	m_brush = nullptr;
 	m_factory = nullptr;
@@ -16,16 +21,13 @@ Font::Font() {
     m_fontShader = nullptr;
     m_textureSamplerState = nullptr;
     m_preObjectBuffer = nullptr;
+    m_layout = nullptr;
+    m_vertexBuffer = nullptr;
+    m_indexBuffer = nullptr;
 }
 
-HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdapter1* adapter) {
-    HRESULT hr = D3D10CreateDevice1(adapter, D3D10_DRIVER_TYPE_HARDWARE,
-        NULL, D3D10_CREATE_DEVICE_DEBUG | D3D10_CREATE_DEVICE_BGRA_SUPPORT,
-        D3D10_FEATURE_LEVEL_9_3, D3D10_1_SDK_VERSION, &m_device);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create D3D10 Device1.", hr);
-        return hr;
-    }
+HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
+    HRESULT hr = S_OK;
 
     D3D11_TEXTURE2D_DESC sharedTexDesc;
     ZeroMemory(&sharedTexDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -35,6 +37,7 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdap
     sharedTexDesc.MipLevels = 1;
     sharedTexDesc.ArraySize = 1;
     sharedTexDesc.SampleDesc.Count = 1;
+    sharedTexDesc.SampleDesc.Quality = 0;
     sharedTexDesc.Usage = D3D11_USAGE_DEFAULT;
     sharedTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
     hr = device->CreateTexture2D(&sharedTexDesc, NULL, &m_textureDesc);
@@ -160,40 +163,107 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIAdap
         return hr;
     }
 
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+    };
+    UINT numElements = ARRAYSIZE(layout);
+
+    LPVOID buffPtr = m_fontShader->getVertexBlob()->GetBufferPointer();
+    SIZE_T size = m_fontShader->getVertexBlob()->GetBufferSize();
+    hr = device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
+        return hr;
+    }
+
+    Vertex vertices[] = {
+        Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+        Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
+        Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
+        Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+    };
+
+    D3D11_BUFFER_DESC vertexBufferDesc;
+    ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+    vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    vertexBufferDesc.ByteWidth = sizeof(Vertex) * 4;
+    vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    vertexBufferDesc.CPUAccessFlags = 0;
+    vertexBufferDesc.MiscFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA vertexData;
+    ZeroMemory(&vertexData, sizeof(D3D11_SUBRESOURCE_DATA));
+    vertexData.pSysMem = vertices;
+
+    hr = device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create vertex buffer.", hr);
+        return hr;
+    }
+
+    DWORD indices[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+    D3D11_BUFFER_DESC indexBufferDesc;
+    ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
+    indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    indexBufferDesc.ByteWidth = sizeof(DWORD) * 6;
+    indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    indexBufferDesc.CPUAccessFlags = 0;
+    indexBufferDesc.MiscFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA indexData;
+    ZeroMemory(&indexData, sizeof(D3D11_SUBRESOURCE_DATA));
+    indexData.pSysMem = indices;
+
+    hr = device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create index buffer.", hr);
+        return hr;
+    }
+
     return hr;
 }
 
 void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
-	m_renderTarget->BeginDraw();
-	m_renderTarget->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
-	D2D1_COLOR_F FontColor = D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f);
-	m_brush->SetColor(FontColor);
-	D2D1_RECT_F layoutRect = D2D1::RectF(0, 0,
-		engine.getSupportedResolutin().Width,
-		engine.getSupportedResolutin().Height);
+    m_renderTarget->BeginDraw();
+    m_renderTarget->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
+    D2D1_COLOR_F FontColor = D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f);
+    m_brush->SetColor(FontColor);
+    D2D1_RECT_F layoutRect = D2D1::RectF(0, 0,
+        engine.getSupportedResolutin().Width,
+        engine.getSupportedResolutin().Height);
 
-	m_renderTarget->DrawText(
-		text.c_str(), wcslen(text.c_str()),
-		m_textFormat, layoutRect, m_brush
-	);
-	m_renderTarget->EndDraw();
+    m_renderTarget->DrawText(
+        text.c_str(), wcslen(text.c_str()),
+        m_textFormat, layoutRect, m_brush
+    );
+    m_renderTarget->EndDraw();
 
     m_bufferWVP.WVP = XMMatrixIdentity();
     m_fontShader->setVertexShader(deviceContext);
     m_fontShader->setPiexlShader(deviceContext);
-    m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
-	deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
-	deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
-	deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
-	deviceContext->PSSetSamplers(0, 1, &m_textureSamplerState);
-	deviceContext->RSSetState(m_cWcullMode);
-	deviceContext->DrawIndexed(6, 0, 0);
-	deviceContext->RSSetState(nullptr);
+    deviceContext->IASetInputLayout(m_layout);
+    deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+    deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+    deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
+    deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
+    deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
+    deviceContext->PSSetSamplers(0, 1, &m_textureSamplerState);
+    deviceContext->RSSetState(m_cWcullMode);
+    deviceContext->DrawIndexed(6, 0, 0);
+    deviceContext->RSSetState(nullptr);
 }
 
 void Font::Release() {
-	if (m_device) m_device->Release();
-	if (m_d2dFactory) m_d2dFactory->Release();
 	if (m_renderTarget) m_renderTarget->Release();
 	if (m_brush) m_brush->Release();
 	if (m_factory) m_factory->Release();
@@ -207,4 +277,7 @@ void Font::Release() {
     }
     if (m_textureSamplerState) m_textureSamplerState->Release();
     if (m_preObjectBuffer) m_preObjectBuffer->Release();
+    if (m_layout) m_layout->Release();
+    if (m_vertexBuffer) m_vertexBuffer->Release();
+    if (m_indexBuffer) m_indexBuffer->Release();
 }

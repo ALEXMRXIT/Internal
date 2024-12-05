@@ -6,6 +6,7 @@ class Shader;
 class Font;
 class Camera;
 class MeshComponent;
+class Location;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -54,6 +55,7 @@ private:
 	std::vector<MeshComponent*> m_quewe;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
+	Location* m_location;
 
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font;

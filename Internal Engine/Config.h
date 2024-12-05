@@ -2,9 +2,9 @@
 class Config {
 public:
 	Config() {
-		resolution = 7;
-		multiply = 3;
-		qualityTexture = 10;
+		resolution = 3;
+		multiply = 0;
+		qualityTexture = 0;
 		fullscreen = true;
 		vSync = 1;
 		showCursor = true;

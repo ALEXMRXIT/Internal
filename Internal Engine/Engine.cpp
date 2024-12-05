@@ -7,6 +7,7 @@
 #include "GameObject.h"
 #include "Camera.h"
 #include "Config.h"
+#include "Location.h"
 
 Engine engine;
 Camera camera;
@@ -260,16 +261,10 @@ bool Engine::InitRenderDevice() {
 
     IDXGIFactory1* dxgiFactory = nullptr;
     hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
-
     dxgiFactory->MakeWindowAssociation(m_windowDesc->hWnd, DXGI_MWA_NO_ALT_ENTER);
 
-    IDXGIAdapter1* adapter = nullptr;
-    hr = dxgiFactory->EnumAdapters1(0, &adapter);
-    dxgiFactory->Release();
-
     m_font = new Font();
-
-    hr = m_font->Init(m_device, m_deviceContext, adapter);
+    hr = m_font->Init(m_device, m_deviceContext);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to init fonts.", hr);
         return false;
@@ -286,6 +281,159 @@ bool Engine::InitRenderDevice() {
 bool Engine::InitScene() {
     HRESULT hr{};
 
+    D3D11_VIEWPORT viewport;
+    ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.Width = (FLOAT)m_supportedResolution[config.resolution].Width;
+    viewport.Height = (FLOAT)m_supportedResolution[config.resolution].Height;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+    m_deviceContext->RSSetViewports(1, &viewport);
+
+    D3D11_BLEND_DESC blendDesc;
+    ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+
+    D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+    ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
+    rtbd.BlendEnable = true;
+    rtbd.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    rtbd.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    rtbd.BlendOp = D3D11_BLEND_OP_ADD;
+    rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
+    rtbd.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
+
+    blendDesc.AlphaToCoverageEnable = false;
+    blendDesc.RenderTarget[0] = rtbd;
+
+    hr = m_device->CreateBlendState(&blendDesc, &m_transparency);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create blend state.", hr);
+        return false;
+    }
+
+    setFullScreen(m_windowDesc->hWnd, config.fullscreen);
+    camera.SetProjection();
+
+    m_location = new Location();
+
+    return true;
+}
+
+void Engine::UpdateInput(float deltaTime) {
+    DIMOUSESTATE mouseCurrState{};
+    BYTE keyboardState[256]{};
+
+    m_keyboard->GetDeviceState(sizeof(BYTE) * 256, (LPVOID)&keyboardState);
+    m_mouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrState);
+
+    if (keyboardState[DIK_ESCAPE] & 0x80)
+        PostMessage(m_windowDesc->hWnd, WM_DESTROY, 0, 0);
+
+#define LSHIFTSPEED (keyboardState[DIK_LSHIFT] & 0x80) ? config.additionalLShiftSpeed : 1.0f
+    const float speed = config.cameraSpeed * (LSHIFTSPEED) * deltaTime;
+    const float intensivity = (config.mouseIntensive / 100.0f) * deltaTime;
+#undef LSHIFTSPEED
+
+    if (keyboardState[DIK_A] & 0x80)
+        camera.verticalLeftRight -= speed;
+    if (keyboardState[DIK_D] & 0x80)
+        camera.verticalLeftRight += speed;
+    if (keyboardState[DIK_W] & 0x80)
+        camera.horizontalBackForward += speed;
+    if (keyboardState[DIK_S] & 0x80)
+        camera.horizontalBackForward -= speed;
+    if (mouseCurrState.rgbButtons[1] & 0x80) {
+        camera.yaw += mouseCurrState.lX * intensivity;
+        camera.pitch += mouseCurrState.lY * intensivity;
+    }
+}
+
+void Engine::FixedUpdate(float deltaTime) {
+    
+}
+
+void Engine::Update(float deltaTime) {
+    camera.Update();
+    m_location->Update(deltaTime);
+    for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
+        m_quewe[iterator]->Update(deltaTime);
+    }
+}
+
+void Engine::Render() {
+    D3DXCOLOR color(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
+    m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    
+    float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
+    
+    for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
+        m_quewe[iterator]->Render(m_deviceContext);
+    
+    wchar_t buffer[16];
+    swprintf_s(buffer, 16, L"Fps: %d", m_timeInfo.fps);
+    m_font->Render(m_deviceContext, buffer);
+
+    m_swapChain->Present(config.vSync, 0);
+}
+
+void Engine::Release() {
+    if (m_swapChain) m_swapChain->Release();
+    if (m_device) m_device->Release();
+    if (m_deviceContext) m_deviceContext->ClearState();
+    if (m_renderTargetView) m_renderTargetView->Release();
+    if (m_depthStencilView) m_depthStencilView->Release();
+    if (m_depthTexture) m_depthTexture->Release();
+
+    for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
+        m_quewe[iterator]->Release();
+    m_quewe.clear();
+
+    if (m_font) m_font->Release();
+}
+
+int Engine::messageWindow() {
+    MSG message;
+    ZeroMemory(&message, sizeof(MSG));
+
+    QueryPerformanceFrequency(&m_timeInfo.frequency);
+    QueryPerformanceCounter(&m_timeInfo.start);
+    m_timeInfo.frameCount = 0;
+    m_timeInfo.elapsedTime = 0.0f;
+    m_timeInfo.targetFrameTime = 1.0f / 30.0f;
+    m_timeInfo.accumulator = 0.0f;
+
+    while (true) {
+        if (PeekMessage(&message, NULL, NULL, NULL, PM_REMOVE)) {
+            if (message.message == WM_QUIT)
+                break;
+
+            TranslateMessage(&message);
+            DispatchMessage(&message);
+        }
+        else {
+            UpdateFrequenceTime(m_timeInfo);
+
+            while (m_timeInfo.accumulator >= m_timeInfo.targetFrameTime) {
+                FixedUpdate(m_timeInfo.targetFrameTime);
+                m_timeInfo.accumulator -= m_timeInfo.targetFrameTime;
+            }
+
+            UpdateInput(m_timeInfo.deltaTime);
+            Update(m_timeInfo.deltaTime);
+            Render();
+        }
+    }
+
+    return message.wParam;
+}
+
+void Engine::addMeshRenderer(MeshComponent* mesh) {
     Vertex vertex[] = {
         Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
             Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
@@ -349,162 +497,10 @@ bool Engine::InitScene() {
         20, 22, 23
     };
 
-    //MeshComponent* cube1 = new MeshComponent();
-    //if (!cube1->CreateVertex(m_device, vertex, 24)) return false;
-    //if (!cube1->CreateIndex(m_device, indices, 36)) return false;
-    //if (FAILED(cube1->Init(m_device, m_deviceContext))) return false;
-    //m_quewe.emplace_back(cube1);
+    mesh->CreateVertex(m_device, vertex, 24);
+    mesh->CreateIndex(m_device, indices, 36);
+    mesh->Init(m_device, m_deviceContext);
 
-    D3D11_VIEWPORT viewport;
-    ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.Width = (FLOAT)m_supportedResolution[config.resolution].Width;
-    viewport.Height = (FLOAT)m_supportedResolution[config.resolution].Height;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    m_deviceContext->RSSetViewports(1, &viewport);
-
-    D3D11_BLEND_DESC blendDesc;
-    ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
-
-    D3D11_RENDER_TARGET_BLEND_DESC rtbd;
-    ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
-    rtbd.BlendEnable = true;
-    rtbd.SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    rtbd.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    rtbd.BlendOp = D3D11_BLEND_OP_ADD;
-    rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
-    rtbd.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
-    rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
-
-    blendDesc.AlphaToCoverageEnable = false;
-    blendDesc.RenderTarget[0] = rtbd;
-
-    hr = m_device->CreateBlendState(&blendDesc, &m_transparency);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create blend state.", hr);
-        return false;
-    }
-
-    setFullScreen(m_windowDesc->hWnd, config.fullscreen);
-    camera.SetProjection();
-
-    return true;
-}
-
-void Engine::UpdateInput(float deltaTime) {
-    DIMOUSESTATE mouseCurrState{};
-    BYTE keyboardState[256]{};
-
-    m_keyboard->GetDeviceState(sizeof(BYTE) * 256, (LPVOID)&keyboardState);
-    m_mouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrState);
-
-    if (keyboardState[DIK_ESCAPE] & 0x80)
-        PostMessage(m_windowDesc->hWnd, WM_DESTROY, 0, 0);
-
-#define LSHIFTSPEED (keyboardState[DIK_LSHIFT] & 0x80) ? config.additionalLShiftSpeed : 1.0f
-    const float speed = config.cameraSpeed * (LSHIFTSPEED) * deltaTime;
-    const float intensivity = (config.mouseIntensive / 100.0f) * deltaTime;
-#undef LSHIFTSPEED
-
-    if (keyboardState[DIK_A] & 0x80)
-        camera.verticalLeftRight -= speed;
-    if (keyboardState[DIK_D] & 0x80)
-        camera.verticalLeftRight += speed;
-    if (keyboardState[DIK_W] & 0x80)
-        camera.horizontalBackForward += speed;
-    if (keyboardState[DIK_S] & 0x80)
-        camera.horizontalBackForward -= speed;
-    if (mouseCurrState.rgbButtons[1] & 0x80) {
-        camera.yaw += mouseCurrState.lX * intensivity;
-        camera.pitch += mouseCurrState.lY * intensivity;
-    }
-}
-
-void Engine::FixedUpdate(float deltaTime) {
-    
-}
-
-void Engine::Update(float deltaTime) {
-    camera.Update();
-    for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
-        m_quewe[iterator]->Update(deltaTime);
-    }
-}
-
-void Engine::Render() {
-    D3DXCOLOR color(0.0f, 0.0f, 0.0f, 1.0f);
-    
-    m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
-    m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    
-    float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
-    
-    for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
-        m_quewe[iterator]->Render(m_deviceContext);
-    
-    wchar_t buffer[64];
-    swprintf_s(buffer, 64, L"Fps: %d", m_timeInfo.fps);
-    m_font->Render(m_deviceContext, buffer);
-
-    m_swapChain->Present(config.vSync, 0);
-}
-
-void Engine::Release() {
-    if (m_swapChain) m_swapChain->Release();
-    if (m_device) m_device->Release();
-    if (m_deviceContext) m_deviceContext->ClearState();
-    if (m_renderTargetView) m_renderTargetView->Release();
-    if (m_depthStencilView) m_depthStencilView->Release();
-    if (m_depthTexture) m_depthTexture->Release();
-
-    for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
-        m_quewe[iterator]->Release();
-    m_quewe.clear();
-
-    if (m_font) m_font->Release();
-}
-
-int Engine::messageWindow() {
-    MSG message;
-    ZeroMemory(&message, sizeof(MSG));
-
-    QueryPerformanceFrequency(&m_timeInfo.frequency);
-    QueryPerformanceCounter(&m_timeInfo.start);
-    m_timeInfo.frameCount = 0;
-    m_timeInfo.elapsedTime = 0.0f;
-    m_timeInfo.targetFrameTime = 1.0f / 30.0f;
-    m_timeInfo.accumulator = 0.0f;
-
-    while (true) {
-        if (PeekMessage(&message, NULL, NULL, NULL, PM_REMOVE)) {
-            if (message.message == WM_QUIT)
-                break;
-
-            TranslateMessage(&message);
-            DispatchMessage(&message);
-        }
-        else {
-            UpdateFrequenceTime(m_timeInfo);
-
-            while (m_timeInfo.accumulator >= m_timeInfo.targetFrameTime) {
-                FixedUpdate(m_timeInfo.targetFrameTime);
-                m_timeInfo.accumulator -= m_timeInfo.targetFrameTime;
-            }
-
-            UpdateInput(m_timeInfo.deltaTime);
-            Update(m_timeInfo.deltaTime);
-            Render();
-        }
-    }
-
-    return message.wParam;
-}
-
-void Engine::addMeshRenderer(MeshComponent* mesh) {
     m_quewe.emplace_back(mesh);
 }
 
