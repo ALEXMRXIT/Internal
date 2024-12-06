@@ -73,7 +73,7 @@ MeshComponent::MeshComponent() {
 }
 
 void MeshComponent::Update(float deltaTime) {
-    //m_position = XMMatrixIdentity();
+    
 }
 
 void MeshComponent::Render(ID3D11DeviceContext* context) {
@@ -89,7 +89,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     context->DrawIndexed(36, 0, 0);
 }
 
-void MeshComponent::setPostion(XMMATRIX& position) {
+void MeshComponent::setMatrix(XMMATRIX& position) {
     m_position = &position;
 }
 

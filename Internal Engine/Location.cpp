@@ -18,7 +18,7 @@ Location::Location() {
             XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
 
         MeshComponent* mesh = obj->AddComponent<MeshComponent>();
-        mesh->setPostion(obj->transform().getWorldMatrix());
+        mesh->setMatrix(obj->transform().getWorldMatrix());
         engine.addMeshRenderer(mesh);
 
         Insert(obj);
@@ -30,7 +30,7 @@ void Location::Update(float deltaTime) {
     rot += deltaTime * 5.0f;
 
     for (GameObject* obj : m_objects) {
-        obj->setRotation(XMFLOAT3(0.0f, rot, 0.0f));
+        obj->setRotation(XMFLOAT3(rot, rot, rot));
     }
 }
 
