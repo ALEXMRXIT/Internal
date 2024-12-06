@@ -147,6 +147,7 @@
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +164,7 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Skybox.h" />
     <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>
