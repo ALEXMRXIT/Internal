@@ -44,6 +44,8 @@ public:
 
 typedef struct _worldViewProjectionBuffer {
 	XMMATRIX WVP;
+	XMFLOAT2 texture_scale;
+	XMFLOAT2 texture_offset;
 } WorldViewProjection, * LPWorldViewProjection;
 
 class MeshComponent : public AbstractBaseComponent {
@@ -69,6 +71,7 @@ public:
 	void Render(ID3D11DeviceContext* context);
 
 	void setMatrix(XMMATRIX& position);
+	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);
 
 	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
 

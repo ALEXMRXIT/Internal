@@ -263,24 +263,6 @@ bool Engine::InitRenderDevice() {
     hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
     dxgiFactory->MakeWindowAssociation(m_windowDesc->hWnd, DXGI_MWA_NO_ALT_ENTER);
 
-    m_font = new Font();
-    hr = m_font->Init(m_device, m_deviceContext);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to init fonts.", hr);
-        return false;
-    }
-
-    if (!InitScene()) {
-        DXUT_ERR_MSGBOX("Error initializing scene.", hr);
-        delete m_font;
-        return false;
-    }
-    return true;
-}
-
-bool Engine::InitScene() {
-    HRESULT hr{};
-
     D3D11_VIEWPORT viewport;
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
     viewport.TopLeftX = 0;
@@ -314,9 +296,20 @@ bool Engine::InitScene() {
         return false;
     }
 
+    if (!InitScene()) {
+        DXUT_ERR_MSGBOX("Error initializing scene.", hr);
+        delete m_font;
+        return false;
+    }
+    return true;
+}
+
+bool Engine::InitScene() {
     setFullScreen(m_windowDesc->hWnd, config.fullscreen);
     camera.SetProjection();
 
+    m_font = new Font();
+    m_font->Init(m_device, m_deviceContext);
     m_location = new Location();
 
     return true;

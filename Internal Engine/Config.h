@@ -4,7 +4,7 @@ public:
 	Config() {
 		resolution = 3;
 		multiply = 0;
-		qualityTexture = 0;
+		qualityTexture = 10;
 		fullscreen = true;
 		vSync = 1;
 		showCursor = true;

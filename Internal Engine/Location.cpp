@@ -13,18 +13,15 @@ GameObject* Instantiate(const XMFLOAT3& pos, const XMFLOAT3& rot, const XMFLOAT3
 }
 
 Location::Location() {
-    for (int i = 0; i < 5; ++i) {
-        for (int y = 0; y < 5; ++y) {
-            GameObject* obj = Instantiate(XMFLOAT3((float)i * 2, 0.0f, y * 2),
-                XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
+    GameObject* obj = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
+        XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(10.0f, 0.0f, 10.0f));
 
-            MeshComponent* mesh = obj->AddComponent<MeshComponent>();
-            mesh->setMatrix(obj->transform().getWorldMatrix());
-            engine.addMeshRenderer(mesh);
+    MeshComponent* mesh = obj->AddComponent<MeshComponent>();
+    mesh->setMatrix(obj->transform().getWorldMatrix());
+    mesh->setMaterial("grass.jpg", XMFLOAT2(10.f, 10.f), XMFLOAT2(0.f, 0.f));
+    engine.addMeshRenderer(mesh);
 
-            Insert(obj);
-        }
-    }
+    Insert(obj);
 }
 
 void Location::Update(float deltaTime) {

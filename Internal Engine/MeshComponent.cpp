@@ -83,6 +83,8 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     context->IASetInputLayout(m_layout);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
+    m_bufferWVP.texture_scale = m_material->scale();
+    m_bufferWVP.texture_offset = m_material->offset();
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     m_material->Bind(context);
@@ -91,6 +93,13 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 
 void MeshComponent::setMatrix(XMMATRIX& position) {
     m_position = &position;
+}
+
+void MeshComponent::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset){
+    m_material = new MeshMaterial();
+    m_material->diffuseTex = new Material::TextureMapInfo();
+    m_material->diffuseTex->name = name;
+    m_material->SetScale(scale, offset);
 }
 
 HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
@@ -119,10 +128,14 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
         return hr;
     }
 
-    m_material = new MeshMaterial();
-    m_material->diffuseTex = new Material::TextureMapInfo();
-    m_material->diffuseTex->name = "box.jpg";
-    m_material->Load(device);
+    if (!m_material) {
+        m_material = new MeshMaterial();
+        m_material->diffuseTex = new Material::TextureMapInfo();
+        m_material->SetScale(XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f));
+    }
+    else if (m_material->diffuseTex && m_material->diffuseTex->name) {
+        m_material->Load(device);
+    }
 
     m_meshShader = new Shader();
     if (FAILED(m_meshShader->LoadVertexShader(device, context, "shaders\\mesh.fx")))
