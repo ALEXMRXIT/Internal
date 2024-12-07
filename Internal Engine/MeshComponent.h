@@ -7,13 +7,13 @@ class MeshMaterial;
 typedef struct _Vertex {
 	XMFLOAT3 position;
 	XMFLOAT2 texCoord;
-	_Vertex() : position(0.f, 0.f, 0.f), texCoord(0.f, 0.f) {}
-	_Vertex(float x, float y, float z, float tx, float ty) :
-		position(x, y, z), texCoord(tx, ty) {}
+	XMFLOAT3 normal;
+	_Vertex() : position(0.f, 0.f, 0.f), texCoord(0.f, 0.f), normal(0.f, 0.f, 0.f) {}
 
 	bool operator==(const _Vertex& other) const {
         return position.x == other.position.x && position.y == other.position.y && position.z == other.position.z &&
-               texCoord.x == other.texCoord.x && texCoord.y == other.texCoord.y;
+			normal.x == other.normal.x && normal.y == other.normal.y && normal.z == other.normal.z &&
+			texCoord.x == other.texCoord.x && texCoord.y == other.texCoord.y;
     }
 } Vertex, *LPVertex;
 
@@ -49,6 +49,7 @@ public:
 
 typedef struct _worldViewProjectionBuffer {
 	XMMATRIX WVP;
+	XMMATRIX World;
 	XMFLOAT2 texture_scale;
 	XMFLOAT2 texture_offset;
 } WorldViewProjection, * LPWorldViewProjection;

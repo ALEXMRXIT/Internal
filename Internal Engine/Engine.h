@@ -39,6 +39,16 @@ typedef struct _multisampleityLevel {
 		SampleCount(count), QualityLevel(quality) { };
 } MultisampleQualityLevel, LPMultisampleQualityLevel;
 
+typedef struct light {
+	XMFLOAT4 direction;
+	XMFLOAT4 ambient;
+	XMFLOAT4 diffuse;
+} DirectionLight, *LPDirectionLight;
+
+typedef struct bufferLight {
+	DirectionLight light;
+} BufferDirectionLight, *LPbufferDirectionLight;
+
 class Engine {
 private:
 	WindowDescription* m_windowDesc;
@@ -52,12 +62,15 @@ private:
 	IDirectInputDevice8* m_keyboard;
 	IDirectInputDevice8* m_mouse;
 	LPDIRECTINPUT8 m_directInput;
+	ID3D11Buffer* m_constantLightBuffer;
 
 	std::vector<MeshComponent*> m_quewe;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 	Location* m_location;
 	Skybox* m_skybox;
+	DirectionLight* m_light;
+	BufferDirectionLight m_bufferLight;
 
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font;
@@ -86,6 +99,7 @@ public:
 	void addMeshRenderer(MeshComponent* mesh, const char* filename);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
+	DirectionLight& getLight();
 	RECT& getWindowRect();
 	IDXGISwapChain* getChain() const;
 	const DXGI_MODE_DESC& getSupportedResolutin() const;

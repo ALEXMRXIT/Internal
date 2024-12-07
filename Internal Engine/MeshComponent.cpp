@@ -83,6 +83,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     m_meshShader->setPiexlShader(context);
     context->IASetInputLayout(m_layout);
     context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_bufferWVP.World = XMMatrixTranspose(*m_position);
     m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
@@ -122,7 +123,6 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
     bufferDesc.MiscFlags = 0;
-
     hr = device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
@@ -146,7 +146,8 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 }
     };
     UINT numElements = ARRAYSIZE(layout);
 

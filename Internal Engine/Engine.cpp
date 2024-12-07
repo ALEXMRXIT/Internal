@@ -297,6 +297,19 @@ bool Engine::InitRenderDevice() {
         return false;
     }
 
+    D3D11_BUFFER_DESC bufferDesc;
+    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth = sizeof(BufferDirectionLight);
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags = 0;
+    hr = m_device->CreateBuffer(&bufferDesc, NULL, &m_constantLightBuffer);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
+        return false;
+    }
+
     if (!InitScene()) {
         DXUT_ERR_MSGBOX("Error initializing scene.", hr);
         delete m_font;
@@ -315,6 +328,11 @@ bool Engine::InitScene() {
 
     m_skybox = new Skybox();
     m_skybox->Init(m_device, m_deviceContext);
+
+    m_light = new DirectionLight();
+    m_light->direction = XMFLOAT4(0.25f, 0.5f, 1.0f, 1.0f);
+    m_light->ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+    m_light->diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
     return true;
 }
@@ -366,6 +384,10 @@ void Engine::Render() {
     
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+    m_bufferLight.light = *m_light;
+    m_deviceContext->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
+    m_deviceContext->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
     
     float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
@@ -444,13 +466,19 @@ static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertice
 
     std::vector<XMFLOAT3> positions;
     std::vector<XMFLOAT2> texCoords;
+    std::vector<XMFLOAT3> normals;
 
-    char line[1024];
+    char line[256];
     while (fgets(line, sizeof(line), file)) {
         if (line[0] == 'v' && line[1] == ' ') {
             XMFLOAT3 pos{};
             sscanf_s(line, "v %f %f %f", &pos.x, &pos.y, &pos.z);
             positions.push_back(pos);
+        }
+        else if (line[0] == 'v' && line[1] == 'n') {
+            XMFLOAT3 normal{};
+            sscanf_s(line, "vn %f %f %f", &normal.x, &normal.y, &normal.z);
+            normals.push_back(normal);
         }
         else if (line[0] == 'v' && line[1] == 't') {
             XMFLOAT2 tex{};
@@ -468,6 +496,7 @@ static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertice
                 Vertex vertex{};
                 vertex.position = positions[posIndex[i] - 1];
                 vertex.texCoord = texCoords[texIndex[i] - 1];
+                vertex.normal = normals[normIndex[i] - 1];
                 vertices.push_back(vertex);
                 indices.push_back(indices.size());
             }
@@ -527,6 +556,10 @@ const WindowDescription* Engine::getWindowDesc() const {
     return m_windowDesc;
 }
 
+DirectionLight& Engine::getLight() {
+    return *m_light;
+}
+
 RECT& Engine::getWindowRect() {
     return m_windowDesc->rect;
 }
@@ -542,7 +575,7 @@ const DXGI_MODE_DESC& Engine::getSupportedResolutin() const {
 const wchar_t* Engine::toStringVSync() const {
     switch (config.vSync) {
     case 0: return L"Off";
-    case 1: return L"Âouble buffering";
+    case 1: return L"Double buffering";
     case 2: return L"Triple Buffering";
     }
 }
