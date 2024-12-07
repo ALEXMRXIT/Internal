@@ -286,9 +286,9 @@ bool Engine::InitRenderDevice() {
     rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
     rtbd.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
     rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
+    rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-    blendDesc.AlphaToCoverageEnable = false;
+    blendDesc.AlphaToCoverageEnable = true;
     blendDesc.RenderTarget[0] = rtbd;
 
     hr = m_device->CreateBlendState(&blendDesc, &m_transparency);
@@ -375,11 +375,11 @@ void Engine::Render() {
 
     m_skybox->Render(m_deviceContext);
     
-    wchar_t buffer[16];
-    swprintf_s(buffer, 16, L"Fps: %d", m_timeInfo.fps);
+    wchar_t buffer[128];
+    swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
     m_font->Render(m_deviceContext, buffer);
 
-    m_swapChain->Present(config.vSync, 0);
+    m_swapChain->Present(min(config.vSync, 2), 0);
 }
 
 void Engine::Release() {
@@ -437,75 +437,58 @@ int Engine::messageWindow() {
     return message.wParam;
 }
 
-void Engine::addMeshRenderer(MeshComponent* mesh) {
-    Vertex vertex[] = {
-        Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-            Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-            Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-            Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertices, std::vector<DWORD>& indices) {
+    FILE* file = nullptr;
+    fopen_s(&file, filename, "r");
+    if (!file) return false;
 
-            // Back Face
-            Vertex(-1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-            Vertex(1.0f, -1.0f, 1.0f, 0.0f, 1.0f),
-            Vertex(1.0f,  1.0f, 1.0f, 0.0f, 0.0f),
-            Vertex(-1.0f,  1.0f, 1.0f, 1.0f, 0.0f),
+    std::vector<XMFLOAT3> positions;
+    std::vector<XMFLOAT2> texCoords;
 
-            // Top Face
-            Vertex(-1.0f, 1.0f, -1.0f, 0.0f, 1.0f),
-            Vertex(-1.0f, 1.0f,  1.0f, 0.0f, 0.0f),
-            Vertex(1.0f, 1.0f,  1.0f, 1.0f, 0.0f),
-            Vertex(1.0f, 1.0f, -1.0f, 1.0f, 1.0f),
+    char line[1024];
+    while (fgets(line, sizeof(line), file)) {
+        if (line[0] == 'v' && line[1] == ' ') {
+            XMFLOAT3 pos{};
+            sscanf_s(line, "v %f %f %f", &pos.x, &pos.y, &pos.z);
+            positions.push_back(pos);
+        }
+        else if (line[0] == 'v' && line[1] == 't') {
+            XMFLOAT2 tex{};
+            sscanf_s(line, "vt %f %f", &tex.x, &tex.y);
+            texCoords.push_back(tex);
+        }
+        else if (line[0] == 'f') {
+            uint32_t posIndex[3]{}, texIndex[3]{}, normIndex[3]{};
+            sscanf_s(line, "f %u/%u/%u %u/%u/%u %u/%u/%u",
+                &posIndex[0], &texIndex[0], &normIndex[0],
+                &posIndex[1], &texIndex[1], &normIndex[1],
+                &posIndex[2], &texIndex[2], &normIndex[2]);
 
-            // Bottom Face
-            Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
-            Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-            Vertex(1.0f, -1.0f,  1.0f, 0.0f, 0.0f),
-            Vertex(-1.0f, -1.0f,  1.0f, 1.0f, 0.0f),
+            for (int i = 0; i < 3; ++i) {
+                Vertex vertex{};
+                vertex.position = positions[posIndex[i] - 1];
+                vertex.texCoord = texCoords[texIndex[i] - 1];
+                vertices.push_back(vertex);
+                indices.push_back(indices.size());
+            }
+        }
+    }
 
-            // Left Face
-            Vertex(-1.0f, -1.0f,  1.0f, 0.0f, 1.0f),
-            Vertex(-1.0f,  1.0f,  1.0f, 0.0f, 0.0f),
-            Vertex(-1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-            Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+    fclose(file);
+    return true;
+}
 
-            // Right Face
-            Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-            Vertex(1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-            Vertex(1.0f,  1.0f,  1.0f, 1.0f, 0.0f),
-            Vertex(1.0f, -1.0f,  1.0f, 1.0f, 1.0f),
-    };
+void Engine::addMeshRenderer(MeshComponent* mesh, const char* filename) {
+    std::vector<Vertex> vertices;
+    std::vector<DWORD> indices;
 
-    DWORD indices[] = {
-        // front face
-        0,  1,  2,
-        0,  2,  3,
+    if (loadObjFileFormat(filename, vertices, indices)) {
+        mesh->CreateVertex(m_device, vertices.data(), sizeof(Vertex), vertices.size());
+        mesh->CreateIndex(m_device, indices.data(), sizeof(DWORD), indices.size());
+        mesh->Init(m_device, m_deviceContext);
 
-        // Back Face
-        4,  5,  6,
-        4,  6,  7,
-
-        // Top Face
-        8,  9, 10,
-        8, 10, 11,
-
-        // Bottom Face
-        12, 13, 14,
-        12, 14, 15,
-
-        // Left Face
-        16, 17, 18,
-        16, 18, 19,
-
-        // Right Face
-        20, 21, 22,
-        20, 22, 23
-    };
-
-    mesh->CreateVertex(m_device, vertex, sizeof(Vertex), 24);
-    mesh->CreateIndex(m_device, indices, sizeof(DWORD), 36);
-    mesh->Init(m_device, m_deviceContext);
-
-    m_quewe.emplace_back(mesh);
+        m_quewe.emplace_back(mesh);
+    }
 }
 
 void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
@@ -554,6 +537,14 @@ IDXGISwapChain* Engine::getChain() const {
 
 const DXGI_MODE_DESC& Engine::getSupportedResolutin() const {
     return m_supportedResolution[config.resolution];
+}
+
+const wchar_t* Engine::toStringVSync() const {
+    switch (config.vSync) {
+    case 0: return L"Off";
+    case 1: return L"Âouble buffering";
+    case 2: return L"Triple Buffering";
+    }
 }
 
 LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {

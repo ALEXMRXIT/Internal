@@ -14,12 +14,12 @@ GameObject* Instantiate(const XMFLOAT3& pos, const XMFLOAT3& rot, const XMFLOAT3
 
 Location::Location() {
     GameObject* obj = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
-        XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(10.0f, 0.0f, 10.0f));
+        XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
 
     MeshComponent* mesh = obj->AddComponent<MeshComponent>();
     mesh->setMatrix(obj->transform().getWorldMatrix());
-    mesh->setMaterial("grass.jpg", XMFLOAT2(10.f, 10.f), XMFLOAT2(0.f, 0.f));
-    engine.addMeshRenderer(mesh);
+    mesh->setMaterial("mesh\\m_had0330000.png", XMFLOAT2(1.f, 1.f), XMFLOAT2(0.f, 0.f));
+    engine.addMeshRenderer(mesh, "mesh\\m_had033.obj");
 
     Insert(obj);
 }

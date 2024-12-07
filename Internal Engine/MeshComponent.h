@@ -10,7 +10,12 @@ typedef struct _Vertex {
 	_Vertex() : position(0.f, 0.f, 0.f), texCoord(0.f, 0.f) {}
 	_Vertex(float x, float y, float z, float tx, float ty) :
 		position(x, y, z), texCoord(tx, ty) {}
-} Vertex, * LPVertex;
+
+	bool operator==(const _Vertex& other) const {
+        return position.x == other.position.x && position.y == other.position.y && position.z == other.position.z &&
+               texCoord.x == other.texCoord.x && texCoord.y == other.texCoord.y;
+    }
+} Vertex, *LPVertex;
 
 class VertexBuffer {
 private:
@@ -59,6 +64,7 @@ private:
 	WorldViewProjection m_bufferWVP;
 	ID3D11Buffer* m_preObjectBuffer;
 	XMMATRIX* m_position;
+	uint32_t indicses;
 
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
 

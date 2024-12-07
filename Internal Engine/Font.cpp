@@ -3,12 +3,12 @@
 #include "debug.h"
 #include "Shader.h"
 
-typedef struct _Vertex {
+typedef struct _fontVertex {
     XMFLOAT3 position;
     XMFLOAT2 texCoord;
-    _Vertex(float x, float y, float z, float tx, float ty) :
+    _fontVertex(float x, float y, float z, float tx, float ty) :
         position(x, y, z), texCoord(tx, ty) {}
-} Vertex, * LPVertex;
+} FontVertex, *LPFontVertex;
 
 Font::Font() {
 	m_renderTarget = nullptr;
@@ -177,17 +177,17 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
         return hr;
     }
 
-    Vertex vertices[] = {
-        Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
-        Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
-        Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
-        Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
+    FontVertex vertices[] = {
+        FontVertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f),
+        FontVertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f),
+        FontVertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f),
+        FontVertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f),
     };
 
     D3D11_BUFFER_DESC vertexBufferDesc;
     ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    vertexBufferDesc.ByteWidth = sizeof(Vertex) * 4;
+    vertexBufferDesc.ByteWidth = sizeof(FontVertex) * 4;
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vertexBufferDesc.CPUAccessFlags = 0;
     vertexBufferDesc.MiscFlags = 0;
@@ -231,7 +231,7 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
 void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
     m_renderTarget->BeginDraw();
     m_renderTarget->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
-    D2D1_COLOR_F FontColor = D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f);
+    D2D1_COLOR_F FontColor = D2D1::ColorF(1.0f, 1.0f, 0.0f, 1.0f);
     m_brush->SetColor(FontColor);
     D2D1_RECT_F layoutRect = D2D1::RectF(0, 0,
         engine.getSupportedResolutin().Width,
@@ -250,7 +250,7 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
     deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-    UINT stride = sizeof(Vertex);
+    UINT stride = sizeof(FontVertex);
     UINT offset = 0;
     deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 

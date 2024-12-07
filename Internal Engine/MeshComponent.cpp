@@ -70,6 +70,7 @@ MeshComponent::MeshComponent() {
     m_meshShader = nullptr;
     m_layout = nullptr;
     m_preObjectBuffer = nullptr;
+    indicses = 0;
 }
 
 void MeshComponent::Update(float deltaTime) {
@@ -89,7 +90,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     m_material->Bind(context);
     context->RSSetState(m_cWcullMode);
-    context->DrawIndexed(36, 0, 0);
+    context->DrawIndexed(indicses, 0, 0);
 }
 
 void MeshComponent::setMatrix(XMMATRIX& position) {
@@ -167,6 +168,7 @@ bool MeshComponent::CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t s
 }
 
 bool MeshComponent::CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
+    indicses = size;
     if (m_indexBuffer = new IndexBuffer())
         return m_indexBuffer->Create(device, pBuffer, sizeType, size);
     return false;

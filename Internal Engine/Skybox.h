@@ -24,7 +24,7 @@ private:
 	XMMATRIX m_pos;
 	ViewProject m_wvp;
 
-	void CreateSphere(ID3D11Device* device, int LatLines, int LongLines);
+	void CreateSphere(ID3D11Device* device, int llines, int longlines);
 
 public:
 	Skybox();

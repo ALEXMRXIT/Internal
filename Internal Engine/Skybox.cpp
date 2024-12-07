@@ -4,10 +4,10 @@
 #include "Camera.h"
 #include "Engine.h"
 
-void Skybox::CreateSphere(ID3D11Device* device, int LatLines, int LongLines) {
+void Skybox::CreateSphere(ID3D11Device* device, int llines, int longlines) {
     HRESULT hr{};
-    verticesNum = ((LatLines - 2) * LongLines) + 2;
-    indexesNum = ((LatLines - 3) * (LongLines) * 2) + (LongLines * 2);
+    verticesNum = ((llines - 2) * longlines) + 2;
+    indexesNum = ((llines - 3) * (longlines) * 2) + (longlines * 2);
 
     std::vector<Vertex> vertices(verticesNum);
     std::vector<DWORD> indices(indexesNum * 3);
@@ -16,15 +16,15 @@ void Skybox::CreateSphere(ID3D11Device* device, int LatLines, int LongLines) {
     vertices[0].texCoord = XMFLOAT2(0.5f, 0.0f);
 
     int vertexIndex = 1;
-    for (int i = 1; i < LatLines - 1; ++i) {
-        float phi = i * XM_PI / (LatLines - 1);
-        for (int j = 0; j < LongLines; ++j) {
-            float theta = j * XM_2PI / LongLines;
+    for (int i = 1; i < llines - 1; ++i) {
+        float phi = i * XM_PI / (llines - 1);
+        for (int j = 0; j < longlines; ++j) {
+            float theta = j * XM_2PI / longlines;
             float x = sin(phi) * cos(theta);
             float y = cos(phi);
             float z = sin(phi) * sin(theta);
             vertices[vertexIndex].position = XMFLOAT3(x, y, z);
-            vertices[vertexIndex].texCoord = XMFLOAT2((float)j / LongLines, (float)i / (LatLines - 1));
+            vertices[vertexIndex].texCoord = XMFLOAT2((float)j / longlines, (float)i / (llines - 1));
             vertexIndex++;
         }
     }
@@ -33,41 +33,41 @@ void Skybox::CreateSphere(ID3D11Device* device, int LatLines, int LongLines) {
     vertices[verticesNum - 1].texCoord = XMFLOAT2(0.5f, 1.0f);
 
     int k = 0;
-    for (int j = 0; j < LongLines - 1; ++j) {
+    for (int j = 0; j < longlines - 1; ++j) {
         indices[k++] = 0;
         indices[k++] = j + 1;
         indices[k++] = j + 2;
     }
     indices[k++] = 0;
-    indices[k++] = LongLines;
+    indices[k++] = longlines;
     indices[k++] = 1;
 
-    for (int i = 0; i < LatLines - 3; ++i) {
-        for (int j = 0; j < LongLines - 1; ++j) {
-            indices[k++] = i * LongLines + j + 1;
-            indices[k++] = i * LongLines + j + 2;
-            indices[k++] = (i + 1) * LongLines + j + 1;
+    for (int i = 0; i < llines - 3; ++i) {
+        for (int j = 0; j < longlines - 1; ++j) {
+            indices[k++] = i * longlines + j + 1;
+            indices[k++] = i * longlines + j + 2;
+            indices[k++] = (i + 1) * longlines + j + 1;
 
-            indices[k++] = (i + 1) * LongLines + j + 1;
-            indices[k++] = i * LongLines + j + 2;
-            indices[k++] = (i + 1) * LongLines + j + 2;
+            indices[k++] = (i + 1) * longlines + j + 1;
+            indices[k++] = i * longlines + j + 2;
+            indices[k++] = (i + 1) * longlines + j + 2;
         }
-        indices[k++] = (i * LongLines) + LongLines;
-        indices[k++] = (i * LongLines) + 1;
-        indices[k++] = ((i + 1) * LongLines) + LongLines;
+        indices[k++] = (i * longlines) + longlines;
+        indices[k++] = (i * longlines) + 1;
+        indices[k++] = ((i + 1) * longlines) + longlines;
 
-        indices[k++] = ((i + 1) * LongLines) + LongLines;
-        indices[k++] = (i * LongLines) + 1;
-        indices[k++] = ((i + 1) * LongLines) + 1;
+        indices[k++] = ((i + 1) * longlines) + longlines;
+        indices[k++] = (i * longlines) + 1;
+        indices[k++] = ((i + 1) * longlines) + 1;
     }
 
-    for (int j = 0; j < LongLines - 1; ++j) {
+    for (int j = 0; j < longlines - 1; ++j) {
         indices[k++] = verticesNum - 1;
         indices[k++] = (verticesNum - 1) - (j + 1);
         indices[k++] = (verticesNum - 1) - (j + 2);
     }
     indices[k++] = verticesNum - 1;
-    indices[k++] = (verticesNum - 1) - LongLines;
+    indices[k++] = (verticesNum - 1) - longlines;
     indices[k++] = verticesNum - 2;
 
     CreateVertex(device, vertices.data(), sizeof(Vertex), verticesNum);
@@ -83,6 +83,8 @@ Skybox::Skybox() {
     m_sharedView = nullptr;
     m_depthState = nullptr;
     m_textureSamplerState = nullptr;
+    verticesNum = 0;
+    indexesNum = 0;
 }
 
 void Skybox::Init(ID3D11Device* device, ID3D11DeviceContext* context) {

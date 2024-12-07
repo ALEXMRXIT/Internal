@@ -83,12 +83,13 @@ public:
 	void Render();
 	void Release();
 	int messageWindow();
-	void addMeshRenderer(MeshComponent* mesh);
+	void addMeshRenderer(MeshComponent* mesh, const char* filename);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
 	RECT& getWindowRect();
 	IDXGISwapChain* getChain() const;
 	const DXGI_MODE_DESC& getSupportedResolutin() const;
+	const wchar_t* toStringVSync() const;
 };
 
 extern Engine engine;
