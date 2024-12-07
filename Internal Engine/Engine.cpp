@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "Config.h"
 #include "Location.h"
+#include "Skybox.h"
 
 Engine engine;
 Camera camera;
@@ -312,6 +313,9 @@ bool Engine::InitScene() {
     m_font->Init(m_device, m_deviceContext);
     m_location = new Location();
 
+    m_skybox = new Skybox();
+    m_skybox->Init(m_device, m_deviceContext);
+
     return true;
 }
 
@@ -354,6 +358,7 @@ void Engine::Update(float deltaTime) {
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
         m_quewe[iterator]->Update(deltaTime);
     }
+    m_skybox->Update(deltaTime);
 }
 
 void Engine::Render() {
@@ -367,6 +372,8 @@ void Engine::Render() {
     
     for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
         m_quewe[iterator]->Render(m_deviceContext);
+
+    m_skybox->Render(m_deviceContext);
     
     wchar_t buffer[16];
     swprintf_s(buffer, 16, L"Fps: %d", m_timeInfo.fps);
@@ -388,6 +395,10 @@ void Engine::Release() {
     m_quewe.clear();
 
     if (m_font) m_font->Release();
+    if (m_skybox) {
+        m_skybox->Release();
+        delete m_skybox;
+    }
 }
 
 int Engine::messageWindow() {
@@ -490,8 +501,8 @@ void Engine::addMeshRenderer(MeshComponent* mesh) {
         20, 22, 23
     };
 
-    mesh->CreateVertex(m_device, vertex, 24);
-    mesh->CreateIndex(m_device, indices, 36);
+    mesh->CreateVertex(m_device, vertex, sizeof(Vertex), 24);
+    mesh->CreateIndex(m_device, indices, sizeof(DWORD), 36);
     mesh->Init(m_device, m_deviceContext);
 
     m_quewe.emplace_back(mesh);

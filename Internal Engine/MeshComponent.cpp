@@ -8,12 +8,12 @@ VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
 }
 
-bool VertexBuffer::Create(ID3D11Device* device, void* pBuffer, unsigned int size) {
+bool VertexBuffer::Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
     HRESULT handleResult{};
     D3D11_BUFFER_DESC vertexBufferDesc;
     ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    vertexBufferDesc.ByteWidth = sizeof(Vertex) * size;
+    vertexBufferDesc.ByteWidth = sizeType * size;
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vertexBufferDesc.CPUAccessFlags = 0;
     vertexBufferDesc.MiscFlags = 0;
@@ -37,12 +37,12 @@ IndexBuffer::IndexBuffer() {
 	m_indexBuffer = nullptr;
 }
 
-bool IndexBuffer::Create(ID3D11Device* device, void* pBuffer, unsigned int size) {
+bool IndexBuffer::Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
     HRESULT handleResult{};
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
     indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    indexBufferDesc.ByteWidth = sizeof(DWORD) * size;
+    indexBufferDesc.ByteWidth = sizeType * size;
     indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
     indexBufferDesc.CPUAccessFlags = 0;
     indexBufferDesc.MiscFlags = 0;
@@ -88,6 +88,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     m_material->Bind(context);
+    context->RSSetState(m_cWcullMode);
     context->DrawIndexed(36, 0, 0);
 }
 
@@ -112,7 +113,6 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     cmdesc.FrontCounterClockwise = false;
     cmdesc.DepthClipEnable = true;
     hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
-    context->RSSetState(m_cWcullMode);
 
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -160,15 +160,15 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     return hr;
 }
 
-bool MeshComponent::CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size) {
+bool MeshComponent::CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
     if (m_vertexBuffer = new VertexBuffer())
-        return m_vertexBuffer->Create(device, pBuffer, size);
+        return m_vertexBuffer->Create(device, pBuffer, sizeType, size);
     return false;
 }
 
-bool MeshComponent::CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size) {
+bool MeshComponent::CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
     if (m_indexBuffer = new IndexBuffer())
-        return m_indexBuffer->Create(device, pBuffer, size);
+        return m_indexBuffer->Create(device, pBuffer, sizeType, size);
     return false;
 }
 

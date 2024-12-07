@@ -249,17 +249,17 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
     deviceContext->IASetInputLayout(m_layout);
     deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+    deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
     deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-    deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
     deviceContext->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
     deviceContext->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     deviceContext->PSSetShaderResources(0, 1, &m_sharedResource);
     deviceContext->PSSetSamplers(0, 1, &m_textureSamplerState);
     deviceContext->RSSetState(m_cWcullMode);
-    deviceContext->DrawIndexed(6, 0, 0);
+    deviceContext->Draw(6, 0);
     deviceContext->RSSetState(nullptr);
 }
 

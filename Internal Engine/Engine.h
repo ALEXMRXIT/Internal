@@ -7,6 +7,7 @@ class Font;
 class Camera;
 class MeshComponent;
 class Location;
+class Skybox;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -56,6 +57,7 @@ private:
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 	Location* m_location;
+	Skybox* m_skybox;
 
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font;
@@ -91,3 +93,4 @@ public:
 
 extern Engine engine;
 extern Config config;
+extern Camera camera;

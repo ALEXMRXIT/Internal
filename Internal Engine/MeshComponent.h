@@ -7,6 +7,7 @@ class MeshMaterial;
 typedef struct _Vertex {
 	XMFLOAT3 position;
 	XMFLOAT2 texCoord;
+	_Vertex() : position(0.f, 0.f, 0.f), texCoord(0.f, 0.f) {}
 	_Vertex(float x, float y, float z, float tx, float ty) :
 		position(x, y, z), texCoord(tx, ty) {}
 } Vertex, * LPVertex;
@@ -20,7 +21,7 @@ public:
 	VertexBuffer(const VertexBuffer&) = delete;
 	VertexBuffer& operator=(const VertexBuffer&) = delete;
 
-	bool Create(ID3D11Device* device, void* pBuffer, unsigned int size);
+	bool Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
 	void Release();
 
 	operator ID3D11Buffer*() const { return m_vertexBuffer; }
@@ -35,7 +36,7 @@ public:
 	IndexBuffer(const IndexBuffer&) = delete;
 	IndexBuffer& operator=(const IndexBuffer&) = delete;
 
-	bool Create(ID3D11Device* device, void* pBuffer, unsigned int size);
+	bool Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
 	void Release();
 
 	operator ID3D11Buffer*() const { return m_indexBuffer; }
@@ -74,8 +75,8 @@ public:
 
 	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
 
-	bool CreateVertex(ID3D11Device* device, void* pBuffer, unsigned int size);
-	bool CreateIndex(ID3D11Device* device, void* pBuffer, unsigned int size);
+	bool CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
+	bool CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
 
 	void Release();
 };

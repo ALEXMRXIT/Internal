@@ -3,9 +3,6 @@ cbuffer cbPerObject : register(b0)
     float4x4 WVP;
 };
 
-TextureCube ObjTexture;
-SamplerState ObjSamplerState;
-
 struct VS_INPUT
 {
     float3 Pos : POSITION;
@@ -25,6 +22,9 @@ VS_OUTPUT VS(VS_INPUT input)
     output.TexCoord = input.Pos;
     return output;
 }
+
+TextureCube ObjTexture;
+SamplerState ObjSamplerState;
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {

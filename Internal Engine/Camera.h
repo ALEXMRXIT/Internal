@@ -28,4 +28,5 @@ public:
 
 	XMMATRIX getView() const { return view; }
 	XMMATRIX getProjection() const { return projection; }
+	XMVECTOR getPos() const { return position; }
 } camera;
