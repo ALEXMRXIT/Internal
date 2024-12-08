@@ -100,7 +100,7 @@ void Skybox::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
     ID3D11Texture2D* texture = nullptr;
-    hr = D3DX11CreateTextureFromFile(device, "skymap.dds", &loadSMInfo, 0, (ID3D11Resource**)&texture, 0);
+    hr = D3DX11CreateTextureFromFile(device, "mesh\\skymap.dds", &loadSMInfo, 0, (ID3D11Resource**)&texture, 0);
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loading skybox texture.", hr);
 
     D3D11_TEXTURE2D_DESC textureDesc;
