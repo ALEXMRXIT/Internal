@@ -72,7 +72,7 @@ MeshComponent::MeshComponent() {
     m_meshShader = nullptr;
     m_layout = nullptr;
     m_preObjectBuffer = nullptr;
-    indicses = 0;
+    indices = 0;
 }
 
 void MeshComponent::Update(float deltaTime) {
@@ -84,15 +84,24 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     m_meshShader->setVertexShader(context);
     m_meshShader->setPiexlShader(context);
     context->IASetInputLayout(m_layout);
+
     m_bufferWVP.World = XMMatrixTranspose(*m_position);
     m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
-    context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
+
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    HRESULT hr = context->Map(m_preObjectBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (SUCCEEDED(hr)) {
+        memcpy(mappedResource.pData, &m_bufferWVP, sizeof(WorldViewProjection));
+        context->Unmap(m_preObjectBuffer, 0);
+    }
+
     context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
+
     m_material->Bind(context);
     context->RSSetState(m_cWcullMode);
-    context->DrawIndexed(indicses, 0, 0);
+    context->DrawIndexed(indices, 0, 0);
 }
 
 void MeshComponent::setMatrix(XMMATRIX& position) {
@@ -119,10 +128,10 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
 
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
     bufferDesc.ByteWidth = sizeof(WorldViewProjection);
     bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     bufferDesc.MiscFlags = 0;
     hr = device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
     if (FAILED(hr)) {
@@ -170,7 +179,7 @@ bool MeshComponent::CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t s
 }
 
 bool MeshComponent::CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
-    indicses = size;
+    indices = size;
     if (m_indexBuffer = new IndexBuffer())
         return m_indexBuffer->Create(device, pBuffer, sizeType, size);
     return false;

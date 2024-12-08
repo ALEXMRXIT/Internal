@@ -65,7 +65,7 @@ private:
 	WorldViewProjection m_bufferWVP;
 	ID3D11Buffer* m_preObjectBuffer;
 	XMMATRIX* m_position;
-	uint32_t indicses;
+	uint32_t indices;
 
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
 
