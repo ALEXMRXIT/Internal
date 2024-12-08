@@ -90,13 +90,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
 
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    HRESULT hr = context->Map(m_preObjectBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-    if (SUCCEEDED(hr)) {
-        memcpy(mappedResource.pData, &m_bufferWVP, sizeof(WorldViewProjection));
-        context->Unmap(m_preObjectBuffer, 0);
-    }
-
+    context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
 
     m_material->Bind(context);
@@ -128,10 +122,10 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
 
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
     bufferDesc.ByteWidth = sizeof(WorldViewProjection);
     bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    bufferDesc.CPUAccessFlags = 0;
     bufferDesc.MiscFlags = 0;
     hr = device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
     if (FAILED(hr)) {
