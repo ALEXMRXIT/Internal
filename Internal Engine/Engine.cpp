@@ -329,11 +329,6 @@ bool Engine::InitScene() {
     m_skybox = new Skybox();
     m_skybox->Init(m_device, m_deviceContext);
 
-    m_light = new DirectionLight();
-    m_light->direction = XMFLOAT4(0.25f, 0.5f, 1.0f, 1.0f);
-    m_light->ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
-    m_light->diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-
     return true;
 }
 
@@ -385,7 +380,9 @@ void Engine::Render() {
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-    m_bufferLight.light = *m_light;
+    m_bufferLight.direction = XMFLOAT4(0.25f, 0.5f, 1.0f, 1.0f);
+    m_bufferLight.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+    m_bufferLight.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_deviceContext->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
     m_deviceContext->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
     
@@ -554,10 +551,6 @@ void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
 
 const WindowDescription* Engine::getWindowDesc() const {
     return m_windowDesc;
-}
-
-DirectionLight& Engine::getLight() {
-    return *m_light;
 }
 
 RECT& Engine::getWindowRect() {

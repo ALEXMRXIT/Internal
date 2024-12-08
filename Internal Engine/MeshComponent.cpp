@@ -49,6 +49,8 @@ bool IndexBuffer::Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType,
     D3D11_SUBRESOURCE_DATA indexBufferData;
     ZeroMemory(&indexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
     indexBufferData.pSysMem = pBuffer;
+    indexBufferData.SysMemPitch = 0;
+    indexBufferData.SysMemSlicePitch = 0;
     handleResult = device->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer);
     if (FAILED(handleResult)) {
         DXUT_ERR_MSGBOX("Failed to create index buffer.", handleResult);
@@ -82,13 +84,12 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     m_meshShader->setVertexShader(context);
     m_meshShader->setPiexlShader(context);
     context->IASetInputLayout(m_layout);
-    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_bufferWVP.World = XMMatrixTranspose(*m_position);
     m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
-    context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
+    context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
     m_material->Bind(context);
     context->RSSetState(m_cWcullMode);
     context->DrawIndexed(indicses, 0, 0);
@@ -145,9 +146,9 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
         return hr;
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
     UINT numElements = ARRAYSIZE(layout);
 
@@ -176,11 +177,12 @@ bool MeshComponent::CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t si
 }
 
 void MeshComponent::IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
-    context->IASetIndexBuffer(*m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
     ID3D11Buffer* vertex = *m_vertexBuffer;
     context->IASetVertexBuffers(0, 1, &vertex, &stride, &offset);
+    context->IASetIndexBuffer(*m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void MeshComponent::Release() {
