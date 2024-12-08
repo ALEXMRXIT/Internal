@@ -380,9 +380,9 @@ void Engine::Render() {
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-    m_bufferLight.direction = XMFLOAT4(0.25f, 0.5f, 1.0f, 1.0f);
-    m_bufferLight.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
-    m_bufferLight.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_bufferLight.direction = XMFLOAT4(0.25f, -5.0f, 1.0f, 1.0f);
+    m_bufferLight.ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
+    m_bufferLight.diffuse = XMFLOAT4(1.0f, 0.8f, 0.8f, 1.0f);
     m_deviceContext->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
     m_deviceContext->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
     
