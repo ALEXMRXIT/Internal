@@ -318,6 +318,11 @@ bool Engine::InitRenderDevice() {
     return true;
 }
 
+struct VertexLine {
+    XMFLOAT3 position;
+    XMFLOAT4 color;
+};
+
 bool Engine::InitScene() {
     setFullScreen(m_windowDesc->hWnd, config.fullscreen);
     camera.SetProjection();
@@ -397,7 +402,7 @@ void Engine::Render() {
     wchar_t buffer[128];
     swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
     m_font->Render(m_deviceContext, buffer);
-
+    
     m_swapChain->Present(min(config.vSync, 2), 0);
 }
 
@@ -455,6 +460,37 @@ int Engine::messageWindow() {
 
     return message.wParam;
 }
+
+#pragma warning(push)
+#pragma warning(disable : 6387)
+void Engine::Raycast(int mouseX, int mouseY) {
+    int screenWidth = getSupportedResolutin().Width;
+    int screenHeight = getSupportedResolutin().Height;
+
+    float ndcX = (2.0f * mouseX) / screenWidth - 1.0f;
+    float ndcY = 1.0f - (2.0f * mouseY) / screenHeight;
+    XMVECTOR rayClip = XMVectorSet(ndcX, ndcY, 1.0f, 1.0f);
+
+    XMVECTOR determinant{};
+    XMMATRIX invProjection = XMMatrixInverse(&determinant, camera.getProjection());
+    XMVECTOR rayView = XMVector3TransformCoord(rayClip, invProjection);
+    rayView = XMVectorSetZ(rayView, 1.0f);
+    XMMATRIX invView = XMMatrixInverse(&determinant, camera.getView());
+    XMVECTOR rayWorld = XMVector3TransformCoord(rayView, invView);
+    XMVECTOR rayOrigin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+    XMVECTOR rayDirection = XMVector3Normalize(rayWorld - rayOrigin);
+
+    std::vector<MeshComponent*>::iterator it = m_quewe.begin();
+    while (it != m_quewe.end()) {
+        if ((*it)->IntersectRayWithMesh(rayOrigin, rayDirection, *it)) {
+            (*it)->Release();
+            delete* it;
+            it = m_quewe.erase(it);
+        }
+        else ++it;
+    }
+}
+#pragma warning(pop)
 
 static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertices, std::vector<DWORD>& indices) {
     struct VertexHash {
@@ -534,6 +570,7 @@ void Engine::addMeshRenderer(MeshComponent* mesh, const char* filename) {
     if (loadObjFileFormat(filename, vertices, indices)) {
         mesh->CreateVertex(m_device, vertices.data(), sizeof(Vertex), vertices.size());
         mesh->CreateIndex(m_device, indices.data(), sizeof(DWORD), indices.size());
+        mesh->GenerateTriangles(vertices, indices);
         mesh->Init(m_device, m_deviceContext);
 
         m_quewe.emplace_back(mesh);
@@ -610,6 +647,11 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
                 config.fullscreen = !config.fullscreen;
                 engine.setFullScreen(hWnd, config.fullscreen);
             }
+        } return 0;
+        case WM_LBUTTONDOWN: {
+            int mouseX = GET_X_LPARAM(lParam);
+            int mouseY = GET_Y_LPARAM(lParam);
+            engine.Raycast(mouseX, mouseY);
         } return 0;
         case WM_DESTROY: {
             PostQuitMessage(0);

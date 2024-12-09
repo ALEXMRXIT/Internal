@@ -92,6 +92,7 @@ public:
 	void Render();
 	void Release();
 	int messageWindow();
+	void Raycast(int mouseX, int mouseY);
 	void addMeshRenderer(MeshComponent* mesh, const char* filename);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;

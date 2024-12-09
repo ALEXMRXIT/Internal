@@ -51,6 +51,9 @@
     <ClCompile Include="Skybox.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Physics.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -98,8 +101,13 @@
     <ClInclude Include="Skybox.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Physics.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\**\*" />
+    <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />

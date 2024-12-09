@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine.h"
 #include "AbstractBaseComponent.h"
+#include "Physics.h"
 
 class MeshMaterial;
 
@@ -54,7 +55,7 @@ typedef struct _worldViewProjectionBuffer {
 	XMFLOAT2 texture_offset;
 } WorldViewProjection, * LPWorldViewProjection;
 
-class MeshComponent : public AbstractBaseComponent {
+class MeshComponent : public AbstractBaseComponent, public Physics {
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
