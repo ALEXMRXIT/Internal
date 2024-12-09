@@ -380,7 +380,7 @@ void Engine::Render() {
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-    m_bufferLight.direction = XMFLOAT4(0.25f, -5.0f, 1.0f, 1.0f);
+    m_bufferLight.direction = XMFLOAT4(-15.0f, -15.0f, 1.0f, 1.0f);
     m_bufferLight.ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
     m_bufferLight.diffuse = XMFLOAT4(1.0f, 0.8f, 0.8f, 1.0f);
     m_deviceContext->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
@@ -457,6 +457,19 @@ int Engine::messageWindow() {
 }
 
 static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertices, std::vector<DWORD>& indices) {
+    struct VertexHash {
+        std::size_t operator()(const Vertex& vertex) const {
+            return ((std::hash<float>()(vertex.position.x) ^
+                (std::hash<float>()(vertex.position.y) << 1)) >> 1) ^
+                (std::hash<float>()(vertex.position.z) << 1) ^
+                ((std::hash<float>()(vertex.texCoord.x) ^
+                    (std::hash<float>()(vertex.texCoord.y) << 1)) >> 1) ^
+                ((std::hash<float>()(vertex.normal.x) ^
+                    (std::hash<float>()(vertex.normal.y) << 1)) >> 1) ^
+                (std::hash<float>()(vertex.normal.z) << 1);
+        }
+    };
+
     FILE* file = nullptr;
     fopen_s(&file, filename, "r");
     if (!file) return false;
@@ -464,6 +477,7 @@ static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertice
     std::vector<XMFLOAT3> positions;
     std::vector<XMFLOAT2> texCoords;
     std::vector<XMFLOAT3> normals;
+    std::unordered_map<Vertex, DWORD, VertexHash> vertexMap;
 
     char line[256];
     while (fgets(line, sizeof(line), file)) {
@@ -494,8 +508,17 @@ static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertice
                 vertex.position = positions[posIndex[i] - 1];
                 vertex.texCoord = texCoords[texIndex[i] - 1];
                 vertex.normal = normals[normIndex[i] - 1];
-                vertices.push_back(vertex);
-                indices.push_back(indices.size());
+
+                auto it = vertexMap.find(vertex);
+                if (it != vertexMap.end()) {
+                    indices.push_back(it->second);
+                }
+                else {
+                    DWORD newIndex = static_cast<DWORD>(vertices.size());
+                    vertices.push_back(vertex);
+                    indices.push_back(newIndex);
+                    vertexMap[vertex] = newIndex;
+                }
             }
         }
     }
