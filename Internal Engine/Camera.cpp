@@ -19,6 +19,11 @@ Camera::Camera() {
 }
 
 void Camera::Update() {
+	XMMATRIX translation = XMMatrixTranslationFromVector(position);
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
+
+	world = rotation * translation;
+
 	rotation = XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
 	target = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), rotation);
 	target = XMVector3Normalize(target);

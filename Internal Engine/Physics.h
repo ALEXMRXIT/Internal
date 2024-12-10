@@ -1,19 +1,16 @@
 #pragma once
 #include "framework.h"
 
-struct Triangle {
-	XMVECTOR v0, v1, v2;
-};
-
 class MeshComponent;
 struct _Vertex;
 
 class Physics {
 private:
-	std::vector<Triangle> m_triangles;
+	std::vector<_Vertex> m_vertices;
+	std::vector<DWORD> m_indices;
 
-	__forceinline bool IntersectRayWithTriangle(const XMVECTOR& rayOrigin,
-		const XMVECTOR& rayDirection, const Triangle& triangle, float& t);
+	__forceinline bool IntersectTriangle(const XMVECTOR& orig, const XMVECTOR& dir,
+		const XMVECTOR& v0, const XMVECTOR& v1, const XMVECTOR& v2);
 
 public:
 	Physics();
@@ -23,5 +20,5 @@ public:
 
 	bool IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent* mesh);
 
-	void GenerateTriangles(const std::vector<_Vertex>& vertices, const std::vector<DWORD>& indices);
+	void SetDataPhysics(const std::vector<_Vertex>& vertices, const std::vector<DWORD>& indices);
 };

@@ -318,11 +318,6 @@ bool Engine::InitRenderDevice() {
     return true;
 }
 
-struct VertexLine {
-    XMFLOAT3 position;
-    XMFLOAT4 color;
-};
-
 bool Engine::InitScene() {
     setFullScreen(m_windowDesc->hWnd, config.fullscreen);
     camera.SetProjection();
@@ -464,28 +459,35 @@ int Engine::messageWindow() {
 #pragma warning(push)
 #pragma warning(disable : 6387)
 void Engine::Raycast(int mouseX, int mouseY) {
+    const XMMATRIX matProj = camera.getProjection();
     int screenWidth = getSupportedResolutin().Width;
     int screenHeight = getSupportedResolutin().Height;
 
-    float ndcX = (2.0f * mouseX) / screenWidth - 1.0f;
-    float ndcY = 1.0f - (2.0f * mouseY) / screenHeight;
-    XMVECTOR rayClip = XMVectorSet(ndcX, ndcY, 1.0f, 1.0f);
+    POINT ptCursor;
+    GetCursorPos(&ptCursor);
+    ScreenToClient(m_windowDesc->hWnd, &ptCursor);
 
+    XMVECTOR v{};
+    v.m128_f32[0] = ((2.0f * ptCursor.x) / screenWidth - 1) / matProj.r[0].m128_f32[0];
+    v.m128_f32[1] = -((2.0f * ptCursor.y) / screenHeight - 1) / matProj.r[1].m128_f32[1];
+    v.m128_f32[2] = 1.0f;
+
+    const XMMATRIX matView = camera.getView();
+    const XMMATRIX matWorld = camera.getWorld();
+
+    XMMATRIX mWorldView = XMMatrixMultiply(matWorld, matView);
     XMVECTOR determinant{};
-    XMMATRIX invProjection = XMMatrixInverse(&determinant, camera.getProjection());
-    XMVECTOR rayView = XMVector3TransformCoord(rayClip, invProjection);
-    rayView = XMVectorSetZ(rayView, 1.0f);
-    XMMATRIX invView = XMMatrixInverse(&determinant, camera.getView());
-    XMVECTOR rayWorld = XMVector3TransformCoord(rayView, invView);
-    XMVECTOR rayOrigin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-    XMVECTOR rayDirection = XMVector3Normalize(rayWorld - rayOrigin);
+    XMMATRIX mInverseWorldView = XMMatrixInverse(&determinant, mWorldView);
+    XMVECTOR vPickRayDir = XMVector3TransformNormal(v, mInverseWorldView);
+    XMVECTOR vPickRayOrig = XMVector3TransformCoord(XMVectorSet(0, 0, 0, 1), mInverseWorldView);
 
     std::vector<MeshComponent*>::iterator it = m_quewe.begin();
     while (it != m_quewe.end()) {
-        if ((*it)->IntersectRayWithMesh(rayOrigin, rayDirection, *it)) {
+        if ((*it)->IntersectRayWithMesh(vPickRayOrig, vPickRayDir, *it)) {
             (*it)->Release();
             delete* it;
             it = m_quewe.erase(it);
+            break;
         }
         else ++it;
     }
@@ -570,7 +572,7 @@ void Engine::addMeshRenderer(MeshComponent* mesh, const char* filename) {
     if (loadObjFileFormat(filename, vertices, indices)) {
         mesh->CreateVertex(m_device, vertices.data(), sizeof(Vertex), vertices.size());
         mesh->CreateIndex(m_device, indices.data(), sizeof(DWORD), indices.size());
-        mesh->GenerateTriangles(vertices, indices);
+        mesh->SetDataPhysics(vertices, indices);
         mesh->Init(m_device, m_deviceContext);
 
         m_quewe.emplace_back(mesh);
