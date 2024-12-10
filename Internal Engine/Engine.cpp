@@ -481,15 +481,31 @@ void Engine::Raycast(int mouseX, int mouseY) {
     XMVECTOR vPickRayDir = XMVector3TransformNormal(v, mInverseWorldView);
     XMVECTOR vPickRayOrig = XMVector3TransformCoord(XMVectorSet(0, 0, 0, 1), mInverseWorldView);
 
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-5.0f, 5.0f);
+
     std::vector<MeshComponent*>::iterator it = m_quewe.begin();
     while (it != m_quewe.end()) {
         if ((*it)->IntersectRayWithMesh(vPickRayOrig, vPickRayDir, *it)) {
-            (*it)->Release();
-            delete* it;
-            it = m_quewe.erase(it);
+            GameObject* obj = (*it)->gameObject();
+
+            XMFLOAT3 currentPosition = obj->position();
+
+            float offsetX = dis(gen);
+            float offsetY = dis(gen);
+            float offsetZ = dis(gen);
+
+            XMVECTOR currentPositionVec = XMLoadFloat3(&currentPosition);
+            XMVECTOR newPositionVec = currentPositionVec + XMVectorSet(offsetX, offsetY, offsetZ, 0.0f);
+            XMFLOAT3 newPosition;
+            XMStoreFloat3(&newPosition, newPositionVec);
+            obj->setPosition(newPosition);
             break;
         }
-        else ++it;
+        else {
+            ++it;
+        }
     }
 }
 #pragma warning(pop)

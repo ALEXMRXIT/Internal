@@ -74,6 +74,7 @@ MeshComponent::MeshComponent() {
     m_preObjectBuffer = nullptr;
     indices = 0;
     m_position = nullptr;
+    m_obj = nullptr;
 }
 
 void MeshComponent::Update(float deltaTime) {

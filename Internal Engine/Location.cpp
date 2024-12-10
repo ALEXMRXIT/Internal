@@ -17,6 +17,7 @@ Location::Location() {
         XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
     MeshComponent* mesh = obj->AddComponent<MeshComponent>();
     mesh->setMatrix(obj->transform().getWorldMatrix());
+    mesh->setGameObject(obj);
     mesh->setMaterial("mesh\\m_had0330000.png", XMFLOAT2(1.f, 1.f), XMFLOAT2(0.f, 0.f));
     engine.addMeshRenderer(mesh, "mesh\\m_had033.obj");
     Insert(obj);
@@ -25,6 +26,7 @@ Location::Location() {
         XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(100.0f, 1.0f, 100.0f));
     MeshComponent* planeMesh = plane->AddComponent<MeshComponent>();
     planeMesh->setMatrix(plane->transform().getWorldMatrix());
+    planeMesh->setGameObject(plane);
     planeMesh->setMaterial("mesh\\grass.jpg", XMFLOAT2(15.f, 15.f), XMFLOAT2(0.f, 0.f));
     engine.addMeshRenderer(planeMesh, "mesh\\plane.obj");
     Insert(plane);
@@ -33,6 +35,7 @@ Location::Location() {
         XMFLOAT3(0.0f, 180.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
     MeshComponent* houseMesh = house->AddComponent<MeshComponent>();
     houseMesh->setMatrix(house->transform().getWorldMatrix());
+    houseMesh->setGameObject(house);
     houseMesh->setMaterial("mesh\\m_hbf0110000.png", XMFLOAT2(1.f, -1.f), XMFLOAT2(0.f, 0.f));
     engine.addMeshRenderer(houseMesh, "mesh\\m_hbf011.obj");
     Insert(house);

@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include "AbstractBaseComponent.h"
 #include "Physics.h"
+#include "GameObject.h"
 
 class MeshMaterial;
 
@@ -67,6 +68,7 @@ private:
 	ID3D11Buffer* m_preObjectBuffer;
 	XMMATRIX* m_position;
 	uint32_t indices;
+	GameObject* m_obj;
 
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
 
@@ -85,6 +87,9 @@ public:
 
 	bool CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
 	bool CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
+
+	GameObject* gameObject() const { return m_obj; }
+	void setGameObject(GameObject* obj) { m_obj = obj; }
 
 	void Release();
 };
