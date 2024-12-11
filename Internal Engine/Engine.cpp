@@ -368,8 +368,8 @@ void Engine::FixedUpdate(float deltaTime) {
 void Engine::Update(float deltaTime) {
     camera.Update();
     m_location->Update(deltaTime);
-    for (int iterator = 0; iterator < m_quewe.size(); ++iterator) {
-        m_quewe[iterator]->Update(deltaTime);
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+        m_meshes[iterator]->Update(deltaTime);
     }
     m_skybox->Update(deltaTime);
 }
@@ -389,8 +389,8 @@ void Engine::Render() {
     float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
     
-    for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
-        m_quewe[iterator]->Render(m_deviceContext);
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
+        m_meshes[iterator]->Render(m_deviceContext);
 
     m_skybox->Render(m_deviceContext);
     
@@ -409,9 +409,9 @@ void Engine::Release() {
     if (m_depthStencilView) m_depthStencilView->Release();
     if (m_depthTexture) m_depthTexture->Release();
 
-    for (int iterator = 0; iterator < m_quewe.size(); ++iterator)
-        m_quewe[iterator]->Release();
-    m_quewe.clear();
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
+        m_meshes[iterator]->Release();
+    m_meshes.clear();
 
     if (m_font) m_font->Release();
     if (m_skybox) {
@@ -459,35 +459,45 @@ int Engine::messageWindow() {
 #pragma warning(push)
 #pragma warning(disable : 6387)
 void Engine::Raycast(int mouseX, int mouseY) {
+    int screenWidth = getSupportedResolution().Width;
+    int screenHeight = getSupportedResolution().Height;
+
+    float pointX = ((2.0f * (float)mouseX) / (float)screenWidth) - 1.0f;
+    float pointY = (((2.0f * (float)mouseY) / (float)screenHeight) - 1.0f) * -1.0f;
+
     const XMMATRIX matProj = camera.getProjection();
-    int screenWidth = getSupportedResolutin().Width;
-    int screenHeight = getSupportedResolutin().Height;
-
-    POINT ptCursor;
-    GetCursorPos(&ptCursor);
-    ScreenToClient(m_windowDesc->hWnd, &ptCursor);
-
-    XMVECTOR v{};
-    v.m128_f32[0] = ((2.0f * ptCursor.x) / screenWidth - 1) / matProj.r[0].m128_f32[0];
-    v.m128_f32[1] = -((2.0f * ptCursor.y) / screenHeight - 1) / matProj.r[1].m128_f32[1];
-    v.m128_f32[2] = 1.0f;
+    XMFLOAT4X4 storeMatrix, viewStoreMatrix;
+    XMStoreFloat4x4(&storeMatrix, matProj);
+    pointX = pointX / storeMatrix._11;
+    pointY = pointY / storeMatrix._22;
 
     const XMMATRIX matView = camera.getView();
-    const XMMATRIX matWorld = camera.getWorld();
+    XMVECTOR determinant;
+    XMMATRIX inverseViewMatrix = XMMatrixInverse(&determinant, matView);
+    XMStoreFloat4x4(&viewStoreMatrix, inverseViewMatrix);
 
-    XMMATRIX mWorldView = XMMatrixMultiply(matWorld, matView);
-    XMVECTOR determinant{};
-    XMMATRIX mInverseWorldView = XMMatrixInverse(&determinant, mWorldView);
-    XMVECTOR vPickRayDir = XMVector3TransformNormal(v, mInverseWorldView);
-    XMVECTOR vPickRayOrig = XMVector3TransformCoord(XMVectorSet(0, 0, 0, 1), mInverseWorldView);
+    XMFLOAT3 cameraDirection{};
+    cameraDirection.x = (pointX * viewStoreMatrix._11) + (pointY * viewStoreMatrix._21) + viewStoreMatrix._31;
+    cameraDirection.y = (pointX * viewStoreMatrix._12) + (pointY * viewStoreMatrix._22) + viewStoreMatrix._32;
+    cameraDirection.z = (pointX * viewStoreMatrix._13) + (pointY * viewStoreMatrix._23) + viewStoreMatrix._33;
+    XMVECTOR direction = XMLoadFloat3(&cameraDirection);
+
+    XMVECTOR origin = camera.getPos();
+    XMMATRIX worldMatrix = XMMatrixTranslation(-5.0f, 1.0f, 5.0f);
+    XMMATRIX inverseWorldMatrix = XMMatrixInverse(&determinant, worldMatrix);
+
+    XMVECTOR rayOrigin = XMVector3TransformCoord(origin, inverseWorldMatrix);
+    XMVECTOR rayDirection = XMVector3TransformNormal(direction, inverseWorldMatrix);
+
+    rayDirection = XMVector3Normalize(rayDirection);
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-5.0f, 5.0f);
 
-    std::vector<MeshComponent*>::iterator it = m_quewe.begin();
-    while (it != m_quewe.end()) {
-        if ((*it)->IntersectRayWithMesh(vPickRayOrig, vPickRayDir, *it)) {
+    std::vector<MeshComponent*>::iterator it = m_meshes.begin();
+    while (it != m_meshes.end()) {
+        if ((*it)->IntersectRayWithMesh(rayOrigin, rayDirection, *it)) {
             GameObject* obj = (*it)->gameObject();
 
             XMFLOAT3 currentPosition = obj->position();
@@ -591,7 +601,7 @@ void Engine::addMeshRenderer(MeshComponent* mesh, const char* filename) {
         mesh->SetDataPhysics(vertices, indices);
         mesh->Init(m_device, m_deviceContext);
 
-        m_quewe.emplace_back(mesh);
+        m_meshes.emplace_back(mesh);
     }
 }
 
@@ -639,7 +649,7 @@ IDXGISwapChain* Engine::getChain() const {
     return m_swapChain;
 }
 
-const DXGI_MODE_DESC& Engine::getSupportedResolutin() const {
+const DXGI_MODE_DESC& Engine::getSupportedResolution() const {
     return m_supportedResolution[config.resolution];
 }
 

@@ -31,8 +31,8 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
 
     D3D11_TEXTURE2D_DESC sharedTexDesc;
     ZeroMemory(&sharedTexDesc, sizeof(D3D11_TEXTURE2D_DESC));
-    sharedTexDesc.Width = engine.getSupportedResolutin().Width;
-    sharedTexDesc.Height = engine.getSupportedResolutin().Height;
+    sharedTexDesc.Width = engine.getSupportedResolution().Width;
+    sharedTexDesc.Height = engine.getSupportedResolution().Height;
     sharedTexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     sharedTexDesc.MipLevels = 1;
     sharedTexDesc.ArraySize = 1;
@@ -234,8 +234,8 @@ void Font::Render(ID3D11DeviceContext* deviceContext, const std::wstring text) {
     D2D1_COLOR_F FontColor = D2D1::ColorF(1.0f, 1.0f, 0.0f, 1.0f);
     m_brush->SetColor(FontColor);
     D2D1_RECT_F layoutRect = D2D1::RectF(0, 0,
-        engine.getSupportedResolutin().Width,
-        engine.getSupportedResolutin().Height);
+        engine.getSupportedResolution().Width,
+        engine.getSupportedResolution().Height);
 
     m_renderTarget->DrawText(
         text.c_str(), wcslen(text.c_str()),

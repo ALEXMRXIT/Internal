@@ -3,7 +3,7 @@
 
 Camera::Camera() {
 	position = XMVectorSet(0.0f, 5.0f, -8.0f, 0.0f);
-	target = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	target = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 	up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	view = XMMatrixLookAtLH(position, target, up);
@@ -19,13 +19,10 @@ Camera::Camera() {
 }
 
 void Camera::Update() {
-	view = XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
+	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
 
-	target = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), view);
-	target = XMVector3Normalize(target);
-
-	right = XMVector3TransformCoord(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), view);
-	forward = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), view);
+	forward = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), rotationMatrix);
+	right = XMVector3TransformCoord(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), rotationMatrix);
 	up = XMVector3Cross(forward, right);
 
 	position += verticalLeftRight * right;
@@ -34,12 +31,12 @@ void Camera::Update() {
 	verticalLeftRight = 0.0f;
 	horizontalBackForward = 0.0f;
 
-	target = position + target;
+	target = position + forward;
 	view = XMMatrixLookAtLH(position, target, up);
 	world = view * XMMatrixTranslationFromVector(position);
 }
 
 void Camera::SetProjection() {
-	float screen = (float)engine.getSupportedResolutin().Width / (float)engine.getSupportedResolutin().Height;
+	float screen = (float)engine.getSupportedResolution().Width / (float)engine.getSupportedResolution().Height;
 	projection = XMMatrixPerspectiveFovLH(0.35f * XM_PI, screen, 0.3f, 1000.0f);
 }

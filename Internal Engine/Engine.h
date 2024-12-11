@@ -61,7 +61,7 @@ private:
 	LPDIRECTINPUT8 m_directInput;
 	ID3D11Buffer* m_constantLightBuffer;
 
-	std::vector<MeshComponent*> m_quewe;
+	std::vector<MeshComponent*> m_meshes;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 	Location* m_location;
@@ -98,7 +98,7 @@ public:
 	const WindowDescription* getWindowDesc() const;
 	RECT& getWindowRect();
 	IDXGISwapChain* getChain() const;
-	const DXGI_MODE_DESC& getSupportedResolutin() const;
+	const DXGI_MODE_DESC& getSupportedResolution() const;
 	const wchar_t* toStringVSync() const;
 };
 

@@ -112,5 +112,7 @@
     <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />
+    <None Include="shaders\**\*" />
+    <None Include="shaders\**\*" />
   </ItemGroup>
 </Project>
