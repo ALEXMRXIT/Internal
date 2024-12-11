@@ -4,7 +4,6 @@
 extern class Camera {
 private:
 	XMVECTOR position;
-	XMMATRIX rotation;
 	XMMATRIX view;
 	XMVECTOR target;
 	XMVECTOR up;

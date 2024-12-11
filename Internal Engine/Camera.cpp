@@ -19,17 +19,13 @@ Camera::Camera() {
 }
 
 void Camera::Update() {
-	XMMATRIX translation = XMMatrixTranslationFromVector(position);
-	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
+	view = XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
 
-	world = rotation * translation;
-
-	rotation = XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
-	target = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), rotation);
+	target = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), view);
 	target = XMVector3Normalize(target);
 
-	right = XMVector3TransformCoord(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), rotation);
-	forward = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), rotation);
+	right = XMVector3TransformCoord(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), view);
+	forward = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), view);
 	up = XMVector3Cross(forward, right);
 
 	position += verticalLeftRight * right;
@@ -40,6 +36,7 @@ void Camera::Update() {
 
 	target = position + target;
 	view = XMMatrixLookAtLH(position, target, up);
+	world = view * XMMatrixTranslationFromVector(position);
 }
 
 void Camera::SetProjection() {
