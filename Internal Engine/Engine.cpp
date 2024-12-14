@@ -397,7 +397,6 @@ void Engine::Render() {
         m_meshes[iterator]->Render(m_deviceContext);
 
     m_skybox->Render(m_deviceContext);
-
     draw.Render();
     
     wchar_t buffer[128];
@@ -462,16 +461,22 @@ int Engine::messageWindow() {
     return message.wParam;
 }
 
-#pragma warning(push)
-#pragma warning(disable : 6387)
 void Engine::Raycast(int mouseX, int mouseY) {
     int screenWidth = getSupportedResolution().Width;
     int screenHeight = getSupportedResolution().Height;
 
     XMVECTOR pickRayInViewSpacePos = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 
-    float pointX = (((2.0f * (float)mouseX) / (float)screenWidth) - 1) / camera.getProjection()(0, 0);
-    float pointY = - (((2.0f * (float)mouseY) / (float)screenHeight) - 1.0f) / camera.getProjection()(1, 1);
+    POINT cursorPos;
+    GetCursorPos(&cursorPos);
+
+    if (config.fullscreen) {
+        cursorPos.x = (int)((float)cursorPos.x * (float)screenWidth / (float)GetSystemMetrics(SM_CXSCREEN));
+        cursorPos.y = (int)((float)cursorPos.y * (float)screenHeight / (float)GetSystemMetrics(SM_CYSCREEN));
+    }
+
+    float pointX = (((2.0f * (float)cursorPos.x) / screenWidth) - 1) / camera.getProjection()(0, 0);
+    float pointY = -(((2.0f * (float)cursorPos.y) / screenHeight) - 1.0f) / camera.getProjection()(1, 1);
     float pointZ = 1.0f;
 
     XMVECTOR pickRayInViewSpaceDir = XMVectorSet(pointX, pointY, pointZ, 1.0f);
@@ -482,6 +487,7 @@ void Engine::Raycast(int mouseX, int mouseY) {
 
     XMVECTOR pickRayInWorldSpacePos = XMVector3TransformCoord(pickRayInViewSpacePos, pickRayToWorldSpaceMatrix);
     XMVECTOR pickRayInWorldSpaceDir = XMVector3TransformNormal(pickRayInViewSpaceDir, pickRayToWorldSpaceMatrix);
+    pickRayInWorldSpaceDir = XMVector3Normalize(pickRayInWorldSpaceDir);
 
     float closestDistance = FLT_MAX;
     MeshComponent* closestMesh = nullptr;
@@ -521,7 +527,6 @@ void Engine::Raycast(int mouseX, int mouseY) {
         obj->setPosition(newPosition);
     }
 }
-#pragma warning(pop)
 
 static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertices, std::vector<DWORD>& indices) {
     struct VertexHash {
