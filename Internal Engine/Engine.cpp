@@ -468,51 +468,36 @@ void Engine::Raycast(int mouseX, int mouseY) {
     int screenWidth = getSupportedResolution().Width;
     int screenHeight = getSupportedResolution().Height;
 
-    // Нормализация координат мыши в диапазон [-1, 1]
-    float pointX = ((2.0f * (float)mouseX) / (float)screenWidth) - 1.0f;
-    float pointY = (((2.0f * (float)mouseY) / (float)screenHeight) - 1.0f) * -1.0f;
+    XMVECTOR pickRayInViewSpacePos = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 
-    // Получаем матрицы проекции и вида
-    const XMMATRIX matProj = camera.getProjection();
-    const XMMATRIX matView = camera.getView();
+    float pointX = (((2.0f * (float)mouseX) / (float)screenWidth) - 1) / camera.getProjection()(0, 0);
+    float pointY = - (((2.0f * (float)mouseY) / (float)screenHeight) - 1.0f) / camera.getProjection()(1, 1);
+    float pointZ = 1.0f;
 
-    // Инвертируем матрицу вида
-    XMVECTOR determinant;
-    XMMATRIX inverseViewMatrix = XMMatrixInverse(&determinant, matView);
+    XMVECTOR pickRayInViewSpaceDir = XMVectorSet(pointX, pointY, pointZ, 1.0f);
 
-    // Преобразуем координаты мыши в пространство вида
-    pointX = pointX / matProj.r[0].m128_f32[0];
-    pointY = pointY / matProj.r[1].m128_f32[1];
+    XMMATRIX pickRayToWorldSpaceMatrix;
+    XMVECTOR matInvDeter;
+    pickRayToWorldSpaceMatrix = XMMatrixInverse(&matInvDeter, camera.getView());
 
-    // Вычисляем направление луча в пространстве камеры
-    XMFLOAT3 cameraDirection{};
-    cameraDirection.x = pointX * inverseViewMatrix.r[0].m128_f32[0] + pointY * inverseViewMatrix.r[1].m128_f32[0] + inverseViewMatrix.r[2].m128_f32[0];
-    cameraDirection.y = pointX * inverseViewMatrix.r[0].m128_f32[1] + pointY * inverseViewMatrix.r[1].m128_f32[1] + inverseViewMatrix.r[2].m128_f32[1];
-    cameraDirection.z = pointX * inverseViewMatrix.r[0].m128_f32[2] + pointY * inverseViewMatrix.r[1].m128_f32[2] + inverseViewMatrix.r[2].m128_f32[2];
-    XMVECTOR direction = XMLoadFloat3(&cameraDirection);
-
-    // Нормализуем направление луча
-    direction = XMVector3Normalize(direction);
-
-    // Получаем позицию камеры
-    XMVECTOR origin = camera.getPos();
+    XMVECTOR pickRayInWorldSpacePos = XMVector3TransformCoord(pickRayInViewSpacePos, pickRayToWorldSpaceMatrix);
+    XMVECTOR pickRayInWorldSpaceDir = XMVector3TransformNormal(pickRayInViewSpaceDir, pickRayToWorldSpaceMatrix);
 
     float closestDistance = FLT_MAX;
     MeshComponent* closestMesh = nullptr;
 
     XMFLOAT3 endPoint;
-    XMStoreFloat3(&endPoint, origin + direction * 1000.0f);
+    XMStoreFloat3(&endPoint, pickRayInWorldSpacePos + pickRayInWorldSpaceDir * 1000.0f);
     draw.DrawLine(
-        XMFLOAT3(XMVectorGetX(origin), XMVectorGetY(origin), XMVectorGetZ(origin)),
+        XMFLOAT3(XMVectorGetX(pickRayInWorldSpacePos), XMVectorGetY(pickRayInWorldSpacePos), XMVectorGetZ(pickRayInWorldSpacePos)),
         endPoint,
         XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)
     );
 
-    // Проверяем пересечение с каждым мешем
     std::vector<MeshComponent*>::iterator it = m_meshes.begin();
     while (it != m_meshes.end()) {
         float distance = 0.0f;
-        if ((*it)->IntersectRayWithMesh(origin, direction, *it, distance)) {
+        if (distance = (*it)->IntersectRayWithMesh(pickRayInWorldSpacePos, pickRayInWorldSpaceDir, *it)) {
             if (distance < closestDistance) {
                 closestDistance = distance;
                 closestMesh = *it;
@@ -521,11 +506,9 @@ void Engine::Raycast(int mouseX, int mouseY) {
         ++it;
     }
 
-    // Если найдено пересечение, обрабатываем его
     if (closestMesh != nullptr) {
         GameObject* obj = closestMesh->gameObject();
 
-        // Генерируем случайные смещения
         std::mt19937 gen(static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
         std::uniform_real_distribution<> dis(-5.0f, 5.0f);
 
@@ -535,7 +518,6 @@ void Engine::Raycast(int mouseX, int mouseY) {
         XMFLOAT3 newPosition;
         XMStoreFloat3(&newPosition, newPositionVec);
 
-        // Устанавливаем новую позицию объекта
         obj->setPosition(newPosition);
     }
 }

@@ -9,8 +9,7 @@ private:
 	std::vector<_Vertex> m_vertices;
 	std::vector<DWORD> m_indices;
 
-	__forceinline bool IntersectTriangle(const XMVECTOR& orig, const XMVECTOR& dir, 
-		const XMVECTOR& v0, const XMVECTOR& v1, const XMVECTOR& v2, float& t);
+	__forceinline bool IntersectTriangle(XMVECTOR& triV1, XMVECTOR& triV2, XMVECTOR& triV3, XMVECTOR& point);
 
 public:
 	Physics();
@@ -18,7 +17,7 @@ public:
 	Physics(const Physics&) = delete;
 	Physics& operator=(const Physics&) = delete;
 
-	bool IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent* mesh, float& closestDistance);
+	float IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent* mesh);
 
 	void SetDataPhysics(const std::vector<_Vertex>& vertices, const std::vector<DWORD>& indices);
 };

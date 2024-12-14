@@ -90,6 +90,7 @@ public:
 
 	GameObject* gameObject() const { return m_obj; }
 	void setGameObject(GameObject* obj) { m_obj = obj; }
+	XMMATRIX& position() const { return *m_position; }
 
 	void Release();
 };
