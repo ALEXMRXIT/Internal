@@ -13,6 +13,12 @@ cbuffer cbPerObject : register(b1)
     float2 texture_offset;
 };
 
+cbuffer cbOutline : register(b2)
+{
+    float outlineThinkess;
+    float3 oulineColor;
+}
+
 struct VS_INPUT
 {
     float4 Pos : POSITION;
@@ -31,11 +37,29 @@ struct VS_OUTPUT
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output;
+    
     output.Pos = mul(input.Pos, WVP);
     output.Normal = mul(input.Normal, (float3x3) World);
     output.Normal = normalize(output.Normal);
     output.TexCoord = (input.TexCoord * texture_scale) + texture_offset;
     output.WorldPos = mul(input.Pos, World).xyz;
+    
+    return output;
+}
+
+VS_OUTPUT VS_Outline(VS_INPUT input)
+{
+    VS_OUTPUT output;
+    
+    float3 normal = mul(input.Normal, (float3x3) World);
+    normal = normalize(normal);
+    float4 offsetPos = input.Pos + float4(normal * outlineThinkess, 0.0f);
+    
+    output.Pos = mul(offsetPos, WVP);
+    output.TexCoord = input.TexCoord;
+    output.Normal = normal;
+    output.WorldPos = mul(offsetPos, World).xyz;
+
     return output;
 }
 
@@ -57,4 +81,9 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     float3 finalColor = (ambient.rgb * color.rgb) + diffuseColor;
     
     return float4(finalColor, color.a);
+}
+
+float4 PS_Outline(VS_OUTPUT input) : SV_TARGET
+{
+    return float4(oulineColor, 1.0f);
 }

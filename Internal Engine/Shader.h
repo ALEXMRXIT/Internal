@@ -14,8 +14,8 @@ public:
 	Shader(const Shader&) = delete;
 	Shader& operator=(const Shader&) = delete;
 
-	HRESULT LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* shaderName);
-	HRESULT LoadPixelShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* shaderName);
+	HRESULT LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* entry, const char* shaderName);
+	HRESULT LoadPixelShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* entry, const char* shaderName);
 
 	void setVertexShader(ID3D11DeviceContext* context) const;
 	void setPiexlShader(ID3D11DeviceContext* context) const;

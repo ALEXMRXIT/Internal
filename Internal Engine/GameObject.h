@@ -15,6 +15,9 @@ public:
 	template<class TComponent>
 	TComponent* AddComponent() { return m_components->AddComponent<TComponent>(); }
 
+	template<class TComponent>
+	TComponent* GetComponentByType() const { return m_components->GetComponentByType<TComponent>(); }
+
 	__forceinline Transform& transform() const { return m_components->transform(); }
 
 	void setPosition(const XMFLOAT3& vector) const { transform().setPosition(vector); }

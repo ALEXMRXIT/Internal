@@ -71,6 +71,7 @@ private:
 
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font;
+	MeshComponent* lastSelected;
 
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

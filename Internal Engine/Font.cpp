@@ -132,9 +132,9 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     }
 
     m_fontShader = new Shader();
-    if (FAILED(m_fontShader->LoadVertexShader(device, context, "shaders\\label.fx")))
+    if (FAILED(m_fontShader->LoadVertexShader(device, context, "VS", "shaders\\label.fx")))
         return hr;
-    if (FAILED(m_fontShader->LoadPixelShader(device, context, "shaders\\label.fx")))
+    if (FAILED(m_fontShader->LoadPixelShader(device, context, "PS", "shaders\\label.fx")))
         return hr;
 
     D3D11_SAMPLER_DESC sampDesc;

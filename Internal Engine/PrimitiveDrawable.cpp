@@ -34,9 +34,9 @@ void PrimitiveDrawable::Init(ID3D11Device* device, ID3D11DeviceContext* context)
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Error create index buffer", hr);
 
     m_shader = new Shader();
-    hr = m_shader->LoadVertexShader(device, context, "shaders\\primitive.fx");
+    hr = m_shader->LoadVertexShader(device, context, "VS", "shaders\\primitive.fx");
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loaded vertex shader", hr);
-    hr = m_shader->LoadPixelShader(device, context, "shaders\\primitive.fx");
+    hr = m_shader->LoadPixelShader(device, context, "PS", "shaders\\primitive.fx");
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loaded pixel shader", hr);
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {

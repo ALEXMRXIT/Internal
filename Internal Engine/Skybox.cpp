@@ -91,9 +91,9 @@ void Skybox::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
 	HRESULT hr{};
     CreateSphere(device, 10, 10);
     m_shader = new Shader();
-    hr = m_shader->LoadVertexShader(device, context, "shaders\\skybox.fx");
+    hr = m_shader->LoadVertexShader(device, context, "VS", "shaders\\skybox.fx");
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to load Vertex shader.", hr);
-    hr = m_shader->LoadPixelShader(device, context, "shaders\\skybox.fx");
+    hr = m_shader->LoadPixelShader(device, context, "PS", "shaders\\skybox.fx");
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to load Pixel shader.", hr);
     
     D3DX11_IMAGE_LOAD_INFO loadSMInfo;
@@ -125,7 +125,7 @@ void Skybox::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
 
     D3D11_DEPTH_STENCIL_DESC depthDesc;
     ZeroMemory(&depthDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-    depthDesc.DepthEnable = true;
+    depthDesc.DepthEnable = TRUE;
     depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     depthDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 

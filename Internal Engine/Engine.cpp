@@ -492,14 +492,6 @@ void Engine::Raycast(int mouseX, int mouseY) {
     float closestDistance = FLT_MAX;
     MeshComponent* closestMesh = nullptr;
 
-    XMFLOAT3 endPoint;
-    XMStoreFloat3(&endPoint, pickRayInWorldSpacePos + pickRayInWorldSpaceDir * 1000.0f);
-    draw.DrawLine(
-        XMFLOAT3(XMVectorGetX(pickRayInWorldSpacePos), XMVectorGetY(pickRayInWorldSpacePos), XMVectorGetZ(pickRayInWorldSpacePos)),
-        endPoint,
-        XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)
-    );
-
     std::vector<MeshComponent*>::iterator it = m_meshes.begin();
     while (it != m_meshes.end()) {
         float distance = 0.0f;
@@ -514,6 +506,11 @@ void Engine::Raycast(int mouseX, int mouseY) {
 
     if (closestMesh != nullptr) {
         GameObject* obj = closestMesh->gameObject();
+        MeshComponent* mesh = obj->GetComponentByType<MeshComponent>();
+        mesh->setSelectable(true);
+        if (lastSelected)
+            lastSelected->setSelectable(false);
+        lastSelected = mesh;
 
         std::mt19937 gen(static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
         std::uniform_real_distribution<> dis(-5.0f, 5.0f);
