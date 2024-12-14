@@ -23,7 +23,7 @@ void Camera::Update() {
 
 	forward = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), rotationMatrix);
 	right = XMVector3TransformCoord(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), rotationMatrix);
-	up = XMVector3Cross(forward, right);
+	up = XMVector3Normalize(XMVector3Cross(forward, right));
 
 	position += verticalLeftRight * right;
 	position += horizontalBackForward * forward;
@@ -33,10 +33,9 @@ void Camera::Update() {
 
 	target = position + forward;
 	view = XMMatrixLookAtLH(position, target, up);
-	world = view * XMMatrixTranslationFromVector(position);
 }
 
 void Camera::SetProjection() {
 	float screen = (float)engine.getSupportedResolution().Width / (float)engine.getSupportedResolution().Height;
-	projection = XMMatrixPerspectiveFovLH(0.35f * XM_PI, screen, 0.3f, 1000.0f);
+	projection = XMMatrixPerspectiveFovLH(0.325f * XM_PI, screen, 0.3f, 1000.0f);
 }

@@ -11,6 +11,7 @@ public:
 		cameraSpeed = 15.0f;
 		mouseIntensive = 25.0f;
 		additionalLShiftSpeed = 3.0f;
+		primitiveBufferSize = 512;
 	}
 
 	int resolution;
@@ -22,4 +23,5 @@ public:
 	float cameraSpeed;
 	float mouseIntensive;
 	float additionalLShiftSpeed;
+	int primitiveBufferSize;
 };

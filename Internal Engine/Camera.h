@@ -10,7 +10,6 @@ private:
 	XMVECTOR forward;
 	XMVECTOR right;
 	XMMATRIX projection;
-	XMMATRIX world;
 
 public:
 	Camera();
@@ -28,6 +27,5 @@ public:
 
 	XMMATRIX getView() const { return view; }
 	XMMATRIX getProjection() const { return projection; }
-	XMMATRIX getWorld() const { return world; }
 	XMVECTOR getPos() const { return position; }
 } camera;

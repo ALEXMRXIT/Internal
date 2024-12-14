@@ -8,6 +8,7 @@ class Camera;
 class MeshComponent;
 class Location;
 class Skybox;
+class PrimitiveDrawable;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -105,3 +106,4 @@ public:
 extern Engine engine;
 extern Config config;
 extern Camera camera;
+extern PrimitiveDrawable draw;

@@ -9,10 +9,12 @@
 #include "Config.h"
 #include "Location.h"
 #include "Skybox.h"
+#include "PrimitiveDrawable.h"
 
 Engine engine;
 Camera camera;
 Config config;
+PrimitiveDrawable draw;
 
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
     m_windowDesc = const_cast<WindowDescription*>(desc);
@@ -329,6 +331,8 @@ bool Engine::InitScene() {
     m_skybox = new Skybox();
     m_skybox->Init(m_device, m_deviceContext);
 
+    draw.Init(m_device, m_deviceContext);
+
     return true;
 }
 
@@ -393,6 +397,8 @@ void Engine::Render() {
         m_meshes[iterator]->Render(m_deviceContext);
 
     m_skybox->Render(m_deviceContext);
+
+    draw.Render();
     
     wchar_t buffer[128];
     swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
@@ -462,60 +468,75 @@ void Engine::Raycast(int mouseX, int mouseY) {
     int screenWidth = getSupportedResolution().Width;
     int screenHeight = getSupportedResolution().Height;
 
+    // Нормализация координат мыши в диапазон [-1, 1]
     float pointX = ((2.0f * (float)mouseX) / (float)screenWidth) - 1.0f;
     float pointY = (((2.0f * (float)mouseY) / (float)screenHeight) - 1.0f) * -1.0f;
 
+    // Получаем матрицы проекции и вида
     const XMMATRIX matProj = camera.getProjection();
-    XMFLOAT4X4 storeMatrix, viewStoreMatrix;
-    XMStoreFloat4x4(&storeMatrix, matProj);
-    pointX = pointX / storeMatrix._11;
-    pointY = pointY / storeMatrix._22;
-
     const XMMATRIX matView = camera.getView();
+
+    // Инвертируем матрицу вида
     XMVECTOR determinant;
     XMMATRIX inverseViewMatrix = XMMatrixInverse(&determinant, matView);
-    XMStoreFloat4x4(&viewStoreMatrix, inverseViewMatrix);
 
+    // Преобразуем координаты мыши в пространство вида
+    pointX = pointX / matProj.r[0].m128_f32[0];
+    pointY = pointY / matProj.r[1].m128_f32[1];
+
+    // Вычисляем направление луча в пространстве камеры
     XMFLOAT3 cameraDirection{};
-    cameraDirection.x = (pointX * viewStoreMatrix._11) + (pointY * viewStoreMatrix._21) + viewStoreMatrix._31;
-    cameraDirection.y = (pointX * viewStoreMatrix._12) + (pointY * viewStoreMatrix._22) + viewStoreMatrix._32;
-    cameraDirection.z = (pointX * viewStoreMatrix._13) + (pointY * viewStoreMatrix._23) + viewStoreMatrix._33;
+    cameraDirection.x = pointX * inverseViewMatrix.r[0].m128_f32[0] + pointY * inverseViewMatrix.r[1].m128_f32[0] + inverseViewMatrix.r[2].m128_f32[0];
+    cameraDirection.y = pointX * inverseViewMatrix.r[0].m128_f32[1] + pointY * inverseViewMatrix.r[1].m128_f32[1] + inverseViewMatrix.r[2].m128_f32[1];
+    cameraDirection.z = pointX * inverseViewMatrix.r[0].m128_f32[2] + pointY * inverseViewMatrix.r[1].m128_f32[2] + inverseViewMatrix.r[2].m128_f32[2];
     XMVECTOR direction = XMLoadFloat3(&cameraDirection);
 
+    // Нормализуем направление луча
+    direction = XMVector3Normalize(direction);
+
+    // Получаем позицию камеры
     XMVECTOR origin = camera.getPos();
-    XMMATRIX worldMatrix = XMMatrixTranslation(-5.0f, 1.0f, 5.0f);
-    XMMATRIX inverseWorldMatrix = XMMatrixInverse(&determinant, worldMatrix);
 
-    XMVECTOR rayOrigin = XMVector3TransformCoord(origin, inverseWorldMatrix);
-    XMVECTOR rayDirection = XMVector3TransformNormal(direction, inverseWorldMatrix);
+    float closestDistance = FLT_MAX;
+    MeshComponent* closestMesh = nullptr;
 
-    rayDirection = XMVector3Normalize(rayDirection);
+    XMFLOAT3 endPoint;
+    XMStoreFloat3(&endPoint, origin + direction * 1000.0f);
+    draw.DrawLine(
+        XMFLOAT3(XMVectorGetX(origin), XMVectorGetY(origin), XMVectorGetZ(origin)),
+        endPoint,
+        XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)
+    );
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-5.0f, 5.0f);
-
+    // Проверяем пересечение с каждым мешем
     std::vector<MeshComponent*>::iterator it = m_meshes.begin();
     while (it != m_meshes.end()) {
-        if ((*it)->IntersectRayWithMesh(rayOrigin, rayDirection, *it)) {
-            GameObject* obj = (*it)->gameObject();
-
-            XMFLOAT3 currentPosition = obj->position();
-
-            float offsetX = dis(gen);
-            float offsetY = dis(gen);
-            float offsetZ = dis(gen);
-
-            XMVECTOR currentPositionVec = XMLoadFloat3(&currentPosition);
-            XMVECTOR newPositionVec = currentPositionVec + XMVectorSet(offsetX, offsetY, offsetZ, 0.0f);
-            XMFLOAT3 newPosition;
-            XMStoreFloat3(&newPosition, newPositionVec);
-            obj->setPosition(newPosition);
-            break;
+        float distance = 0.0f;
+        if ((*it)->IntersectRayWithMesh(origin, direction, *it, distance)) {
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestMesh = *it;
+            }
         }
-        else {
-            ++it;
-        }
+        ++it;
+    }
+
+    // Если найдено пересечение, обрабатываем его
+    if (closestMesh != nullptr) {
+        GameObject* obj = closestMesh->gameObject();
+
+        // Генерируем случайные смещения
+        std::mt19937 gen(static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+        std::uniform_real_distribution<> dis(-5.0f, 5.0f);
+
+        XMFLOAT3 currentPosition = obj->position();
+        XMVECTOR currentPositionVec = XMLoadFloat3(&currentPosition);
+        XMVECTOR newPositionVec = currentPositionVec + XMVectorSet(dis(gen), dis(gen), dis(gen), 0.0f);
+        XMFLOAT3 newPosition;
+        XMStoreFloat3(&newPosition, newPositionVec);
+
+        // Устанавливаем новую позицию объекта
+        obj->setPosition(newPosition);
     }
 }
 #pragma warning(pop)

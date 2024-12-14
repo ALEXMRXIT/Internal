@@ -34,8 +34,8 @@ HRESULT Shader::LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* cont
         DXUT_ERR_MSGBOX("Error compiling vertex shader", hr);
         return hr;
     }
-    LPVOID buffPtr = vertexShader->GetBufferPointer();
-    SIZE_T size = vertexShader->GetBufferSize();
+    const LPVOID buffPtr = vertexShader->GetBufferPointer();
+    const SIZE_T size = vertexShader->GetBufferSize();
     device->CreateVertexShader(buffPtr, size, NULL, &m_vertexShader);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to create vertex shader.", hr);
@@ -52,8 +52,8 @@ HRESULT Shader::LoadPixelShader(ID3D11Device* device, ID3D11DeviceContext* conte
         DXUT_ERR_MSGBOX("Error compiling pixel shader", hr);
         return hr;
     }
-    LPVOID buffPtr = pixelShader->GetBufferPointer();
-    SIZE_T size = pixelShader->GetBufferSize();
+    const LPVOID buffPtr = pixelShader->GetBufferPointer();
+    const SIZE_T size = pixelShader->GetBufferSize();
     device->CreatePixelShader(buffPtr, size, NULL, &m_pixelShader);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to create pixel shader.", hr);
