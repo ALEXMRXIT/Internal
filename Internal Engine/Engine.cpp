@@ -383,7 +383,7 @@ void Engine::Render() {
     
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
+    
     m_bufferLight.direction = XMFLOAT4(-15.0f, -15.0f, 1.0f, 1.0f);
     m_bufferLight.ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
     m_bufferLight.diffuse = XMFLOAT4(1.0f, 0.8f, 0.8f, 1.0f);
@@ -507,21 +507,10 @@ void Engine::Raycast(int mouseX, int mouseY) {
     if (closestMesh != nullptr) {
         GameObject* obj = closestMesh->gameObject();
         MeshComponent* mesh = obj->GetComponentByType<MeshComponent>();
-        mesh->setSelectable(true);
         if (lastSelected)
             lastSelected->setSelectable(false);
+        mesh->setSelectable(true);
         lastSelected = mesh;
-
-        std::mt19937 gen(static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
-        std::uniform_real_distribution<> dis(-5.0f, 5.0f);
-
-        XMFLOAT3 currentPosition = obj->position();
-        XMVECTOR currentPositionVec = XMLoadFloat3(&currentPosition);
-        XMVECTOR newPositionVec = currentPositionVec + XMVectorSet(dis(gen), dis(gen), dis(gen), 0.0f);
-        XMFLOAT3 newPosition;
-        XMStoreFloat3(&newPosition, newPositionVec);
-
-        obj->setPosition(newPosition);
     }
 }
 

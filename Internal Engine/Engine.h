@@ -71,7 +71,6 @@ private:
 
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font;
-	MeshComponent* lastSelected;
 
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -81,6 +80,8 @@ private:
 	void UpdateInput(float deltaTime);
 public:
 	Engine() {}
+
+	MeshComponent* lastSelected;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;

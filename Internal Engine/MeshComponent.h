@@ -56,10 +56,9 @@ typedef struct _worldViewProjectionBuffer {
 	XMFLOAT2 texture_offset;
 } WorldViewProjection, * LPWorldViewProjection;
 
-typedef struct _outlineBuffer {
-	float outlineThinkess;
-	XMFLOAT3 outlineColor;
-} OutlineBuffer, *LPOutlineBuffer;
+struct SelectableConstantBuffer {
+	XMFLOAT4 selectable;
+};
 
 class MeshComponent : public AbstractBaseComponent, public Physics {
 private:
@@ -68,13 +67,11 @@ private:
 	ID3D11RasterizerState* m_cWcullMode;
 	MeshMaterial* m_material;
 	ID3D11InputLayout* m_layout;
-	ID3D11InputLayout* m_layoutOutline;
 	Shader* m_meshShader;
-	Shader* m_outlineShader;
 	WorldViewProjection m_bufferWVP;
-	OutlineBuffer m_outlineBuffer;
+	SelectableConstantBuffer m_select;
 	ID3D11Buffer* m_preObjectBuffer;
-	ID3D11Buffer* m_preOutline;
+	ID3D11Buffer* m_preObjectSelect;
 	XMMATRIX* m_position;
 	uint32_t indices;
 	GameObject* m_obj;

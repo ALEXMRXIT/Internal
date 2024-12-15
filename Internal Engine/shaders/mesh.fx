@@ -13,10 +13,9 @@ cbuffer cbPerObject : register(b1)
     float2 texture_offset;
 };
 
-cbuffer cbOutline : register(b2)
+cbuffer cbSelectable : register(b2)
 {
-    float outlineThinkess;
-    float3 oulineColor;
+    float4 selectable;
 }
 
 struct VS_INPUT
@@ -47,22 +46,6 @@ VS_OUTPUT VS(VS_INPUT input)
     return output;
 }
 
-VS_OUTPUT VS_Outline(VS_INPUT input)
-{
-    VS_OUTPUT output;
-    
-    float3 normal = mul(input.Normal, (float3x3) World);
-    normal = normalize(normal);
-    float4 offsetPos = input.Pos + float4(normal * outlineThinkess, 0.0f);
-    
-    output.Pos = mul(offsetPos, WVP);
-    output.TexCoord = input.TexCoord;
-    output.Normal = normal;
-    output.WorldPos = mul(offsetPos, World).xyz;
-
-    return output;
-}
-
 Texture2D ObjTexture;
 SamplerState ObjSamplerState;
 
@@ -73,6 +56,9 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     if (color.a == 0)
         return float4(0.3f, 0.3f, 0.3f, 1.0f);
     
+    if (selectable.x > 0)
+        return color * 1.5f;
+    
     float3 lightDir = normalize(-direction.xyz);
     
     float diffuseFactor = saturate(dot(input.Normal, lightDir));
@@ -81,9 +67,4 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     float3 finalColor = (ambient.rgb * color.rgb) + diffuseColor;
     
     return float4(finalColor, color.a);
-}
-
-float4 PS_Outline(VS_OUTPUT input) : SV_TARGET
-{
-    return float4(oulineColor, 1.0f);
 }

@@ -17,8 +17,6 @@
 #include <psapi.h>
 #include <unordered_map>
 #include <windowsx.h>
-#include <random>
-#include <chrono>
 
 #pragma comment(lib, "d3d11.lib")
 #ifdef _DEBUG

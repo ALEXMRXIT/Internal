@@ -70,14 +70,13 @@ MeshComponent::MeshComponent() {
     m_cWcullMode = nullptr;
     m_material = nullptr;
     m_meshShader = nullptr;
-    m_outlineShader = nullptr;
     m_layout = nullptr;
     m_preObjectBuffer = nullptr;
     indices = 0;
     m_position = nullptr;
     m_obj = nullptr;
     m_selectable = false;
-    m_preOutline = nullptr;
+    m_select.selectable = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void MeshComponent::Update(float deltaTime) {
@@ -93,23 +92,15 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
 
-    if (m_selectable) {
-        m_outlineShader->setVertexShader(context);
-        m_outlineShader->setPiexlShader(context);
+    context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
+    context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
 
-        m_outlineBuffer.outlineThinkess = 0.5f;
-        m_outlineBuffer.outlineColor = XMFLOAT3(1.0f, 0.5f, 0.0f);
-        context->UpdateSubresource(m_preOutline, 0, NULL, &m_outlineBuffer, 0, 0);
-        context->VSSetConstantBuffers(2, 1, &m_preOutline);
-
-        context->DrawIndexed(indices, 0, 0);
-    }
+    m_select.selectable = XMFLOAT4((float)m_selectable, 0.0f, 0.0f, 0.0f);
+    context->UpdateSubresource(m_preObjectSelect, 0, NULL, &m_select, 0, 0);
+    context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
 
     m_meshShader->setVertexShader(context);
     m_meshShader->setPiexlShader(context);
-
-    context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
-    context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
 
     m_material->Bind(context);
     context->RSSetState(m_cWcullMode);
@@ -134,8 +125,7 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     cmdesc.FillMode = D3D11_FILL_SOLID;
     cmdesc.CullMode = D3D11_CULL_BACK;
     cmdesc.MultisampleEnable = true;
-    cmdesc.FrontCounterClockwise = false;
-    cmdesc.DepthClipEnable = true;
+    cmdesc.DepthClipEnable = false;
     hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
 
     D3D11_BUFFER_DESC bufferDesc;
@@ -151,14 +141,14 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
         return hr;
     }
 
-    D3D11_BUFFER_DESC bufferDescOutline;
-    ZeroMemory(&bufferDescOutline, sizeof(D3D11_BUFFER_DESC));
-    bufferDescOutline.Usage = D3D11_USAGE_DEFAULT;
-    bufferDescOutline.ByteWidth = sizeof(OutlineBuffer);
-    bufferDescOutline.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDescOutline.CPUAccessFlags = 0;
-    bufferDescOutline.MiscFlags = 0;
-    hr = device->CreateBuffer(&bufferDescOutline, NULL, &m_preOutline);
+    D3D11_BUFFER_DESC bufferDescSelectable;
+    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+    bufferDescSelectable.Usage = D3D11_USAGE_DEFAULT;
+    bufferDescSelectable.ByteWidth = sizeof(SelectableConstantBuffer);
+    bufferDescSelectable.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDescSelectable.CPUAccessFlags = 0;
+    bufferDescSelectable.MiscFlags = 0;
+    hr = device->CreateBuffer(&bufferDescSelectable, NULL, &m_preObjectSelect);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
         return hr;
@@ -177,12 +167,6 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     hr = m_meshShader->LoadVertexShader(device, context, "VS", "shaders\\mesh.fx");
     if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading vertex shader.", hr); return hr; }
     hr = m_meshShader->LoadPixelShader(device, context, "PS", "shaders\\mesh.fx");
-    if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading pixel shader.", hr); return hr; }
-
-    m_outlineShader = new Shader();
-    hr = m_outlineShader->LoadVertexShader(device, context, "VS_Outline", "shaders\\mesh.fx");
-    if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading vertex shader.", hr); return hr; }
-    hr = m_outlineShader->LoadPixelShader(device, context, "PS_Outline", "shaders\\mesh.fx");
     if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading pixel shader.", hr); return hr; }
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
@@ -243,11 +227,6 @@ void MeshComponent::Release() {
         m_meshShader->Release();
         delete m_meshShader;
     }
-    if (m_outlineShader) {
-        m_outlineShader->Release();
-        delete m_outlineShader;
-    }
     if (m_layout) m_layout->Release();
     if (m_preObjectBuffer) m_preObjectBuffer->Release();
-    if (m_preOutline) m_preOutline->Release();
 }
