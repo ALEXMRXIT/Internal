@@ -89,7 +89,6 @@ HRESULT Engine::InitDirectInput(HINSTANCE hInstance) {
 
     hr = m_keyboard->SetDataFormat(&c_dfDIKeyboard);
     hr = m_keyboard->SetCooperativeLevel(m_windowDesc->hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
-    hr = m_keyboard->Acquire();
 
     hr = m_mouse->SetDataFormat(&c_dfDIMouse);
     hr = m_mouse->SetCooperativeLevel(m_windowDesc->hWnd, config.showCursor ? DISCL_NONEXCLUSIVE : DISCL_EXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
@@ -340,7 +339,9 @@ void Engine::UpdateInput(float deltaTime) {
     DIMOUSESTATE mouseCurrState{};
     BYTE keyboardState[256]{};
 
-    m_keyboard->GetDeviceState(sizeof(BYTE) * 256, (LPVOID)&keyboardState);
+    HRESULT hr = m_keyboard->GetDeviceState(sizeof(BYTE) * 256, (LPVOID)&keyboardState);
+    if (FAILED(hr))
+        m_keyboard->Acquire();
     m_mouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrState);
 
     if (keyboardState[DIK_ESCAPE] & 0x80)
