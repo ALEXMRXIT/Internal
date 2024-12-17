@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{d31f47b2-89f7-4f98-a3c9-34dccd4e0c62}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -112,18 +115,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
-    <None Include="shaders\**\*" />
+    <None Include="shaders\mesh.fx" />
+    <None Include="shaders\primitive.fx" />
+    <None Include="shaders\skybox.fx" />
+    <None Include="shaders\label.fx" />
   </ItemGroup>
 </Project>
