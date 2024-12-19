@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="Core.h" />
+    <ClInclude Include="debug.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
