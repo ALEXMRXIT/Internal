@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
+    <ClInclude Include="Core.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="FileSharedBuffer.h">
+    <ClInclude Include="Common.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="FileSharedBuffer.cpp">
+    <ClCompile Include="Common.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
