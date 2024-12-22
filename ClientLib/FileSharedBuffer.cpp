@@ -1,10 +1,10 @@
 #include "FileSharedBuffer.h"
-#include "MeshComponent.h"
+#include <debug.h>
 
 static void LoadMTL(const char* filePath, char*& textureName) {
     FILE* file = fopen(filePath, "r");
     if (!file) {
-        //DXUT_ERR_MSGBOX("Failed to open .mtl file: %s", 0, filePath);
+        DXUT_ERR_MSGBOX("Failed to open .mtl file: %s", 0, filePath);
         return;
     }
 
@@ -13,13 +13,13 @@ static void LoadMTL(const char* filePath, char*& textureName) {
     while (fgets(line, (unsigned)_countof(line), file)) {
         if (strncmp(line, "map_Kd", 6) == 0) {
             char texturePath[MAX_PATH];
-            sscanf_s(line, "map_Kd %s", texturePath);
-            std::size_t textureNameSize = strlen(texturePath) + 1;
+            sscanf_s(line, "map_Kd %s", texturePath, (unsigned)_countof(texturePath));
+            std::size_t textureNameSize = strlen(texturePath) + strlen("mesh\\") + 1;
             textureName = (char*)malloc(textureNameSize * sizeof(char));
             if (!textureName)
-                return;
-                //DXUT_ERR_MSGBOX("Failed to allocate memory for texture name.", 0);
-            strcpy_s(textureName, textureNameSize, texturePath);
+                DXUT_ERR_MSGBOX("Failed to allocate memory for texture name.", 0);
+            strcpy_s(textureName, textureNameSize, "mesh\\");
+            strcat_s(textureName, textureNameSize, texturePath);
             break;
         }
     }
@@ -27,10 +27,10 @@ static void LoadMTL(const char* filePath, char*& textureName) {
     fclose(file);
 }
 
-inline void MeshLoader::LoadFile(const char* filePath, std::vector<Vertex>& vertices, std::vector<DWORD>& indices) {
+void MeshLoader::LoadFile(const char* filePath, std::vector<Vertex>& vertices, std::vector<DWORD>& indices) {
 	FILE* file = fopen(filePath, "rb");
     if (!file)
-        return;// DXUT_ERR_MSGBOX("File not found or don't access %s.", 0, filePath);
+        DXUT_ERR_MSGBOX("File not found or don't access %s.", 0, filePath);
 
     struct VertexHash {
         std::size_t operator()(const Vertex& vertex) const {
@@ -53,9 +53,11 @@ inline void MeshLoader::LoadFile(const char* filePath, std::vector<Vertex>& vert
     char line[256];
     while (fgets(line, (unsigned)_countof(line), file)) {
         if (strncmp(line, "mtllib", 6) == 0) {
-            char mtlFilePath[256];
-            sscanf_s(line, "mtllib %s", mtlFilePath);
-            LoadMTL(mtlFilePath, material);
+            char mtlFilePath[MAX_PATH];
+            sscanf_s(line, "mtllib %s", mtlFilePath, (unsigned)_countof(mtlFilePath));
+            char buffer[MAX_PATH];
+            sprintf_s(buffer, MAX_PATH, "mesh\\%s", mtlFilePath);
+            LoadMTL(buffer, material);
         }
         else if (line[0] == 'v' && line[1] == ' ') {
             XMFLOAT3 pos{};

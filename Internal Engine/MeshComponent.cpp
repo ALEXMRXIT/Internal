@@ -77,10 +77,14 @@ MeshComponent::MeshComponent() {
     m_obj = nullptr;
     m_selectable = false;
     m_select.selectable = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+    alpha = 0.0f;
 }
 
 void MeshComponent::Update(float deltaTime) {
-    
+    if (alpha < 1.0f) {
+        alpha += deltaTime * 5.0f;
+        alpha = min(alpha, 1.0f);
+    }
 }
 
 void MeshComponent::Render(ID3D11DeviceContext* context) {
@@ -95,7 +99,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
 
-    m_select.selectable = XMFLOAT4((float)m_selectable, 0.0f, 0.0f, 0.0f);
+    m_select.selectable = XMFLOAT4((float)m_selectable, alpha, 0.0f, 0.0f);
     context->UpdateSubresource(m_preObjectSelect, 0, NULL, &m_select, 0, 0);
     context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
 

@@ -3,7 +3,6 @@
 
 typedef struct _viewProject {
 	XMMATRIX WVP;
-	XMMATRIX World;
 } ViewProject, *LPViewProject;
 
 class Skybox {
@@ -17,6 +16,7 @@ private:
 	ID3D11RasterizerState* m_cullMode;
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11SamplerState* m_textureSamplerState;
+	ID3D11InputLayout* m_layout;
 
 	int verticesNum;
 	int indexesNum;

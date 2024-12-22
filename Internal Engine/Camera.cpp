@@ -2,8 +2,8 @@
 #include "Engine.h"
 
 Camera::Camera() {
-	position = XMVectorSet(0.0f, 5.0f, -8.0f, 0.0f);
-	target = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	position = XMVectorSet(30.0f, 45.0f, -60.0f, 0.0f);
+	target = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 	up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	view = XMMatrixLookAtLH(position, target, up);

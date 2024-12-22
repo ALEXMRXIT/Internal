@@ -18,9 +18,6 @@
     <ClInclude Include="FileSharedBuffer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="framework.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="ResourceLoader.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>

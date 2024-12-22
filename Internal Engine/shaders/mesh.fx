@@ -66,5 +66,5 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     
     float3 finalColor = (ambient.rgb * color.rgb) + diffuseColor;
     
-    return float4(finalColor, color.a);
+    return float4(finalColor, color.a * selectable.y);
 }

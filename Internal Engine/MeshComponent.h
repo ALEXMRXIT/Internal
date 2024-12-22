@@ -77,6 +77,7 @@ private:
 	GameObject* m_obj;
 
 	bool m_selectable;
+	float alpha;
 
 private:
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);

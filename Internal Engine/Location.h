@@ -1,6 +1,7 @@
 #pragma once
 #include "framework.h"
 #include "ResourceLoader.h"
+#include "FileSharedBuffer.h"
 
 class GameObject;
 

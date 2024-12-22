@@ -85,6 +85,7 @@ Skybox::Skybox() {
     m_textureSamplerState = nullptr;
     verticesNum = 0;
     indexesNum = 0;
+    m_layout = nullptr;
 }
 
 void Skybox::Init(ID3D11Device* device) {
@@ -145,11 +146,7 @@ void Skybox::Init(ID3D11Device* device) {
 
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
-    if (config.qualityTexture == 0) sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-    else if (config.qualityTexture == 10) sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-    else sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    const int anisotropy = 1 + (config.qualityTexture * 2);
-    sampDesc.MaxAnisotropy = min(anisotropy, 16);
+    config.qualityTexture = D3D11_FILTER_MIN_MAG_MIP_POINT;
     sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -158,6 +155,17 @@ void Skybox::Init(ID3D11Device* device) {
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
     hr = device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
+
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+    };
+    UINT numElements = ARRAYSIZE(layout);
+
+    LPVOID buffPtr = m_shader->getVertexBlob()->GetBufferPointer();
+    SIZE_T size = m_shader->getVertexBlob()->GetBufferSize();
+    hr = device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
+    if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
 }
 
 void Skybox::Update(float deltaTime) {
@@ -176,6 +184,7 @@ void Skybox::Render(ID3D11DeviceContext* context) {
     m_wvp.WVP = XMMatrixTranspose(m_wvp.WVP);
     m_shader->setVertexShader(context);
     m_shader->setPiexlShader(context);
+    context->IASetInputLayout(m_layout);
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_wvp, 0, 0);
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     context->PSSetShaderResources(0, 1, &m_sharedView);
@@ -191,6 +200,7 @@ void Skybox::IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
     UINT offset = 0;
     ID3D11Buffer* vertex = *m_vertexBuffer;
     context->IASetVertexBuffers(0, 1, &vertex, &stride, &offset);
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 bool Skybox::CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
@@ -223,4 +233,5 @@ void Skybox::Release() {
     if (m_sharedView) m_sharedView->Release();
     if (m_depthState) m_depthState->Release();
     if (m_textureSamplerState) m_textureSamplerState->Release();
+    if (m_layout) m_layout->Release();
 }
