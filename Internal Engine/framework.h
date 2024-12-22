@@ -16,7 +16,6 @@
 #include <dbghelp.h>
 #include <psapi.h>
 #include <unordered_map>
-#include <windowsx.h>
 
 #pragma comment(lib, "d3d11.lib")
 #ifdef _DEBUG

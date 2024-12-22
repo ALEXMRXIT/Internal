@@ -30,7 +30,7 @@ public:
 	Font(const Font&) = delete;
 	Font& operator=(const Font&) = delete;
 
-	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
+	HRESULT Init(ID3D11Device* device);
 	void Render(ID3D11DeviceContext* deviceContext, const std::wstring text);
 
 	void Release();

@@ -13,32 +13,29 @@ GameObject* Instantiate(const XMFLOAT3& pos, const XMFLOAT3& rot, const XMFLOAT3
 }
 
 Location::Location() {
+    m_meshLoader = new MeshLoader();
+    m_loader = new ResourceLoader(engine, m_meshLoader);
+
     GameObject* obj = Instantiate(XMFLOAT3(-25.0f, 0.0f, 0.0f),
         XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
     MeshComponent* mesh = obj->AddComponent<MeshComponent>();
     mesh->setMatrix(obj->transform().getWorldMatrix());
     mesh->setGameObject(obj);
-    mesh->setMaterial("mesh\\m_had0330000.png", XMFLOAT2(1.f, 1.f), XMFLOAT2(0.f, 0.f));
-    engine.addMeshRenderer(mesh, "mesh\\m_had033.obj");
-    Insert(obj);
+    m_loader->AddResourceToLoad("mesh\\m_had033.obj", mesh);
 
     GameObject* plane = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
         XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(100.0f, 1.0f, 100.0f));
     MeshComponent* planeMesh = plane->AddComponent<MeshComponent>();
     planeMesh->setMatrix(plane->transform().getWorldMatrix());
     planeMesh->setGameObject(plane);
-    planeMesh->setMaterial("mesh\\grass.jpg", XMFLOAT2(15.f, 15.f), XMFLOAT2(0.f, 0.f));
-    engine.addMeshRenderer(planeMesh, "mesh\\plane.obj");
-    Insert(plane);
+    m_loader->AddResourceToLoad("mesh\\plane.obj", planeMesh);
 
     GameObject* house = Instantiate(XMFLOAT3(60.0f, 0.0f, 50.0f),
         XMFLOAT3(0.0f, 180.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
     MeshComponent* houseMesh = house->AddComponent<MeshComponent>();
     houseMesh->setMatrix(house->transform().getWorldMatrix());
     houseMesh->setGameObject(house);
-    houseMesh->setMaterial("mesh\\m_hbf0110000.png", XMFLOAT2(1.f, -1.f), XMFLOAT2(0.f, 0.f));
-    engine.addMeshRenderer(houseMesh, "mesh\\m_hbf011.obj");
-    Insert(house);
+    m_loader->AddResourceToLoad("mesh\\m_hbf011.obj", houseMesh);
 }
 
 void Location::Update(float deltaTime) {

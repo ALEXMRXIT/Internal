@@ -109,9 +109,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\mesh.fx" />
-    <None Include="shaders\primitive.fx" />
-    <None Include="shaders\skybox.fx" />
     <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />
     <None Include="shaders\**\*" />
@@ -136,5 +133,8 @@
     <None Include="shaders\**\*">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaders\**\*" />
+    <None Include="shaders\**\*" />
+    <None Include="shaders\**\*" />
   </ItemGroup>
 </Project>

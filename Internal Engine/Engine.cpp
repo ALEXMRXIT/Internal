@@ -324,11 +324,11 @@ bool Engine::InitScene() {
     camera.SetProjection();
 
     m_font = new Font();
-    m_font->Init(m_device, m_deviceContext);
+    m_font->Init(m_device);
     m_location = new Location();
 
     m_skybox = new Skybox();
-    m_skybox->Init(m_device, m_deviceContext);
+    m_skybox->Init(m_device);
 
     draw.Init(m_device, m_deviceContext);
 
@@ -462,7 +462,7 @@ int Engine::messageWindow() {
     return message.wParam;
 }
 
-void Engine::Raycast(int mouseX, int mouseY) {
+void Engine::Raycast() {
     int screenWidth = getSupportedResolution().Width;
     int screenHeight = getSupportedResolution().Height;
 
@@ -515,89 +515,8 @@ void Engine::Raycast(int mouseX, int mouseY) {
     }
 }
 
-static bool loadObjFileFormat(const char* filename, std::vector<Vertex>& vertices, std::vector<DWORD>& indices) {
-    struct VertexHash {
-        std::size_t operator()(const Vertex& vertex) const {
-            return ((std::hash<float>()(vertex.position.x) ^
-                (std::hash<float>()(vertex.position.y) << 1)) >> 1) ^
-                (std::hash<float>()(vertex.position.z) << 1) ^
-                ((std::hash<float>()(vertex.texCoord.x) ^
-                    (std::hash<float>()(vertex.texCoord.y) << 1)) >> 1) ^
-                ((std::hash<float>()(vertex.normal.x) ^
-                    (std::hash<float>()(vertex.normal.y) << 1)) >> 1) ^
-                (std::hash<float>()(vertex.normal.z) << 1);
-        }
-    };
-
-    FILE* file = nullptr;
-    fopen_s(&file, filename, "r");
-    if (!file) return false;
-
-    std::vector<XMFLOAT3> positions;
-    std::vector<XMFLOAT2> texCoords;
-    std::vector<XMFLOAT3> normals;
-    std::unordered_map<Vertex, DWORD, VertexHash> vertexMap;
-
-    char line[256];
-    while (fgets(line, sizeof(line), file)) {
-        if (line[0] == 'v' && line[1] == ' ') {
-            XMFLOAT3 pos{};
-            sscanf_s(line, "v %f %f %f", &pos.x, &pos.y, &pos.z);
-            positions.push_back(pos);
-        }
-        else if (line[0] == 'v' && line[1] == 'n') {
-            XMFLOAT3 normal{};
-            sscanf_s(line, "vn %f %f %f", &normal.x, &normal.y, &normal.z);
-            normals.push_back(normal);
-        }
-        else if (line[0] == 'v' && line[1] == 't') {
-            XMFLOAT2 tex{};
-            sscanf_s(line, "vt %f %f", &tex.x, &tex.y);
-            texCoords.push_back(tex);
-        }
-        else if (line[0] == 'f') {
-            uint32_t posIndex[3]{}, texIndex[3]{}, normIndex[3]{};
-            sscanf_s(line, "f %u/%u/%u %u/%u/%u %u/%u/%u",
-                &posIndex[0], &texIndex[0], &normIndex[0],
-                &posIndex[1], &texIndex[1], &normIndex[1],
-                &posIndex[2], &texIndex[2], &normIndex[2]);
-
-            for (int i = 0; i < 3; ++i) {
-                Vertex vertex{};
-                vertex.position = positions[posIndex[i] - 1];
-                vertex.texCoord = texCoords[texIndex[i] - 1];
-                vertex.normal = normals[normIndex[i] - 1];
-
-                auto it = vertexMap.find(vertex);
-                if (it != vertexMap.end()) {
-                    indices.push_back(it->second);
-                }
-                else {
-                    DWORD newIndex = static_cast<DWORD>(vertices.size());
-                    vertices.push_back(vertex);
-                    indices.push_back(newIndex);
-                    vertexMap[vertex] = newIndex;
-                }
-            }
-        }
-    }
-
-    fclose(file);
-    return true;
-}
-
-void Engine::addMeshRenderer(MeshComponent* mesh, const char* filename) {
-    std::vector<Vertex> vertices;
-    std::vector<DWORD> indices;
-
-    if (loadObjFileFormat(filename, vertices, indices)) {
-        mesh->CreateVertex(m_device, vertices.data(), sizeof(Vertex), vertices.size());
-        mesh->CreateIndex(m_device, indices.data(), sizeof(DWORD), indices.size());
-        mesh->SetDataPhysics(vertices, indices);
-        mesh->Init(m_device, m_deviceContext);
-
-        m_meshes.emplace_back(mesh);
-    }
+void Engine::addMeshRenderer(MeshComponent* mesh) {
+    if (mesh) m_meshes.emplace_back(mesh);
 }
 
 void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
@@ -672,9 +591,7 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             }
         } return 0;
         case WM_LBUTTONDOWN: {
-            int mouseX = GET_X_LPARAM(lParam);
-            int mouseY = GET_Y_LPARAM(lParam);
-            engine.Raycast(mouseX, mouseY);
+            engine.Raycast();
         } return 0;
         case WM_DESTROY: {
             PostQuitMessage(0);

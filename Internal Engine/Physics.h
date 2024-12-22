@@ -19,5 +19,6 @@ public:
 
 	float IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent* mesh);
 
-	void SetDataPhysics(const std::vector<_Vertex>& vertices, const std::vector<DWORD>& indices);
+	void setVerticesPhysics(const std::vector<_Vertex>& vertices);
+	void setIndecesPhysics(const std::vector<DWORD>& indices);
 };

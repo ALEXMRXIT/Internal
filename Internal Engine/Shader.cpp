@@ -27,7 +27,7 @@ HRESULT Shader::LoadShader(const char* entryPoint, const char* shaderName, const
     return hr;
 }
 
-HRESULT Shader::LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* entry, const char* shaderName) {
+HRESULT Shader::LoadVertexShader(ID3D11Device* device, const char* entry, const char* shaderName) {
     ID3D10Blob* vertexShader = nullptr;
     HRESULT hr = LoadShader(entry, shaderName, "vs_4_0", &vertexShader);
     if (FAILED(hr)) {
@@ -45,7 +45,7 @@ HRESULT Shader::LoadVertexShader(ID3D11Device* device, ID3D11DeviceContext* cont
     return hr;
 }
 
-HRESULT Shader::LoadPixelShader(ID3D11Device* device, ID3D11DeviceContext* context, const char* entry, const char* shaderName) {
+HRESULT Shader::LoadPixelShader(ID3D11Device* device, const char* entry, const char* shaderName) {
     ID3D10Blob* pixelShader = nullptr;
     HRESULT hr = LoadShader(entry, shaderName, "ps_4_0", &pixelShader);
     if (FAILED(hr)) {

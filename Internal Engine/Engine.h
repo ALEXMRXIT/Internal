@@ -95,14 +95,16 @@ public:
 	void Render();
 	void Release();
 	int messageWindow();
-	void Raycast(int mouseX, int mouseY);
-	void addMeshRenderer(MeshComponent* mesh, const char* filename);
+	void Raycast();
+	void addMeshRenderer(MeshComponent* mesh);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
 	RECT& getWindowRect();
 	IDXGISwapChain* getChain() const;
 	const DXGI_MODE_DESC& getSupportedResolution() const;
 	const wchar_t* toStringVSync() const;
+
+	ID3D11Device* device() const { return m_device; }
 };
 
 extern Engine engine;

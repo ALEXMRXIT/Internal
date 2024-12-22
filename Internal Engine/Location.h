@@ -1,11 +1,14 @@
 #pragma once
 #include "framework.h"
+#include "ResourceLoader.h"
 
 class GameObject;
 
 class Location {
 private:
 	std::list<GameObject*> m_objects;
+	ResourceLoader* m_loader;
+	MeshLoader* m_meshLoader;
 
 public:
 	Location();

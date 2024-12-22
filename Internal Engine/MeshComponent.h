@@ -73,7 +73,7 @@ private:
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11Buffer* m_preObjectSelect;
 	XMMATRIX* m_position;
-	uint32_t indices;
+	uint32_t m_indices;
 	GameObject* m_obj;
 
 	bool m_selectable;
@@ -92,10 +92,10 @@ public:
 	void setMatrix(XMMATRIX& position);
 	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);
 
-	HRESULT Init(ID3D11Device* device, ID3D11DeviceContext* context);
+	HRESULT Init(ID3D11Device* device);
 
-	bool CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
-	bool CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
+	bool CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size);
+	bool CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size);
 
 	GameObject* gameObject() const { return m_obj; }
 	void setGameObject(GameObject* obj) { m_obj = obj; }

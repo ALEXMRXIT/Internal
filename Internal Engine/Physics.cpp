@@ -80,7 +80,10 @@ float Physics::IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& r
     return FLT_MAX;
 }
 
-void Physics::SetDataPhysics(const std::vector<_Vertex>& vertices, const std::vector<DWORD>& indices) {
+void Physics::setVerticesPhysics(const std::vector<_Vertex>& vertices) {
     m_vertices = vertices;
+}
+
+void Physics::setIndecesPhysics(const std::vector<DWORD>& indices) {
     m_indices = indices;
 }

@@ -72,7 +72,7 @@ MeshComponent::MeshComponent() {
     m_meshShader = nullptr;
     m_layout = nullptr;
     m_preObjectBuffer = nullptr;
-    indices = 0;
+    m_indices = 0;
     m_position = nullptr;
     m_obj = nullptr;
     m_selectable = false;
@@ -104,7 +104,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 
     m_material->Bind(context);
     context->RSSetState(m_cWcullMode);
-    context->DrawIndexed(indices, 0, 0);
+    context->DrawIndexed(m_indices, 0, 0);
 }
 
 void MeshComponent::setMatrix(XMMATRIX& position) {
@@ -118,7 +118,7 @@ void MeshComponent::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offse
     m_material->SetScale(scale, offset);
 }
 
-HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
+HRESULT MeshComponent::Init(ID3D11Device* device) {
     HRESULT hr;
     D3D11_RASTERIZER_DESC cmdesc;
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -164,9 +164,9 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     }
 
     m_meshShader = new Shader();
-    hr = m_meshShader->LoadVertexShader(device, context, "VS", "shaders\\mesh.fx");
+    hr = m_meshShader->LoadVertexShader(device, "VS", "shaders\\mesh.fx");
     if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading vertex shader.", hr); return hr; }
-    hr = m_meshShader->LoadPixelShader(device, context, "PS", "shaders\\mesh.fx");
+    hr = m_meshShader->LoadPixelShader(device, "PS", "shaders\\mesh.fx");
     if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading pixel shader.", hr); return hr; }
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
@@ -187,16 +187,18 @@ HRESULT MeshComponent::Init(ID3D11Device* device, ID3D11DeviceContext* context) 
     return hr;
 }
 
-bool MeshComponent::CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
+bool MeshComponent::CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size) {
     if (m_vertexBuffer = new VertexBuffer())
-        return m_vertexBuffer->Create(device, pBuffer, sizeType, size);
+        return m_vertexBuffer->Create(device, (void*)vertices.data(), sizeType, size);
+    setVerticesPhysics(vertices);
     return false;
 }
 
-bool MeshComponent::CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
-    indices = size;
+bool MeshComponent::CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) {
+    m_indices = size;
     if (m_indexBuffer = new IndexBuffer())
-        return m_indexBuffer->Create(device, pBuffer, sizeType, size);
+        return m_indexBuffer->Create(device, (void*)indices.data(), sizeType, size);
+    setIndecesPhysics(indices);
     return false;
 }
 

@@ -32,7 +32,7 @@ public:
 	Skybox(const Skybox&) = delete;
 	Skybox& operator=(const Skybox&) = delete;
 
-	void Init(ID3D11Device* device, ID3D11DeviceContext* context);
+	void Init(ID3D11Device* device);
 	void Update(float deltaTime);
 	void Render(ID3D11DeviceContext* context);
 

@@ -26,7 +26,7 @@ Font::Font() {
     m_indexBuffer = nullptr;
 }
 
-HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
+HRESULT Font::Init(ID3D11Device* device) {
     HRESULT hr = S_OK;
 
     D3D11_TEXTURE2D_DESC sharedTexDesc;
@@ -132,9 +132,9 @@ HRESULT Font::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     }
 
     m_fontShader = new Shader();
-    if (FAILED(m_fontShader->LoadVertexShader(device, context, "VS", "shaders\\label.fx")))
+    if (FAILED(m_fontShader->LoadVertexShader(device, "VS", "shaders\\label.fx")))
         return hr;
-    if (FAILED(m_fontShader->LoadPixelShader(device, context, "PS", "shaders\\label.fx")))
+    if (FAILED(m_fontShader->LoadPixelShader(device, "PS", "shaders\\label.fx")))
         return hr;
 
     D3D11_SAMPLER_DESC sampDesc;
