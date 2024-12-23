@@ -192,17 +192,17 @@ HRESULT MeshComponent::Init(ID3D11Device* device) {
 }
 
 bool MeshComponent::CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size) {
+    setVerticesPhysics(vertices);
     if (m_vertexBuffer = new VertexBuffer())
         return m_vertexBuffer->Create(device, (void*)vertices.data(), sizeType, size);
-    setVerticesPhysics(vertices);
     return false;
 }
 
 bool MeshComponent::CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) {
     m_indices = size;
+    setIndecesPhysics(indices);
     if (m_indexBuffer = new IndexBuffer())
         return m_indexBuffer->Create(device, (void*)indices.data(), sizeType, size);
-    setIndecesPhysics(indices);
     return false;
 }
 
