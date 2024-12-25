@@ -72,6 +72,8 @@ private:
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font;
 
+	bool m_SwapChainOccluded;
+
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	void UpdateFrequenceTime(PerfomanceTimeInfo& timeInfo) const;
@@ -79,7 +81,7 @@ private:
 	HRESULT InitDirectInput(HINSTANCE hInstance);
 	void UpdateInput(float deltaTime);
 public:
-	Engine() {}
+	Engine();
 
 	MeshComponent* lastSelected;
 

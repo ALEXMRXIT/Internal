@@ -108,18 +108,4 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\mesh.fx" />
-    <None Include="shaders\primitive.fx" />
-    <None Include="shaders\skybox.fx" />
-    <None Include="shaders\mesh.fx" />
-    <None Include="shaders\primitive.fx" />
-    <None Include="shaders\skybox.fx" />
-    <None Include="shaders\mesh.fx" />
-    <None Include="shaders\primitive.fx" />
-    <None Include="shaders\skybox.fx" />
-    <None Include="shaders\mesh.fx" />
-    <None Include="shaders\primitive.fx" />
-    <None Include="shaders\skybox.fx" />
-  </ItemGroup>
 </Project>

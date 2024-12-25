@@ -366,6 +366,10 @@ void Engine::UpdateInput(float deltaTime) {
     }
 }
 
+Engine::Engine() {
+    m_SwapChainOccluded = false;
+}
+
 void Engine::FixedUpdate(float deltaTime) {
     
 }
@@ -404,7 +408,8 @@ void Engine::Render() {
     swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
     m_font->Render(m_deviceContext, buffer);
     
-    m_swapChain->Present(min(config.vSync, 2), 0);
+    HRESULT hr = m_swapChain->Present(min(config.vSync, 2), 0);
+    m_SwapChainOccluded = hr == DXGI_STATUS_OCCLUDED;
 }
 
 void Engine::Release() {
@@ -455,6 +460,11 @@ int Engine::messageWindow() {
 
             UpdateInput(m_timeInfo.deltaTime);
             Update(m_timeInfo.deltaTime);
+            if (m_SwapChainOccluded && m_swapChain->Present(0, DXGI_PRESENT_TEST) == DXGI_STATUS_OCCLUDED) {
+                Sleep(10);
+                continue;
+            }
+            m_SwapChainOccluded = false;
             Render();
         }
     }
