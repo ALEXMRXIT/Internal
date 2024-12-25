@@ -2,7 +2,7 @@
 class Config {
 public:
 	Config() {
-		resolution = 19;
+		resolution = 3;
 		multiply = 3;
 		qualityTexture = 10;
 		fullscreen = true;
