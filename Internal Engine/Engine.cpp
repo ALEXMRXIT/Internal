@@ -17,6 +17,7 @@ Config config;
 PrimitiveDrawable draw;
 
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
+    SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
     m_windowDesc = const_cast<WindowDescription*>(desc);
 
     WNDCLASSEX wndClassEx;
@@ -174,7 +175,7 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.SampleDesc.Count = m_qualityLevels[config.multiply].SampleCount;
     swapChainDesc.SampleDesc.Quality = m_qualityLevels[config.multiply].QualityLevel - 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.BufferCount = 1;
+    swapChainDesc.BufferCount = 2;
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
     swapChainDesc.Windowed = TRUE;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
@@ -331,6 +332,10 @@ bool Engine::InitScene() {
     m_skybox->Init(m_device);
 
     draw.Init(m_device, m_deviceContext);
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+    m_gui = new ImGUIDevice();
+    m_gui->Init(m_device, m_deviceContext);
+#endif
 
     return true;
 }
@@ -407,6 +412,10 @@ void Engine::Render() {
     wchar_t buffer[128];
     swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
     m_font->Render(m_deviceContext, buffer);
+
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+    m_gui->Render();
+#endif
     
     HRESULT hr = m_swapChain->Present(min(config.vSync, 2), 0);
     m_SwapChainOccluded = hr == DXGI_STATUS_OCCLUDED;
@@ -429,6 +438,9 @@ void Engine::Release() {
         m_skybox->Release();
         delete m_skybox;
     }
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+    m_gui->Release();
+#endif
 }
 
 int Engine::messageWindow() {
@@ -472,22 +484,19 @@ int Engine::messageWindow() {
     return message.wParam;
 }
 
-void Engine::Raycast() {
+void Engine::Raycast(int mouseX, int mouseY) {
     int screenWidth = getSupportedResolution().Width;
     int screenHeight = getSupportedResolution().Height;
 
     XMVECTOR pickRayInViewSpacePos = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 
-    POINT cursorPos;
-    GetCursorPos(&cursorPos);
-
     if (config.fullscreen) {
-        cursorPos.x = (int)((float)cursorPos.x * (float)screenWidth / (float)GetSystemMetrics(SM_CXSCREEN));
-        cursorPos.y = (int)((float)cursorPos.y * (float)screenHeight / (float)GetSystemMetrics(SM_CYSCREEN));
+        mouseX = (int)((float)mouseX * (float)screenWidth / (float)GetSystemMetrics(SM_CXSCREEN));
+        mouseY = (int)((float)mouseY * (float)screenHeight / (float)GetSystemMetrics(SM_CYSCREEN));
     }
 
-    float pointX = (((2.0f * (float)cursorPos.x) / screenWidth) - 1) / camera.getProjection()(0, 0);
-    float pointY = -(((2.0f * (float)cursorPos.y) / screenHeight) - 1.0f) / camera.getProjection()(1, 1);
+    float pointX = (((2.0f * (float)mouseX) / screenWidth) - 1) / camera.getProjection()(0, 0);
+    float pointY = -(((2.0f * (float)mouseY) / screenHeight) - 1.0f) / camera.getProjection()(1, 1);
     float pointZ = 1.0f;
 
     XMVECTOR pickRayInViewSpaceDir = XMVectorSet(pointX, pointY, pointZ, 1.0f);
@@ -585,7 +594,16 @@ const wchar_t* Engine::toStringVSync() const {
     }
 }
 
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
+
 LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+        return true;
+#endif
+
     switch (msg) {
         case WM_CREATE: {
             LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
@@ -601,7 +619,9 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             }
         } return 0;
         case WM_LBUTTONDOWN: {
-            engine.Raycast();
+            int mouseX = GET_X_LPARAM(lParam);
+            int mouseY = GET_Y_LPARAM(lParam);
+            engine.Raycast(mouseX, mouseY);
         } return 0;
         case WM_DESTROY: {
             PostQuitMessage(0);

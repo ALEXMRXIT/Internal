@@ -2,6 +2,11 @@
 #include "framework.h"
 #include "Config.h"
 
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+#include "ImGUIDevice.h"
+class ImGUIDevice;
+#endif
+
 class Shader;
 class Font;
 class Camera;
@@ -61,6 +66,9 @@ private:
 	IDirectInputDevice8* m_mouse;
 	LPDIRECTINPUT8 m_directInput;
 	ID3D11Buffer* m_constantLightBuffer;
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+	ImGUIDevice* m_gui;
+#endif
 
 	std::vector<MeshComponent*> m_meshes;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
@@ -97,7 +105,7 @@ public:
 	void Render();
 	void Release();
 	int messageWindow();
-	void Raycast();
+	void Raycast(int mouseX, int mouseY);
 	void addMeshRenderer(MeshComponent* mesh);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
