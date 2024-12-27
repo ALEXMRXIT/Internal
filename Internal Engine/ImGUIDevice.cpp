@@ -34,11 +34,46 @@ void ImGUIDevice::Render() {
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::Begin("Hello, world!");
+    static int selectedButton = 1;
+    static int last_selected = 1;
+
+    ImGui::Begin("Inspector");
+
+    ImGui::BeginChild("ButtonBlock", ImVec2(0, 40), true);
+    {
+        float availableWidth = ImGui::GetContentRegionAvail().x;
+        float buttonWidth = (availableWidth - ImGui::GetStyle().ItemSpacing.x) / 2;
+
+        if (selectedButton == 1) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 1.0f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.69f, 1.0f, 1.0f));
+        }
+        if (ImGui::Button("World", ImVec2(buttonWidth, 20))) {
+            last_selected = 1;
+        }
+        if (selectedButton == 1) ImGui::PopStyleColor(3);
+
+        ImGui::SameLine();
+
+        if (selectedButton == 2) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 1.0f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.69f, 1.0f, 1.0f));
+        }
+        if (ImGui::Button("Local", ImVec2(buttonWidth, 20))) {
+            last_selected = 2;
+        }
+        if (selectedButton == 2) ImGui::PopStyleColor(3);
+    }
+    ImGui::EndChild();
+
     ImGui::End();
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    selectedButton = last_selected;
 }
 
 void ImGUIDevice::Release() {
