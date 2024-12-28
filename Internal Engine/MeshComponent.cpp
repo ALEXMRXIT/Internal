@@ -67,10 +67,7 @@ void IndexBuffer::Release() {
 MeshComponent::MeshComponent() {
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
-    m_cWcullMode = nullptr;
     m_material = nullptr;
-    m_meshShader = nullptr;
-    m_layout = nullptr;
     m_preObjectBuffer = nullptr;
     m_indices = 0;
     m_position = nullptr;
@@ -89,7 +86,6 @@ void MeshComponent::Update(float deltaTime) {
 
 void MeshComponent::Render(ID3D11DeviceContext* context) {
     IASetVertexAndIndexBuffer(context);
-    context->IASetInputLayout(m_layout);
 
     m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
     m_bufferWVP.World = XMMatrixTranspose(*m_position);
@@ -103,11 +99,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     context->UpdateSubresource(m_preObjectSelect, 0, NULL, &m_select, 0, 0);
     context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
 
-    m_meshShader->setVertexShader(context);
-    m_meshShader->setPiexlShader(context);
-
     m_material->Bind(context);
-    context->RSSetState(m_cWcullMode);
     context->DrawIndexed(m_indices, 0, 0);
 }
 
@@ -124,13 +116,6 @@ void MeshComponent::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offse
 
 HRESULT MeshComponent::Init(ID3D11Device* device) {
     HRESULT hr;
-    D3D11_RASTERIZER_DESC cmdesc;
-    ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
-    cmdesc.FillMode = D3D11_FILL_SOLID;
-    cmdesc.CullMode = D3D11_CULL_BACK;
-    cmdesc.MultisampleEnable = true;
-    cmdesc.DepthClipEnable = false;
-    hr = device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
 
     D3D11_BUFFER_DESC bufferDesc;
     ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -165,27 +150,6 @@ HRESULT MeshComponent::Init(ID3D11Device* device) {
     }
     else if (m_material->diffuseTex && m_material->diffuseTex->name) {
         m_material->Load(device);
-    }
-
-    m_meshShader = new Shader();
-    hr = m_meshShader->LoadVertexShader(device, "VS", "shaders\\mesh.fx");
-    if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading vertex shader.", hr); return hr; }
-    hr = m_meshShader->LoadPixelShader(device, "PS", "shaders\\mesh.fx");
-    if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading pixel shader.", hr); return hr; }
-
-    D3D11_INPUT_ELEMENT_DESC layout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
-    };
-    UINT numElements = ARRAYSIZE(layout);
-
-    LPVOID buffPtr = m_meshShader->getVertexBlob()->GetBufferPointer();
-    SIZE_T size = m_meshShader->getVertexBlob()->GetBufferSize();
-    hr = device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
-        return hr;
     }
 
     return hr;
@@ -224,15 +188,9 @@ void MeshComponent::Release() {
         m_indexBuffer->Release();
         delete m_indexBuffer;
     }
-    if (m_cWcullMode) m_cWcullMode->Release();
     if (m_material) {
         m_material->Release();
         delete m_material;
     }
-    if (m_meshShader) {
-        m_meshShader->Release();
-        delete m_meshShader;
-    }
-    if (m_layout) m_layout->Release();
     if (m_preObjectBuffer) m_preObjectBuffer->Release();
 }

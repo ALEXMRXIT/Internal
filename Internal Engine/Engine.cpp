@@ -317,6 +317,36 @@ bool Engine::InitRenderDevice() {
         delete m_font;
         return false;
     }
+
+    D3D11_RASTERIZER_DESC cmdesc;
+    ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
+    cmdesc.FillMode = D3D11_FILL_SOLID;
+    cmdesc.CullMode = D3D11_CULL_BACK;
+    cmdesc.MultisampleEnable = true;
+    cmdesc.DepthClipEnable = false;
+    hr = m_device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
+
+    m_meshShader = new Shader();
+    hr = m_meshShader->LoadVertexShader(m_device, "VS", "shaders\\mesh.fx");
+    if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading vertex shader.", hr); return hr; }
+    hr = m_meshShader->LoadPixelShader(m_device, "PS", "shaders\\mesh.fx");
+    if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading pixel shader.", hr); return hr; }
+
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    UINT numElements = ARRAYSIZE(layout);
+
+    LPVOID buffPtr = m_meshShader->getVertexBlob()->GetBufferPointer();
+    SIZE_T size = m_meshShader->getVertexBlob()->GetBufferSize();
+    hr = m_device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
+        return hr;
+    }
+
     return true;
 }
 
@@ -389,7 +419,7 @@ void Engine::Update(float deltaTime) {
 }
 
 void Engine::Render() {
-    D3DXCOLOR color(0.0f, 0.0f, 0.0f, 1.0f);
+    D3DXCOLOR color(0.0f, 0.0f, 0.0f, 0.0f);
     
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -397,12 +427,17 @@ void Engine::Render() {
     float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
     
+    m_bufferLight.direction = XMFLOAT4(-15.0f, -15.0f, 1.0f, 1.0f);
+    m_bufferLight.ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
+    m_bufferLight.diffuse = XMFLOAT4(1.0f, 0.8f, 0.8f, 1.0f);
+    m_deviceContext->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
+    m_deviceContext->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
+
+    m_deviceContext->IASetInputLayout(m_layout);
+    m_meshShader->setVertexShader(m_deviceContext);
+    m_meshShader->setPiexlShader(m_deviceContext);
+    m_deviceContext->RSSetState(m_cWcullMode);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
-        m_bufferLight.direction = XMFLOAT4(-15.0f, -15.0f, 1.0f, 1.0f);
-        m_bufferLight.ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
-        m_bufferLight.diffuse = XMFLOAT4(1.0f, 0.8f, 0.8f, 1.0f);
-        m_deviceContext->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
-        m_deviceContext->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
         m_meshes[iterator]->Render(m_deviceContext);
     }
 
@@ -441,6 +476,12 @@ void Engine::Release() {
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_gui->Release();
 #endif
+    if (m_cWcullMode) m_cWcullMode->Release();\
+    if (m_meshShader) {
+        m_meshShader->Release();
+        delete m_meshShader;
+    }
+    if (m_layout) m_layout->Release();
 }
 
 int Engine::messageWindow() {
@@ -605,28 +646,36 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 #endif
 
     switch (msg) {
-        case WM_CREATE: {
-            LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
-        } return 0;
-        case WM_KEYDOWN: {
-            if (wParam == VK_ESCAPE) {
-                DestroyWindow(hWnd);
-            }
-            else if (wParam == VK_SPACE) {
-                config.fullscreen = !config.fullscreen;
-                engine.setFullScreen(hWnd, config.fullscreen);
-            }
-        } return 0;
-        case WM_LBUTTONDOWN: {
+    case WM_CREATE: {
+        LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+    } return 0;
+    case WM_KEYDOWN: {
+        if (wParam == VK_ESCAPE) {
+            DestroyWindow(hWnd);
+        }
+        else if (wParam == VK_SPACE) {
+            config.fullscreen = !config.fullscreen;
+            engine.setFullScreen(hWnd, config.fullscreen);
+        }
+    } return 0;
+    case WM_LBUTTONDOWN: {
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+        if (!ImGui::GetIO().WantCaptureMouse) {
             int mouseX = GET_X_LPARAM(lParam);
             int mouseY = GET_Y_LPARAM(lParam);
             engine.Raycast(mouseX, mouseY);
-        } return 0;
-        case WM_DESTROY: {
-            PostQuitMessage(0);
-            return 0;
         }
+#else
+        int mouseX = GET_X_LPARAM(lParam);
+        int mouseY = GET_Y_LPARAM(lParam);
+        engine.Raycast(mouseX, mouseY);
+#endif
+    } return 0;
+    case WM_DESTROY: {
+        PostQuitMessage(0);
+        return 0;
+    }
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }

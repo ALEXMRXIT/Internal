@@ -62,6 +62,8 @@ private:
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11Texture2D* m_depthTexture;
 	ID3D11BlendState* m_transparency;
+	ID3D11RasterizerState* m_cWcullMode;
+	ID3D11InputLayout* m_layout;
 	IDirectInputDevice8* m_keyboard;
 	IDirectInputDevice8* m_mouse;
 	LPDIRECTINPUT8 m_directInput;
@@ -76,6 +78,7 @@ private:
 	Location* m_location;
 	Skybox* m_skybox;
 	BufferDirectionLight m_bufferLight;
+	Shader* m_meshShader;
 
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font;

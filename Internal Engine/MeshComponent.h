@@ -64,10 +64,7 @@ class MeshComponent : public AbstractBaseComponent, public Physics {
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
-	ID3D11RasterizerState* m_cWcullMode;
 	MeshMaterial* m_material;
-	ID3D11InputLayout* m_layout;
-	Shader* m_meshShader;
 	WorldViewProjection m_bufferWVP;
 	SelectableConstantBuffer m_select;
 	ID3D11Buffer* m_preObjectBuffer;
