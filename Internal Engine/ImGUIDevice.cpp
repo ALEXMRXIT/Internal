@@ -41,53 +41,94 @@ void ImGUIDevice::Render() {
 
     ImGui::Begin("Inspector");
     {
-        if (ImGui::CollapsingHeader("Transform")) {
-            static int selectedButton = 1;
-            static int last_selected = 1;
-            ImGui::BeginDisabled(!static_cast<bool>(engine.lastSelected));
-            ImGui::BeginChild("ButtonBlock", ImVec2(0, 40), true);
-            {
-                float availableWidth = ImGui::GetContentRegionAvail().x;
-                float buttonWidth = (availableWidth - ImGui::GetStyle().ItemSpacing.x) / 2;
+        if (engine.lastSelected) {
+            if (ImGui::CollapsingHeader("Transform")) {
+                static int selectedButton = 1;
+                static int last_selected = 1;
+                ImGui::BeginChild("ButtonBlock", ImVec2(0, 40), true);
+                {
+                    float availableWidth = ImGui::GetContentRegionAvail().x;
+                    float buttonWidth = (availableWidth - ImGui::GetStyle().ItemSpacing.x) / 2;
 
-                if (selectedButton == 1) {
-                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 1.0f, 1.0f));
-                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
-                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.69f, 1.0f, 1.0f));
-                }
-                if (ImGui::Button("World", ImVec2(buttonWidth, 20))) {
-                    last_selected = 1;
-                }
-                if (selectedButton == 1) ImGui::PopStyleColor(3);
+                    if (selectedButton == 1) {
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 1.0f, 1.0f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.69f, 1.0f, 1.0f));
+                    }
+                    if (ImGui::Button("World", ImVec2(buttonWidth, 20))) {
+                        last_selected = 1;
+                    }
+                    if (selectedButton == 1) ImGui::PopStyleColor(3);
 
-                ImGui::SameLine();
+                    ImGui::SameLine();
 
-                if (selectedButton == 2) {
-                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 1.0f, 1.0f));
-                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
-                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.69f, 1.0f, 1.0f));
+                    if (selectedButton == 2) {
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 1.0f, 1.0f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.69f, 1.0f, 1.0f));
+                    }
+                    if (ImGui::Button("Local", ImVec2(buttonWidth, 20))) {
+                        last_selected = 2;
+                    }
+                    if (selectedButton == 2) ImGui::PopStyleColor(3);
                 }
-                if (ImGui::Button("Local", ImVec2(buttonWidth, 20))) {
-                    last_selected = 2;
+                ImGui::EndChild();
+
+                ImGui::BeginGroup();
+                {
+                    MeshComponent* mesh = engine.lastSelected;
+                    XMFLOAT3 pos = mesh->gameObject()->position();
+                    float position[3] = { pos.x, pos.y, pos.z };
+                    ImGui::SetWindowFontScale(1.1f);
+                    if (ImGui::DragFloat3("Position", position, 0.1f))
+                        mesh->gameObject()->setPosition(XMFLOAT3(position[0], position[1], position[2]));
                 }
-                if (selectedButton == 2) ImGui::PopStyleColor(3);
+                ImGui::EndGroup();
+                selectedButton = last_selected;
             }
-            ImGui::EndChild();
-            ImGui::EndDisabled();
-
-            selectedButton = last_selected;
         }
 
         ImGui::End();
     }
 
     ImGui::Begin("Hierarchy");
-    for (const GameObject* entity : engine.location()->staticObjects()) {
-        ImGui::PushID(entity);
-        ImGui::CollapsingHeader(entity->name.c_str());
-        ImGui::PopID();
+    {
+        bool clickedOnElement = false;
+        for (const GameObject* entity : engine.location()->staticObjects()) {
+            ImGui::PushID(entity);
+            MeshComponent* obj = entity->GetComponentByType<MeshComponent>();
+            bool isSelected = (engine.lastSelected == obj);
+
+            if (isSelected) {
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.26f, 0.59f, 0.98f, 0.31f));
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.51f));
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.26f, 0.59f, 0.98f, 0.71f));
+            }
+
+            if (ImGui::Selectable(entity->name.c_str(), isSelected)) {
+                clickedOnElement = true;
+                if (engine.lastSelected) {
+                    engine.lastSelected->setSelectable(false);
+                    engine.lastSelected = nullptr;
+                }
+                obj->setSelectable(true);
+                engine.lastSelected = obj;
+            }
+
+            if (isSelected)
+                ImGui::PopStyleColor(3);
+            ImGui::PopID();
+        }
+
+        if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !clickedOnElement) {
+            if (engine.lastSelected) {
+                engine.lastSelected->setSelectable(false);
+                engine.lastSelected = nullptr;
+            }
+        }
+
+        ImGui::End();
     }
-    ImGui::End();
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {

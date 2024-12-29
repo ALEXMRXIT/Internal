@@ -102,7 +102,7 @@ private:
 public:
 	Engine();
 
-	MeshComponent* lastSelected;
+	MeshComponent* lastSelected = nullptr;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
