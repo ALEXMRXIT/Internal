@@ -54,43 +54,51 @@ typedef struct bufferLight {
 
 class Engine {
 private:
-	WindowDescription* m_windowDesc;
-	IDXGISwapChain* m_swapChain;
-	ID3D11Device* m_device;
-	ID3D11DeviceContext* m_deviceContext;
-	ID3D11RenderTargetView* m_renderTargetView;
-	ID3D11DepthStencilView* m_depthStencilView;
-	ID3D11Texture2D* m_depthTexture;
-	ID3D11BlendState* m_transparency;
-	ID3D11RasterizerState* m_cWcullMode;
-	ID3D11InputLayout* m_layout;
-	IDirectInputDevice8* m_keyboard;
-	IDirectInputDevice8* m_mouse;
-	LPDIRECTINPUT8 m_directInput;
-	ID3D11Buffer* m_constantLightBuffer;
+	WindowDescription* m_windowDesc = nullptr;
+	IDXGISwapChain* m_swapChain = nullptr;
+	ID3D11Device* m_device = nullptr;
+	ID3D11DeviceContext* m_deviceContext = nullptr;
+	ID3D11RenderTargetView* m_renderTargetView = nullptr;
+	ID3D11DepthStencilView* m_depthStencilView = nullptr;
+	ID3D11Texture2D* m_depthTexture = nullptr;
+	ID3D11BlendState* m_transparency = nullptr;
+	ID3D11RasterizerState* m_cWcullMode = nullptr;
+	ID3D11InputLayout* m_layout = nullptr;
+	IDirectInputDevice8* m_keyboard = nullptr;
+	IDirectInputDevice8* m_mouse = nullptr;
+	LPDIRECTINPUT8 m_directInput = nullptr;
+	ID3D11Buffer* m_constantLightBuffer = nullptr;
+	ID3D11Texture2D* m_renderTexture = nullptr;
+	ID3D11ShaderResourceView* m_renderTextureSRV = nullptr;
+	ID3D11RenderTargetView* m_renderTextureRTV = nullptr;
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
-	ImGUIDevice* m_gui;
+	ImGUIDevice* m_gui = nullptr;
+	XMFLOAT2 m_scenePos;
+	XMFLOAT2 m_sceneSize;
 #endif
 
 	std::vector<MeshComponent*> m_meshes;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
-	Location* m_location;
-	Skybox* m_skybox;
+	Location* m_location = nullptr;
+	Skybox* m_skybox = nullptr;
 	BufferDirectionLight m_bufferLight;
-	Shader* m_meshShader;
+	Shader* m_meshShader = nullptr;
 
 	PerfomanceTimeInfo m_timeInfo;
-	Font* m_font;
+	Font* m_font = nullptr;
 
 	bool m_SwapChainOccluded;
+	bool m_raycastEnabled;
 
+private:
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	void UpdateFrequenceTime(PerfomanceTimeInfo& timeInfo) const;
 	HRESULT BuildMultiSampleQualityList(DXGI_FORMAT format);
 	HRESULT InitDirectInput(HINSTANCE hInstance);
 	void UpdateInput(float deltaTime);
+	void CreateRenderTexture(int width, int height);
 public:
 	Engine();
 
@@ -118,9 +126,16 @@ public:
 	const wchar_t* toStringVSync() const;
 
 	ID3D11Device* device() const { return m_device; }
+	ID3D11ShaderResourceView* GetRenderTextureSRV() const { return m_renderTextureSRV; }
+	Location* location() const { return m_location; }
+	void setRaycast(bool status) { m_raycastEnabled = status; }
+	bool getRaycast() const { return m_raycastEnabled; }
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+	void setMousePosition(XMFLOAT2 scenePos, XMFLOAT2 sceneSize) { m_scenePos = scenePos; m_sceneSize = sceneSize; }
+#endif
 };
 
 extern Engine engine;
 extern Config config;
 extern Camera camera;
-extern PrimitiveDrawable draw;
+extern PrimitiveDrawable gizmozRect;

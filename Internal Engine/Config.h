@@ -3,9 +3,9 @@ class Config {
 public:
 	Config() {
 		resolution = 7;
-		multiply = 3;
+		multiply = 0;
 		qualityTexture = 10;
-		fullscreen = true;
+		fullscreen = false;
 		vSync = 1;
 		showCursor = true;
 		cameraSpeed = 15.0f;

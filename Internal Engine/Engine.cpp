@@ -14,7 +14,7 @@
 Engine engine;
 Camera camera;
 Config config;
-PrimitiveDrawable draw;
+PrimitiveDrawable gizmozRect;
 
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
     SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -145,6 +145,7 @@ HRESULT Engine::GetSupportedResolutions() {
         return hr;
     }
 
+    m_supportedResolution.clear();
     m_supportedResolution.assign(displayModes.begin(), displayModes.end());
 
     output->Release();
@@ -251,7 +252,11 @@ bool Engine::InitRenderDevice() {
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
     depthStencilViewDesc.Format = depthStencilDesc.Format;
+#if INTERNAL_ENGINE_GUI_INTERFACE
+    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+#else
     depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+#endif
     depthStencilViewDesc.Texture2D.MipSlice = 0;
 
     hr = m_device->CreateDepthStencilView(m_depthTexture, &depthStencilViewDesc, &m_depthStencilView);
@@ -259,8 +264,6 @@ bool Engine::InitRenderDevice() {
         DXUT_ERR_MSGBOX("Error creating depth stencil view.", hr);
         return false;
     }
-
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
     IDXGIFactory1* dxgiFactory = nullptr;
     hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
@@ -344,7 +347,6 @@ bool Engine::InitRenderDevice() {
     hr = m_device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
-        return hr;
     }
 
     return true;
@@ -361,10 +363,11 @@ bool Engine::InitScene() {
     m_skybox = new Skybox();
     m_skybox->Init(m_device);
 
-    draw.Init(m_device, m_deviceContext);
+    gizmozRect.Init(m_device, m_deviceContext);
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_gui = new ImGUIDevice();
     m_gui->Init(m_device, m_deviceContext);
+    CreateRenderTexture(m_supportedResolution[config.resolution].Width, m_supportedResolution[config.resolution].Height);
 #endif
 
     return true;
@@ -401,6 +404,49 @@ void Engine::UpdateInput(float deltaTime) {
     }
 }
 
+void Engine::CreateRenderTexture(int width, int height) {
+    D3D11_TEXTURE2D_DESC textureDesc = {};
+    textureDesc.Width = width;
+    textureDesc.Height = height;
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = 1;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Quality = 0;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+    textureDesc.CPUAccessFlags = 0;
+    textureDesc.MiscFlags = 0;
+
+    HRESULT hr = m_device->CreateTexture2D(&textureDesc, nullptr, &m_renderTexture);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create render texture.", hr);
+    }
+
+    D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+    ZeroMemory(&renderTargetViewDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+    renderTargetViewDesc.Format = textureDesc.Format;
+    renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+    hr = m_device->CreateRenderTargetView(m_renderTexture, &renderTargetViewDesc, &m_renderTextureRTV);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create RTV for render texture.", hr);
+    }
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+    srvDesc.Format = textureDesc.Format;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+
+    hr = m_device->CreateShaderResourceView(m_renderTexture, &srvDesc, &m_renderTextureSRV);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create SRV for render texture.", hr);
+    }
+}
+
 Engine::Engine() {
     m_SwapChainOccluded = false;
 }
@@ -419,14 +465,20 @@ void Engine::Update(float deltaTime) {
 }
 
 void Engine::Render() {
-    D3DXCOLOR color(0.0f, 0.0f, 0.0f, 0.0f);
-    
-    m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
+    float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+    m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    
+
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+    m_deviceContext->ClearRenderTargetView(m_renderTextureRTV, clearColor);
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
+#endif
+
     float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
-    
+
     m_bufferLight.direction = XMFLOAT4(-15.0f, -15.0f, 1.0f, 1.0f);
     m_bufferLight.ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
     m_bufferLight.diffuse = XMFLOAT4(1.0f, 0.8f, 0.8f, 1.0f);
@@ -437,21 +489,22 @@ void Engine::Render() {
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
-    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
         m_meshes[iterator]->Render(m_deviceContext);
-    }
 
     m_skybox->Render(m_deviceContext);
-    draw.Render();
-    
+    gizmozRect.Render();
+
     wchar_t buffer[128];
     swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
     m_font->Render(m_deviceContext, buffer);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+
     m_gui->Render();
 #endif
-    
+
     HRESULT hr = m_swapChain->Present(min(config.vSync, 2), 0);
     m_SwapChainOccluded = hr == DXGI_STATUS_OCCLUDED;
 }
@@ -526,10 +579,20 @@ int Engine::messageWindow() {
 }
 
 void Engine::Raycast(int mouseX, int mouseY) {
+#ifndef INTERNAL_ENGINE_GUI_INTERFACE
     int screenWidth = getSupportedResolution().Width;
     int screenHeight = getSupportedResolution().Height;
+#else
+    int screenWidth = m_sceneSize.x;
+    int screenHeight = m_sceneSize.y;
+#endif
 
     XMVECTOR pickRayInViewSpacePos = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+    mouseX = mouseX - static_cast<int>(m_scenePos.x);
+    mouseY = mouseY - static_cast<int>(m_scenePos.y);
+#endif
 
     if (config.fullscreen) {
         mouseX = (int)((float)mouseX * (float)screenWidth / (float)GetSystemMetrics(SM_CXSCREEN));
@@ -661,7 +724,7 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     } return 0;
     case WM_LBUTTONDOWN: {
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
-        if (!ImGui::GetIO().WantCaptureMouse) {
+        if (engine.getRaycast()) {
             int mouseX = GET_X_LPARAM(lParam);
             int mouseY = GET_Y_LPARAM(lParam);
             engine.Raycast(mouseX, mouseY);

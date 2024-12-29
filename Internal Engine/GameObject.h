@@ -7,6 +7,9 @@ private:
 	Component* m_components;
 
 public:
+	std::string name;
+
+public:
 	GameObject();
 
 	GameObject(const GameObject&) = delete;

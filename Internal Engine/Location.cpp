@@ -18,24 +18,30 @@ Location::Location() {
     
     GameObject* obj = Instantiate(XMFLOAT3(-25.0f, 0.0f, 0.0f),
         XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
+    obj->name = "Cart";
     MeshComponent* mesh = obj->AddComponent<MeshComponent>();
     mesh->setMatrix(obj->transform().getWorldMatrix());
     mesh->setGameObject(obj);
     m_loader->AddResourceToLoad("mesh\\m_had033.obj", mesh);
+    Insert(obj);
     
     GameObject* plane = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
         XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(100.0f, 1.0f, 100.0f));
+    plane->name = "Ground";
     MeshComponent* planeMesh = plane->AddComponent<MeshComponent>();
     planeMesh->setMatrix(plane->transform().getWorldMatrix());
     planeMesh->setGameObject(plane);
     m_loader->AddResourceToLoad("mesh\\plane.obj", planeMesh);
+    Insert(plane);
     
     GameObject* house = Instantiate(XMFLOAT3(60.0f, 0.0f, 50.0f),
         XMFLOAT3(0.0f, 180.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
+    house->name = "House";
     MeshComponent* houseMesh = house->AddComponent<MeshComponent>();
     houseMesh->setMatrix(house->transform().getWorldMatrix());
     houseMesh->setGameObject(house);
     m_loader->AddResourceToLoad("mesh\\m_hbf011.obj", houseMesh);
+    Insert(house);
 }
 
 void Location::Update(float deltaTime) {
