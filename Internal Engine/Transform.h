@@ -2,6 +2,10 @@
 #include "framework.h"
 #include "AbstractBaseComponent.h"
 
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+#include "ImGUIDevice.h"
+#endif
+
 class Transform : public AbstractBaseComponent {
 private:
 	XMMATRIX m_worldPosition;
@@ -17,6 +21,10 @@ public:
 	Transform(const Transform& other);
 
 	Transform& operator=(const Transform& other);
+
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+	void UpdateInterfaceInInspector(GameObject* gameObject) override;
+#endif
 
 	XMMATRIX& getWorldMatrix() { return m_worldPosition; }
 

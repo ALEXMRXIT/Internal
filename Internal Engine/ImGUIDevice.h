@@ -7,7 +7,16 @@
 
 class ImGUIDevice {
 private:
+	bool m_styleSelectedState;
+	int m_selectedStyle;
+
+private:
 	void InitWindowStyle(void);
+
+	void DefaultStyle(void);
+	void BlueStyle(void);
+	void BlackStyle(void);
+	void WhiteStyle(void);
 
 public:
 	ImGUIDevice();

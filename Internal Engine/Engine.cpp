@@ -92,7 +92,8 @@ HRESULT Engine::InitDirectInput(HINSTANCE hInstance) {
     hr = m_keyboard->SetCooperativeLevel(m_windowDesc->hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 
     hr = m_mouse->SetDataFormat(&c_dfDIMouse);
-    hr = m_mouse->SetCooperativeLevel(m_windowDesc->hWnd, config.showCursor ? DISCL_NONEXCLUSIVE : DISCL_EXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
+    hr = m_mouse->SetCooperativeLevel(m_windowDesc->hWnd, (config.showCursor ?
+        DISCL_NONEXCLUSIVE : DISCL_EXCLUSIVE) | DISCL_NOWINKEY | DISCL_FOREGROUND);
     hr = m_mouse->Acquire();
 
     return hr;
@@ -729,10 +730,6 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             int mouseY = GET_Y_LPARAM(lParam);
             engine.Raycast(mouseX, mouseY);
         }
-#else
-        int mouseX = GET_X_LPARAM(lParam);
-        int mouseY = GET_Y_LPARAM(lParam);
-        engine.Raycast(mouseX, mouseY);
 #endif
     } return 0;
     case WM_DESTROY: {

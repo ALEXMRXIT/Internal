@@ -103,6 +103,12 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     context->DrawIndexed(m_indices, 0, 0);
 }
 
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
+
+}
+#endif
+
 void MeshComponent::setMatrix(XMMATRIX& position) {
     m_position = &position;
 }

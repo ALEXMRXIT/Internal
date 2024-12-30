@@ -21,6 +21,9 @@ public:
 	template<class TComponent>
 	TComponent* GetComponentByType() const { return m_components->GetComponentByType<TComponent>(); }
 
+	uint32_t sizeComponents() const { return m_components->size(); }
+	std::list<AbstractBaseComponent*> getComponents() const { return m_components->components(); }
+
 	__forceinline Transform& transform() const { return m_components->transform(); }
 
 	void setPosition(const XMFLOAT3& vector) const { transform().setPosition(vector); }

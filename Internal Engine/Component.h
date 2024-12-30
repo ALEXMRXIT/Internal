@@ -5,7 +5,7 @@
 class Component {
 private:
 	std::list<AbstractBaseComponent*> m_components;
-	Transform* m_transform;
+	Transform* m_transform; // компонент этот вытащен, так как очень часто используется. Сделано ради оптимизации
 
 public:
 	Component();
@@ -31,6 +31,9 @@ public:
 		}
 		return nullptr;
 	}
+
+	uint32_t size() const { return (uint32_t)m_components.size(); }
+	std::list<AbstractBaseComponent*> components() const { return m_components; }
 
 	__forceinline Transform& transform() const { return *m_transform; }
 };

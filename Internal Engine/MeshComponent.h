@@ -90,6 +90,10 @@ public:
 	void setMatrix(XMMATRIX& position);
 	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);
 
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+	void UpdateInterfaceInInspector(GameObject* gameObject) override;
+#endif
+
 	HRESULT Init(ID3D11Device* device);
 
 	bool CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size);
