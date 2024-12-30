@@ -32,6 +32,7 @@ Transform& Transform::operator=(const Transform& other) {
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
+    ImGui::Dummy(ImVec2(0.0f, 2.0f));
     if (ImGui::CollapsingHeader("Transform")) {
         static int selectedButton = 1;
         static int last_selected = 1;

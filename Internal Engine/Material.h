@@ -26,6 +26,7 @@ class MeshMaterial : public Material {
 private:
 	XMFLOAT2 m_scale;
 	XMFLOAT2 m_offset;
+	XMFLOAT4 m_color;
 
 public:
 	MeshMaterial();
@@ -39,8 +40,11 @@ public:
 	void Load(ID3D11Device* device) override;
 	void SetScale(XMFLOAT2 scale, XMFLOAT2 offset) override;
 
+	void setColor(XMFLOAT4 color) { m_color = color; }
+
 	XMFLOAT2 scale() const { return m_scale; }
 	XMFLOAT2 offset() const { return m_offset; }
+	XMFLOAT4 color() const { return m_color; }
 
 	void Release();
 };

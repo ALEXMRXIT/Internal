@@ -58,6 +58,7 @@ typedef struct _worldViewProjectionBuffer {
 
 struct SelectableConstantBuffer {
 	XMFLOAT4 selectable;
+	XMFLOAT4 texture_color;
 };
 
 class MeshComponent : public AbstractBaseComponent, public Physics {
@@ -100,6 +101,7 @@ public:
 	bool CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size);
 
 	GameObject* gameObject() const { return m_obj; }
+	MeshMaterial* material() const { return m_material; }
 	void setGameObject(GameObject* obj) { m_obj = obj; }
 	XMMATRIX& position() const { return *m_position; }
 	void setSelectable(bool flag) { m_selectable = flag; }

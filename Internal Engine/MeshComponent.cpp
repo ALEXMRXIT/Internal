@@ -95,7 +95,8 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
 
-    m_select.selectable = XMFLOAT4((float)m_selectable, alpha, 0.0f, 0.0f);
+    m_select.selectable = XMFLOAT4(0.0f, alpha, 0.0f, 0.0f);
+    m_select.texture_color = m_material->color();
     context->UpdateSubresource(m_preObjectSelect, 0, NULL, &m_select, 0, 0);
     context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
 
@@ -105,8 +106,50 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
+    ImGui::Dummy(ImVec2(0.0f, 2.0f));
     if (ImGui::CollapsingHeader("Mesh Renderer")) {
+        MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
+        if (material) {
+            if (ImGui::Button("Select Texture")) {
+                ImGui::OpenPopup("Texture Selection");
+            }
 
+            if (ImGui::BeginPopupModal("Texture Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                static const char* textures[] = { "Texture1", "Texture2", "Texture3" };
+                static int selectedTexture = 0;
+
+                ImGui::Text("Select a texture:");
+                if (ImGui::Combo("##Textures", &selectedTexture, textures, IM_ARRAYSIZE(textures))) {
+
+                }
+
+                if (ImGui::Button("OK")) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel")) {
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+
+            if (material->diffuseTex && material->diffuseTex->m_shaderView) {
+                ImGui::Image((void*)material->diffuseTex->m_shaderView, ImVec2(100, 100));
+                ImGui::SameLine();
+                static char buffer[MAX_PATH];
+                snprintf(buffer, MAX_PATH, "Name: %s", material->diffuseTex->name);
+                ImGui::Text(buffer);
+            }
+
+            XMFLOAT4 col = material->color();
+            float color[4] = { col.x, col.y, col.z, col.w };
+
+            if (ImGui::ColorEdit4("Color", color)) {
+                XMFLOAT4 newColor(color[0], color[1], color[2], color[3] );
+                material->setColor(newColor);
+            }
+        }
     }
 }
 #endif
@@ -120,6 +163,7 @@ void MeshComponent::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offse
     m_material->diffuseTex = new Material::TextureMapInfo();
     m_material->diffuseTex->name = name;
     m_material->SetScale(scale, offset);
+    m_material->setColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 }
 
 HRESULT MeshComponent::Init(ID3D11Device* device) {

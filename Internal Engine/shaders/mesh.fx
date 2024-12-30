@@ -16,6 +16,7 @@ cbuffer cbPerObject : register(b1)
 cbuffer cbSelectable : register(b2)
 {
     float4 selectable;
+    float4 texture_color;
 }
 
 struct VS_INPUT
@@ -56,15 +57,13 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     if (color.a == 0)
         return float4(0.3f, 0.3f, 0.3f, 1.0f);
     
-    if (selectable.x > 0)
-        return color * 1.5f;
-    
     float3 lightDir = normalize(-direction.xyz);
     
     float diffuseFactor = saturate(dot(input.Normal, lightDir));
     float3 diffuseColor = diffuseFactor * diffuse.rgb * color.rgb;
     
     float3 finalColor = (ambient.rgb * color.rgb) + diffuseColor;
+    float3 baseColor = finalColor + texture_color.rgb;
     
-    return float4(finalColor, color.a * selectable.y);
+    return float4(baseColor, color.a * selectable.y);
 }
