@@ -41,6 +41,8 @@ public:
 	void SetScale(XMFLOAT2 scale, XMFLOAT2 offset) override;
 
 	void setColor(XMFLOAT4 color) { m_color = color; }
+	void setScale(XMFLOAT2 scale) { m_scale = scale; }
+	void setOffset(XMFLOAT2 offset) { m_offset = offset; }
 
 	XMFLOAT2 scale() const { return m_scale; }
 	XMFLOAT2 offset() const { return m_offset; }
