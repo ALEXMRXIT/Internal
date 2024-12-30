@@ -264,6 +264,54 @@ void ImGUIDevice::Render() {
     {
         if (engine.lastSelected) {
             GameObject* gameObject = engine.lastSelected->gameObject();
+            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.5f));
+            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+            float availableWidth = ImGui::GetContentRegionAvail().x;
+            float width = availableWidth - ImGui::GetStyle().ItemSpacing.x;
+
+            if (ImGui::BeginChild("ObjectEditorFrame", ImVec2(width, 70.0f), true)) {
+                ImGui::Checkbox("##ToggleObject", &gameObject->enable);
+                ImGui::SameLine();
+
+                static char buffer[128];
+                std::strncpy(buffer, gameObject->name.c_str(), sizeof(buffer));
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(width);
+                if (ImGui::InputText("##ObjectName", buffer, IM_ARRAYSIZE(buffer)))
+                    gameObject->name = buffer;
+                const char* tags[] = { "Default Tag" };
+                const char* layers[] = { "Default Layer" };
+
+                const char* labelTag = "Tag:";
+                const char* labelLayer = "Layer:";
+                ImVec2 labelTagSize = ImGui::CalcTextSize(labelTag);
+                ImVec2 labelLayerSize = ImGui::CalcTextSize(labelLayer);
+
+                float availableWidth = ImGui::GetContentRegionAvail().x;
+                float comboWidth = (availableWidth - labelTagSize.x - labelLayerSize.x - ImGui::GetStyle().ItemSpacing.x * 3) / 2;
+
+                ImGui::Dummy(ImVec2(0.0f, 2.0f));
+                ImGui::Text("Tag:");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(comboWidth);
+                if (ImGui::Combo("##Tag", &gameObject->selectedTag, tags, IM_ARRAYSIZE(tags))) {
+
+                }
+
+                ImGui::SameLine();
+                ImGui::Text("Layer:");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(comboWidth);
+                if (ImGui::Combo("##Layer", &gameObject->selectedLayer, layers, IM_ARRAYSIZE(layers))) {
+
+                }
+            }
+            ImGui::EndChild();
+
+            ImGui::PopStyleColor(2);
+            ImGui::PopStyleVar();
             for (AbstractBaseComponent* component : gameObject->getComponents())
                 component->UpdateInterfaceInInspector(gameObject);
         }

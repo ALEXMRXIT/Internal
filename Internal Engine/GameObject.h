@@ -8,6 +8,9 @@ private:
 
 public:
 	std::string name;
+	bool enable;
+	int selectedTag;
+	int selectedLayer;
 
 public:
 	GameObject();

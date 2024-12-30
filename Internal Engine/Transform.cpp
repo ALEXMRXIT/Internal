@@ -64,6 +64,7 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
         }
         ImGui::EndChild();
 
+        ImGui::Dummy(ImVec2(0.0f, 2.0f));
         ImGui::BeginGroup();
         {
             XMFLOAT3 pos = gameObject->position();

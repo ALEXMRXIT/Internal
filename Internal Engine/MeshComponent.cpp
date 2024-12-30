@@ -105,7 +105,9 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
+    if (ImGui::CollapsingHeader("Mesh Renderer")) {
 
+    }
 }
 #endif
 
