@@ -40,7 +40,7 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
     m_windowDesc->windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
 
     m_windowDesc->hWnd = CreateWindowEx(NULL, m_windowDesc->title, m_windowDesc->title,
-        m_windowDesc->windowStyle, CW_USEDEFAULT, CW_USEDEFAULT, m_supportedResolution[config.resolution].Width,
+        m_windowDesc->windowStyle, 0, 0, m_supportedResolution[config.resolution].Width,
         m_supportedResolution[config.resolution].Height, NULL, NULL, m_windowDesc->hInstance, NULL);
 
     ShowWindow(m_windowDesc->hWnd, m_windowDesc->nCmdShow);
@@ -614,6 +614,8 @@ void Engine::Raycast(int mouseX, int mouseY) {
     XMVECTOR pickRayInWorldSpaceDir = XMVector3TransformNormal(pickRayInViewSpaceDir, pickRayToWorldSpaceMatrix);
     pickRayInWorldSpaceDir = XMVector3Normalize(pickRayInWorldSpaceDir);
 
+    
+
     float closestDistance = FLT_MAX;
     MeshComponent* closestMesh = nullptr;
 
@@ -713,7 +715,7 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_CREATE: {
         LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
         SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
-    } return 0;
+    } break;
     case WM_KEYDOWN: {
         if (wParam == VK_ESCAPE) {
             DestroyWindow(hWnd);
@@ -722,7 +724,7 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             config.fullscreen = !config.fullscreen;
             engine.setFullScreen(hWnd, config.fullscreen);
         }
-    } return 0;
+    } break;
     case WM_LBUTTONDOWN: {
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
         if (engine.getRaycast()) {
@@ -731,10 +733,10 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             engine.Raycast(mouseX, mouseY);
         }
 #endif
-    } return 0;
+    } break;
     case WM_DESTROY: {
         PostQuitMessage(0);
-        return 0;
+        break;
     }
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);

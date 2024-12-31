@@ -9,6 +9,7 @@ class ImGUIDevice {
 private:
 	bool m_styleSelectedState;
 	int m_selectedStyle;
+	float m_fontSize;
 
 private:
 	void InitWindowStyle(void);

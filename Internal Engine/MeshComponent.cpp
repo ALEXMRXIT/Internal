@@ -108,91 +108,102 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
     ImGui::Dummy(ImVec2(0.0f, 2.0f));
     if (ImGui::CollapsingHeader("Mesh Renderer")) {
-        MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
-        if (material) {
-            if (ImGui::Button("Select Texture")) {
-                ImGui::OpenPopup("Texture Selection");
-            }
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
+        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-            if (ImGui::BeginPopupModal("Texture Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-                static const char* textures[] = { "Texture1", "Texture2", "Texture3" };
-                static int selectedTexture = 0;
-
-                ImGui::Text("Select a texture:");
-                if (ImGui::Combo("##Textures", &selectedTexture, textures, IM_ARRAYSIZE(textures))) {
-
+        ImGui::BeginChild("MeshRenderer", ImVec2(0, 180), true);
+        {
+            MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
+            if (material) {
+                if (ImGui::Button("Select Texture")) {
+                    ImGui::OpenPopup("Texture Selection");
                 }
 
-                if (ImGui::Button("OK")) {
-                    ImGui::CloseCurrentPopup();
+                if (ImGui::BeginPopupModal("Texture Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                    static const char* textures[] = { "Texture1", "Texture2", "Texture3" };
+                    static int selectedTexture = 0;
+
+                    ImGui::Text("Select a texture:");
+                    if (ImGui::Combo("##Textures", &selectedTexture, textures, IM_ARRAYSIZE(textures))) {
+
+                    }
+
+                    if (ImGui::Button("OK")) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Cancel")) {
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    ImGui::EndPopup();
                 }
-                ImGui::SameLine();
-                if (ImGui::Button("Cancel")) {
-                    ImGui::CloseCurrentPopup();
+
+                if (material->diffuseTex && material->diffuseTex->m_shaderView) {
+                    ImGui::Image((void*)material->diffuseTex->m_shaderView, ImVec2(100, 100));
+                    ImGui::SameLine();
+
+                    ImGui::BeginGroup();
+                    {
+                        static char buffer[MAX_PATH];
+                        snprintf(buffer, MAX_PATH, "Name: %s", material->diffuseTex->name);
+                        ImGui::Text(buffer);
+
+                        XMFLOAT2 tiling = material->scale();
+                        float til[2] = { tiling.x, tiling.y };
+
+                        ImGui::Dummy(ImVec2(0.0f, 2.0f));
+                        ImGui::Text("Tiling");
+                        ImGui::SameLine();
+                        ImGui::Text("X:");
+                        ImGui::SameLine();
+                        ImGui::SetNextItemWidth(50.0f);
+                        if (ImGui::DragFloat("##TexX", &til[0], 0.1f))
+                            material->setScale(XMFLOAT2(til[0], til[1]));
+
+                        ImGui::SameLine();
+                        ImGui::Text("Y:");
+                        ImGui::SameLine();
+                        ImGui::SetNextItemWidth(50.0f);
+                        if (ImGui::DragFloat("##TexY", &til[1], 0.1f))
+                            material->setScale(XMFLOAT2(til[0], til[1]));
+
+                        XMFLOAT2 offset = material->offset();
+                        float off[2] = { offset.x, offset.y };
+
+                        ImGui::Dummy(ImVec2(0.0f, 2.0f));
+                        ImGui::Text("Offset");
+                        ImGui::SameLine();
+                        ImGui::Text("X:");
+                        ImGui::SameLine();
+                        ImGui::SetNextItemWidth(50.0f);
+                        if (ImGui::DragFloat("##OffX", &off[0], 0.01f))
+                            material->setOffset(XMFLOAT2(off[0], off[1]));
+
+                        ImGui::SameLine();
+                        ImGui::Text("Y:");
+                        ImGui::SameLine();
+                        ImGui::SetNextItemWidth(50.0f);
+                        if (ImGui::DragFloat("##OffY", &off[1], 0.01f))
+                            material->setOffset(XMFLOAT2(off[0], off[1]));
+                    }
+                    ImGui::EndGroup();
                 }
 
-                ImGui::EndPopup();
-            }
+                XMFLOAT4 col = material->color();
+                float color[4] = { col.x, col.y, col.z, col.w };
 
-            if (material->diffuseTex && material->diffuseTex->m_shaderView) {
-                ImGui::Image((void*)material->diffuseTex->m_shaderView, ImVec2(100, 100));
-                ImGui::SameLine();
-
-                ImGui::BeginGroup();
-                {
-                    static char buffer[MAX_PATH];
-                    snprintf(buffer, MAX_PATH, "Name: %s", material->diffuseTex->name);
-                    ImGui::Text(buffer);
-
-                    XMFLOAT2 tiling = material->scale();
-                    float til[2] = { tiling.x, tiling.y };
-                    
-                    ImGui::Dummy(ImVec2(0.0f, 2.0f));
-                    ImGui::Text("Tiling");
-                    ImGui::SameLine();
-                    ImGui::Text("X:");
-                    ImGui::SameLine();
-                    ImGui::SetNextItemWidth(50.0f);
-                    if (ImGui::DragFloat("##TexX", &til[0], 0.1f))
-                        material->setScale(XMFLOAT2(til[0], til[1]));
-
-                    ImGui::SameLine();
-                    ImGui::Text("Y:");
-                    ImGui::SameLine();
-                    ImGui::SetNextItemWidth(50.0f);
-                    if (ImGui::DragFloat("##TexY", &til[1], 0.1f))
-                        material->setScale(XMFLOAT2(til[0], til[1]));
-
-                    XMFLOAT2 offset = material->offset();
-                    float off[2] = { offset.x, offset.y };
-
-                    ImGui::Dummy(ImVec2(0.0f, 2.0f));
-                    ImGui::Text("Offset");
-                    ImGui::SameLine();
-                    ImGui::Text("X:");
-                    ImGui::SameLine();
-                    ImGui::SetNextItemWidth(50.0f);
-                    if (ImGui::DragFloat("##OffX", &off[0], 0.01f))
-                        material->setOffset(XMFLOAT2(off[0], off[1]));
-
-                    ImGui::SameLine();
-                    ImGui::Text("Y:");
-                    ImGui::SameLine();
-                    ImGui::SetNextItemWidth(50.0f);
-                    if (ImGui::DragFloat("##OffY", &off[1], 0.01f))
-                        material->setOffset(XMFLOAT2(off[0], off[1]));
+                if (ImGui::ColorEdit4("Color", color)) {
+                    XMFLOAT4 newColor(color[0], color[1], color[2], color[3]);
+                    material->setColor(newColor);
                 }
-                ImGui::EndGroup();
-            }
-
-            XMFLOAT4 col = material->color();
-            float color[4] = { col.x, col.y, col.z, col.w };
-
-            if (ImGui::ColorEdit4("Color", color)) {
-                XMFLOAT4 newColor(color[0], color[1], color[2], color[3] );
-                material->setColor(newColor);
             }
         }
+        ImGui::EndChild();
+
+        ImGui::PopStyleColor(2);
+        ImGui::PopStyleVar();
     }
 }
 #endif

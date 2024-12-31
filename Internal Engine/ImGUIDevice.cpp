@@ -11,15 +11,18 @@ void ImGUIDevice::InitWindowStyle(void) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 
+    float dpiScale = ImGui_ImplWin32_GetDpiScaleForHwnd(engine.getWindowDesc()->hWnd);
+    if (dpiScale > 1.0f) {
+        ImGui::GetStyle().ScaleAllSizes(dpiScale);
+        io.FontGlobalScale = dpiScale;
+    }
+
+    ImFont* font = io.Fonts->AddFontFromFileTTF("arlrdbd.ttf", m_fontSize);
+    io.FontDefault = font;
+
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    if (viewport) {
-        viewport->Size = ImVec2((float)engine.getSupportedResolution().Width, 
-            (float)engine.getSupportedResolution().Height);
-        viewport->Pos = ImVec2(0, 0);
-    }
     DefaultStyle();
 }
 
@@ -244,6 +247,7 @@ void ImGUIDevice::WhiteStyle(void) {
 ImGUIDevice::ImGUIDevice() { 
     m_styleSelectedState = false;
     m_selectedStyle = 0;
+    m_fontSize = 16.0f;
 }
 
 void ImGUIDevice::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
@@ -265,16 +269,16 @@ void ImGUIDevice::Render() {
         if (engine.lastSelected) {
             GameObject* gameObject = engine.lastSelected->gameObject();
             ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.5f));
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
             ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-
+    
             float availableWidth = ImGui::GetContentRegionAvail().x;
             float width = availableWidth - ImGui::GetStyle().ItemSpacing.x;
-
-            if (ImGui::BeginChild("ObjectEditorFrame", ImVec2(width, 70.0f), true)) {
+    
+            if (ImGui::BeginChild("ObjectEditorFrame", ImVec2(width, 80.0f), true)) {
                 ImGui::Checkbox("##ToggleObject", &gameObject->enable);
                 ImGui::SameLine();
-
+    
                 static char buffer[128];
                 std::strncpy(buffer, gameObject->name.c_str(), sizeof(buffer));
                 ImGui::SameLine();
@@ -283,42 +287,42 @@ void ImGUIDevice::Render() {
                     gameObject->name = buffer;
                 const char* tags[] = { "Default Tag" };
                 const char* layers[] = { "Default Layer" };
-
+    
                 const char* labelTag = "Tag:";
                 const char* labelLayer = "Layer:";
                 ImVec2 labelTagSize = ImGui::CalcTextSize(labelTag);
                 ImVec2 labelLayerSize = ImGui::CalcTextSize(labelLayer);
-
+    
                 float availableWidth = ImGui::GetContentRegionAvail().x;
                 float comboWidth = (availableWidth - labelTagSize.x - labelLayerSize.x - ImGui::GetStyle().ItemSpacing.x * 3) / 2;
-
+    
                 ImGui::Dummy(ImVec2(0.0f, 2.0f));
                 ImGui::Text("Tag:");
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(comboWidth);
                 if (ImGui::Combo("##Tag", &gameObject->selectedTag, tags, IM_ARRAYSIZE(tags))) {
-
+    
                 }
-
+    
                 ImGui::SameLine();
                 ImGui::Text("Layer:");
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(comboWidth);
                 if (ImGui::Combo("##Layer", &gameObject->selectedLayer, layers, IM_ARRAYSIZE(layers))) {
-
+    
                 }
             }
             ImGui::EndChild();
-
+    
             ImGui::PopStyleColor(2);
             ImGui::PopStyleVar();
             for (AbstractBaseComponent* component : gameObject->getComponents())
                 component->UpdateInterfaceInInspector(gameObject);
         }
-
+    
         ImGui::End();
     }
-
+    
     ImGui::Begin("Hierarchy");
     {
         bool clickedOnElement = false;
@@ -326,13 +330,14 @@ void ImGUIDevice::Render() {
             ImGui::PushID(entity);
             MeshComponent* obj = entity->GetComponentByType<MeshComponent>();
             bool isSelected = (engine.lastSelected == obj);
-
+    
             if (isSelected) {
                 ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.26f, 0.59f, 0.98f, 0.31f));
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.51f));
                 ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.26f, 0.59f, 0.98f, 0.71f));
             }
-
+    
+            ImGui::Dummy(ImVec2(0.0f, 1.0f));
             if (ImGui::Selectable(entity->name.c_str(), isSelected)) {
                 clickedOnElement = true;
                 if (engine.lastSelected) {
@@ -342,22 +347,22 @@ void ImGUIDevice::Render() {
                 obj->setSelectable(true);
                 engine.lastSelected = obj;
             }
-
+    
             if (isSelected)
                 ImGui::PopStyleColor(3);
             ImGui::PopID();
         }
-
+    
         if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !clickedOnElement) {
             if (engine.lastSelected) {
                 engine.lastSelected->setSelectable(false);
                 engine.lastSelected = nullptr;
             }
         }
-
+    
         ImGui::End();
     }
-
+    
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open..", "Ctrl+O")) {}
@@ -373,34 +378,66 @@ void ImGUIDevice::Render() {
         }
         ImGui::EndMainMenuBar();
     }
-
+    
     if (m_styleSelectedState) {
         ImGui::Begin("Styles");
-        const char* styles[] = { "Default", "Blue", "Black", "White" };
-        if (ImGui::Combo("Select Style", &m_selectedStyle, styles, IM_ARRAYSIZE(styles))) {
-            switch (m_selectedStyle) {
-                case 0: DefaultStyle(); break;
-                case 1: BlueStyle(); break;
-                case 2: BlackStyle(); break;
-                case 3: WhiteStyle(); break;
+        {
+            ImGui::BeginGroup();
+            {
+                const char* styles[] = { "Default", "Blue", "Black", "White" };
+                if (ImGui::Combo("Select Style", &m_selectedStyle, styles, IM_ARRAYSIZE(styles))) {
+                    switch (m_selectedStyle) {
+                    case 0: DefaultStyle(); break;
+                    case 1: BlueStyle(); break;
+                    case 2: BlackStyle(); break;
+                    case 3: WhiteStyle(); break;
+                    }
+                    m_styleSelectedState = false;
+                }
             }
-            m_styleSelectedState = false;
+            ImGui::EndGroup();
+            static float fontSize = 0;
+            ImGui::BeginGroup();
+            {
+                ImGui::SliderFloat("Font Size", &fontSize, 15.0f, 32.0f);
+            }
+            ImGui::EndGroup();
+            if (ImGui::Button("Ok")) {
+                ImGui::OpenPopup("Are you sure?");
+            }
+            if (ImGui::BeginPopupModal("Are you sure?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("Are you sure you want to save your settings?");
+    
+                if (ImGui::Button("OK")) {
+                    m_fontSize = fontSize;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel")) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Close")) {
+                m_styleSelectedState = false;
+            }
         }
         ImGui::End();
     }
-
+    
     ImGui::Begin("Project");
     {
-
+    
     }
     ImGui::End();
-
+    
     ImGui::Begin("Assets");
     {
-
+    
     }
     ImGui::End();
-
+    
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("Scene");
     {
@@ -416,7 +453,7 @@ void ImGUIDevice::Render() {
     }
     ImGui::End();
     ImGui::PopStyleVar();
-
+    
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }

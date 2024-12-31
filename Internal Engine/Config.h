@@ -5,7 +5,7 @@ public:
 		resolution = 7;
 		multiply = 0;
 		qualityTexture = 10;
-		fullscreen = false;
+		fullscreen = true;
 		vSync = 1;
 		showCursor = true;
 		cameraSpeed = 15.0f;
