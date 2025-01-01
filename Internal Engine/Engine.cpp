@@ -595,10 +595,12 @@ void Engine::Raycast(int mouseX, int mouseY) {
     mouseY = mouseY - static_cast<int>(m_scenePos.y);
 #endif
 
+#ifndef INTERNAL_ENGINE_GUI_INTERFACE
     if (config.fullscreen) {
         mouseX = (int)((float)mouseX * (float)screenWidth / (float)GetSystemMetrics(SM_CXSCREEN));
         mouseY = (int)((float)mouseY * (float)screenHeight / (float)GetSystemMetrics(SM_CYSCREEN));
     }
+#endif
 
     float pointX = (((2.0f * (float)mouseX) / screenWidth) - 1) / camera.getProjection()(0, 0);
     float pointY = -(((2.0f * (float)mouseY) / screenHeight) - 1.0f) / camera.getProjection()(1, 1);
@@ -614,7 +616,15 @@ void Engine::Raycast(int mouseX, int mouseY) {
     XMVECTOR pickRayInWorldSpaceDir = XMVector3TransformNormal(pickRayInViewSpaceDir, pickRayToWorldSpaceMatrix);
     pickRayInWorldSpaceDir = XMVector3Normalize(pickRayInWorldSpaceDir);
 
-    
+#ifdef INTERNAL_ENGINE_DEBUG_RAYCAST
+    XMFLOAT3 startPosFloat3;
+    XMStoreFloat3(&startPosFloat3, pickRayInWorldSpacePos);
+
+    XMFLOAT3 newEndPosFloat3;
+    XMStoreFloat3(&newEndPosFloat3, pickRayInWorldSpacePos + pickRayInWorldSpaceDir * 100.0f);
+
+    gizmozRect.DrawLine(startPosFloat3, newEndPosFloat3, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+#endif
 
     float closestDistance = FLT_MAX;
     MeshComponent* closestMesh = nullptr;
