@@ -60,7 +60,7 @@ void ResourceLoader::LoadResource(const char* resourceName, MeshComponent* mesh)
 
     mesh->CreateVertex(engine.device(), vertices, sizeof(Vertex), vertices.size());
     mesh->CreateIndex(engine.device(), indices, sizeof(DWORD), indices.size());
-    mesh->setMaterial(fileBuffer->material, XMFLOAT2(1.0f, -1.0f), XMFLOAT2(0.0f, 0.0f));
+    mesh->setMaterial(fileBuffer->material, XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f));
 
     mesh->Init(engine.device());
     engine.addMeshRenderer(mesh);

@@ -41,7 +41,7 @@ VS_OUTPUT VS(VS_INPUT input)
     output.Pos = mul(input.Pos, WVP);
     output.Normal = mul(input.Normal, (float3x3) World);
     output.Normal = normalize(output.Normal);
-    output.TexCoord = (input.TexCoord * texture_scale) + texture_offset;
+    output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
     output.WorldPos = mul(input.Pos, World).xyz;
     
     return output;
