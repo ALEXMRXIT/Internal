@@ -1,7 +1,7 @@
 #include "Engine.h"
 #include "debug.h"
 #include "Shader.h"
-#include "MeshComponent.h"
+#include "Model.h"
 #include "Font.h"
 #include "Component.h"
 #include "GameObject.h"
@@ -10,6 +10,7 @@
 #include "Location.h"
 #include "Skybox.h"
 #include "PrimitiveDrawable.h"
+#include "MeshComponent.h"
 
 Engine engine;
 Camera camera;
@@ -361,9 +362,6 @@ bool Engine::InitScene() {
     m_font->Init(m_device);
     m_location = new Location();
 
-    m_skybox = new Skybox();
-    m_skybox->Init(m_device);
-
     gizmozRect.Init(m_device, m_deviceContext);
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_gui = new ImGUIDevice();
@@ -462,7 +460,7 @@ void Engine::Update(float deltaTime) {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         m_meshes[iterator]->Update(deltaTime);
     }
-    m_skybox->Update(deltaTime);
+    m_location->m_skybox->Update(deltaTime);
 }
 
 void Engine::Render() {
@@ -493,7 +491,7 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
         m_meshes[iterator]->Render(m_deviceContext);
 
-    m_skybox->Render(m_deviceContext);
+    m_location->m_skybox->Render(m_deviceContext);
     gizmozRect.Render();
 
     wchar_t buffer[128];
@@ -502,7 +500,6 @@ void Engine::Render() {
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
-
     m_gui->Render();
 #endif
 
@@ -523,10 +520,6 @@ void Engine::Release() {
     m_meshes.clear();
 
     if (m_font) m_font->Release();
-    if (m_skybox) {
-        m_skybox->Release();
-        delete m_skybox;
-    }
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_gui->Release();
 #endif
@@ -627,12 +620,12 @@ void Engine::Raycast(int mouseX, int mouseY) {
 #endif
 
     float closestDistance = FLT_MAX;
-    MeshComponent* closestMesh = nullptr;
+    Model* closestMesh = nullptr;
 
-    std::vector<MeshComponent*>::iterator it = m_meshes.begin();
+    std::vector<Model*>::iterator it = m_meshes.begin();
     while (it != m_meshes.end()) {
         float distance = 0.0f;
-        if (distance = (*it)->IntersectRayWithMesh(pickRayInWorldSpacePos, pickRayInWorldSpaceDir, *it)) {
+        if (distance = (*it)->IntersectRayWithMesh(pickRayInWorldSpacePos, pickRayInWorldSpaceDir, (*it)->mesh())) {
             if (distance < closestDistance) {
                 closestDistance = distance;
                 closestMesh = *it;
@@ -643,15 +636,15 @@ void Engine::Raycast(int mouseX, int mouseY) {
 
     if (closestMesh != nullptr) {
         GameObject* obj = closestMesh->gameObject();
-        MeshComponent* mesh = obj->GetComponentByType<MeshComponent>();
+        Model* model = obj->model;
         if (lastSelected)
             lastSelected->setSelectable(false);
-        mesh->setSelectable(true);
-        lastSelected = mesh;
+        model->setSelectable(true);
+        lastSelected = model;
     }
 }
 
-void Engine::addMeshRenderer(MeshComponent* mesh) {
+void Engine::addMeshRenderer(Model* mesh) {
     if (mesh) m_meshes.emplace_back(mesh);
 }
 

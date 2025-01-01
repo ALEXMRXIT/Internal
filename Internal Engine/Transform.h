@@ -22,6 +22,8 @@ public:
 
 	Transform& operator=(const Transform& other);
 
+	void setMatrix(XMMATRIX& position) override {};
+
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	void UpdateInterfaceInInspector(GameObject* gameObject) override;
 #endif

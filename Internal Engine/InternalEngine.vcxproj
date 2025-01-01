@@ -152,6 +152,7 @@
     <ClCompile Include="Location.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="PrimitiveDrawable.cpp" />
     <ClCompile Include="Shader.cpp" />
@@ -179,9 +180,11 @@
     <ClInclude Include="Location.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MeshComponent.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="PrimitiveDrawable.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="SharedObject.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Transform.h" />
   </ItemGroup>

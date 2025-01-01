@@ -1,5 +1,6 @@
 #pragma once
 #include "framework.h"
+#include "Skybox.h"
 #include "ResourceLoader.h"
 #include "FileSharedBuffer.h"
 
@@ -10,6 +11,9 @@ private:
 	std::list<GameObject*> m_objects;
 	ResourceLoader* m_loader;
 	MeshLoader* m_meshLoader;
+
+public:
+	Skybox* m_skybox;
 
 public:
 	Location();

@@ -71,22 +71,11 @@ MeshComponent::MeshComponent() {
     m_preObjectBuffer = nullptr;
     m_indices = 0;
     m_position = nullptr;
-    m_obj = nullptr;
-    m_selectable = false;
-    m_select.selectable = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-    alpha = 0.0f;
+    model = nullptr;
 }
 
-void MeshComponent::Update(float deltaTime) {
-    if (alpha < 1.0f) {
-        alpha += deltaTime * 5.0f;
-        alpha = min(alpha, 1.0f);
-    }
-}
-
-void MeshComponent::Render(ID3D11DeviceContext* context) {
-    IASetVertexAndIndexBuffer(context);
-
+void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context) {
+    if (!m_device_loader) return;
     m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
     m_bufferWVP.World = XMMatrixTranspose(*m_position);
     m_bufferWVP.texture_scale = m_material->scale();
@@ -94,12 +83,11 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
+}
 
-    m_select.selectable = XMFLOAT4(0.0f, alpha, 0.0f, 0.0f);
-    m_select.texture_color = m_material->color();
-    context->UpdateSubresource(m_preObjectSelect, 0, NULL, &m_select, 0, 0);
-    context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
-
+void MeshComponent::Render(ID3D11DeviceContext* context) {
+    if (!m_device_loader) return;
+    IASetVertexAndIndexBuffer(context);
     m_material->Bind(context);
     context->DrawIndexed(m_indices, 0, 0);
 }
@@ -111,7 +99,7 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-
+    
         ImGui::BeginChild("MeshRenderer", ImVec2(0, 180), true);
         {
             MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
@@ -119,16 +107,16 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
                 if (ImGui::Button("Select Texture")) {
                     ImGui::OpenPopup("Texture Selection");
                 }
-
+    
                 if (ImGui::BeginPopupModal("Texture Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
                     static const char* textures[] = { "Texture1", "Texture2", "Texture3" };
                     static int selectedTexture = 0;
-
+    
                     ImGui::Text("Select a texture:");
                     if (ImGui::Combo("##Textures", &selectedTexture, textures, IM_ARRAYSIZE(textures))) {
-
+    
                     }
-
+    
                     if (ImGui::Button("OK")) {
                         ImGui::CloseCurrentPopup();
                     }
@@ -136,23 +124,23 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
                     if (ImGui::Button("Cancel")) {
                         ImGui::CloseCurrentPopup();
                     }
-
+    
                     ImGui::EndPopup();
                 }
-
+    
                 if (material->diffuseTex && material->diffuseTex->m_shaderView) {
                     ImGui::Image((void*)material->diffuseTex->m_shaderView, ImVec2(100, 100));
                     ImGui::SameLine();
-
+    
                     ImGui::BeginGroup();
                     {
                         static char buffer[MAX_PATH];
                         snprintf(buffer, MAX_PATH, "Name: %s", material->diffuseTex->name);
                         ImGui::Text(buffer);
-
+    
                         XMFLOAT2 tiling = material->scale();
                         float til[2] = { tiling.x, tiling.y };
-
+    
                         ImGui::Dummy(ImVec2(0.0f, 2.0f));
                         ImGui::Text("Tiling");
                         ImGui::SameLine();
@@ -161,17 +149,17 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
                         ImGui::SetNextItemWidth(50.0f);
                         if (ImGui::DragFloat("##TexX", &til[0], 0.1f))
                             material->setScale(XMFLOAT2(til[0], til[1]));
-
+    
                         ImGui::SameLine();
                         ImGui::Text("Y:");
                         ImGui::SameLine();
                         ImGui::SetNextItemWidth(50.0f);
                         if (ImGui::DragFloat("##TexY", &til[1], 0.1f))
                             material->setScale(XMFLOAT2(til[0], til[1]));
-
+    
                         XMFLOAT2 offset = material->offset();
                         float off[2] = { offset.x, offset.y };
-
+    
                         ImGui::Dummy(ImVec2(0.0f, 2.0f));
                         ImGui::Text("Offset");
                         ImGui::SameLine();
@@ -180,7 +168,7 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
                         ImGui::SetNextItemWidth(50.0f);
                         if (ImGui::DragFloat("##OffX", &off[0], 0.01f))
                             material->setOffset(XMFLOAT2(off[0], off[1]));
-
+    
                         ImGui::SameLine();
                         ImGui::Text("Y:");
                         ImGui::SameLine();
@@ -190,10 +178,10 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
                     }
                     ImGui::EndGroup();
                 }
-
+    
                 XMFLOAT4 col = material->color();
                 float color[4] = { col.x, col.y, col.z, col.w };
-
+    
                 if (ImGui::ColorEdit4("Color", color)) {
                     XMFLOAT4 newColor(color[0], color[1], color[2], color[3]);
                     material->setColor(newColor);
@@ -201,7 +189,7 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
             }
         }
         ImGui::EndChild();
-
+    
         ImGui::PopStyleColor(2);
         ImGui::PopStyleVar();
     }
@@ -236,19 +224,6 @@ HRESULT MeshComponent::Init(ID3D11Device* device) {
         return hr;
     }
 
-    D3D11_BUFFER_DESC bufferDescSelectable;
-    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-    bufferDescSelectable.Usage = D3D11_USAGE_DEFAULT;
-    bufferDescSelectable.ByteWidth = sizeof(SelectableConstantBuffer);
-    bufferDescSelectable.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDescSelectable.CPUAccessFlags = 0;
-    bufferDescSelectable.MiscFlags = 0;
-    hr = device->CreateBuffer(&bufferDescSelectable, NULL, &m_preObjectSelect);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
-        return hr;
-    }
-
     if (!m_material) {
         m_material = new MeshMaterial();
         m_material->diffuseTex = new Material::TextureMapInfo();
@@ -257,12 +232,11 @@ HRESULT MeshComponent::Init(ID3D11Device* device) {
     else if (m_material->diffuseTex && m_material->diffuseTex->name) {
         m_material->Load(device);
     }
-
+    m_device_loader = true;
     return hr;
 }
 
 bool MeshComponent::CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size) {
-    setVerticesPhysics(vertices);
     if (m_vertexBuffer = new VertexBuffer())
         return m_vertexBuffer->Create(device, (void*)vertices.data(), sizeType, size);
     return false;
@@ -270,7 +244,6 @@ bool MeshComponent::CreateVertex(ID3D11Device* device, const std::vector<Vertex>
 
 bool MeshComponent::CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) {
     m_indices = size;
-    setIndecesPhysics(indices);
     if (m_indexBuffer = new IndexBuffer())
         return m_indexBuffer->Create(device, (void*)indices.data(), sizeType, size);
     return false;

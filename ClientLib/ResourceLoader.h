@@ -1,14 +1,14 @@
 #pragma once
-#include "MeshComponent.h"
+#include "Engine.h"
 #include <queue>
 
-class MeshComponent;
+class SharedObject;
 class FileSharedBuffer;
 
 class ResourceLoader {
 private:
 	struct MeshContainer {
-		MeshComponent* m_mesh;
+		SharedObject* m_mesh;
 		const char* m_fileName;
 	};
 
@@ -25,7 +25,7 @@ private:
 	static DWORD WINAPI WorkerFunction(LPVOID param);
 
 	DWORD ThreadLoop();
-	void LoadResource(const char* resourceName, MeshComponent* mesh);
+	void LoadResource(const char* resourceName, SharedObject* mesh);
 
 public:
 	ResourceLoader(Engine& engine, FileSharedBuffer* fileBuffer);
@@ -34,5 +34,5 @@ public:
 	ResourceLoader(const ResourceLoader&) = delete;
 	ResourceLoader& operator=(const ResourceLoader&) = delete;
 
-	void AddResourceToLoad(const char* resourceName, MeshComponent* mesh);
+	void AddResourceToLoad(const char* resourceName, SharedObject* mesh);
 };

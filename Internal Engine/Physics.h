@@ -17,7 +17,7 @@ public:
 	Physics(const Physics&) = delete;
 	Physics& operator=(const Physics&) = delete;
 
-	float IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent* mesh);
+	float IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent& mesh);
 
 	void setVerticesPhysics(const std::vector<_Vertex>& vertices);
 	void setIndecesPhysics(const std::vector<DWORD>& indices);

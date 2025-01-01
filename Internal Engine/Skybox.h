@@ -1,44 +1,38 @@
 #pragma once
+#include "SharedObject.h"
 #include "MeshComponent.h"
+#include "LoaderNotificationDevice.h"
 
 typedef struct _viewProject {
 	XMMATRIX WVP;
 } ViewProject, *LPViewProject;
 
-class Skybox {
+class Skybox : public SharedObject, public LoaderNotificationDevice {
 private:
-	VertexBuffer* m_vertexBuffer;
-	IndexBuffer* m_indexBuffer;
-	Shader* m_shader;
-
-	ID3D11ShaderResourceView* m_sharedView;
 	ID3D11DepthStencilState* m_depthState;
 	ID3D11RasterizerState* m_cullMode;
 	ID3D11Buffer* m_preObjectBuffer;
-	ID3D11SamplerState* m_textureSamplerState;
 	ID3D11InputLayout* m_layout;
-
-	int verticesNum;
-	int indexesNum;
+	MeshComponent& m_component;
+	Shader* m_shader;
 
 	XMMATRIX m_pos;
 	ViewProject m_wvp;
 
-	void CreateSphere(ID3D11Device* device, int llines, int longlines);
-
 public:
-	Skybox();
+	Skybox(MeshComponent& component);
 
 	Skybox(const Skybox&) = delete;
 	Skybox& operator=(const Skybox&) = delete;
 
-	void Init(ID3D11Device* device);
+	HRESULT Init(ID3D11Device* device) override;
 	void Update(float deltaTime);
 	void Render(ID3D11DeviceContext* context);
 
-	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
-	bool CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
-	bool CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size);
+	bool CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size) override;
+	bool CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) override;
+
+	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset) override;
 
 	void Release();
 };

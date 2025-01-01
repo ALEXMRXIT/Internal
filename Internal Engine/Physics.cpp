@@ -17,9 +17,12 @@ bool Physics::IntersectTriangle(XMVECTOR& triV1, XMVECTOR& triV2, XMVECTOR& triV
     return false;
 }
 
-Physics::Physics() { }
+Physics::Physics() { 
+    m_vertices.clear();
+    m_indices.clear();
+}
 
-float Physics::IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent* mesh) {
+float Physics::IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent& mesh) {
     DWORD dwNumFaces = static_cast<DWORD>(m_indices.size()) / 3;
     
     for (int iterator = 0; iterator < dwNumFaces; iterator++) {
@@ -37,9 +40,9 @@ float Physics::IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& r
         tri1V2 = XMVectorSet(tV2.position.x, tV2.position.y, tV2.position.z, 0.0f);
         tri1V3 = XMVectorSet(tV3.position.x, tV3.position.y, tV3.position.z, 0.0f);
 
-        tri1V1 = XMVector3TransformCoord(tri1V1, mesh->position());
-        tri1V2 = XMVector3TransformCoord(tri1V2, mesh->position());
-        tri1V3 = XMVector3TransformCoord(tri1V3, mesh->position());
+        tri1V1 = XMVector3TransformCoord(tri1V1, mesh.position());
+        tri1V2 = XMVector3TransformCoord(tri1V2, mesh.position());
+        tri1V3 = XMVector3TransformCoord(tri1V3, mesh.position());
 
         XMVECTOR U = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
         XMVECTOR V = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);

@@ -1,5 +1,7 @@
 #include "ResourceLoader.h"
 #include "FileSharedBuffer.h"
+#include "Model.h"
+#include "SharedObject.h"
 
 ResourceLoader::ResourceLoader(Engine& engine, FileSharedBuffer* fileBuffer) : 
         engine(engine), fileBuffer(fileBuffer), stop(false) {
@@ -19,7 +21,7 @@ ResourceLoader::~ResourceLoader() {
     DeleteCriticalSection(&queueMutex);
 }
 
-void ResourceLoader::AddResourceToLoad(const char* resourceName, MeshComponent* mesh) {
+void ResourceLoader::AddResourceToLoad(const char* resourceName, SharedObject* mesh) {
     EnterCriticalSection(&queueMutex);
     resourceQueue.emplace(MeshContainer{ mesh, resourceName });
     LeaveCriticalSection(&queueMutex);
@@ -53,7 +55,7 @@ DWORD ResourceLoader::ThreadLoop() {
     return 0;
 }
 
-void ResourceLoader::LoadResource(const char* resourceName, MeshComponent* mesh) {
+void ResourceLoader::LoadResource(const char* resourceName, SharedObject* mesh) {
     std::vector<Vertex> vertices;
     std::vector<DWORD> indices;
     fileBuffer->LoadFile(resourceName, vertices, indices);
@@ -61,7 +63,5 @@ void ResourceLoader::LoadResource(const char* resourceName, MeshComponent* mesh)
     mesh->CreateVertex(engine.device(), vertices, sizeof(Vertex), vertices.size());
     mesh->CreateIndex(engine.device(), indices, sizeof(DWORD), indices.size());
     mesh->setMaterial(fileBuffer->material, XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f));
-
     mesh->Init(engine.device());
-    engine.addMeshRenderer(mesh);
 }

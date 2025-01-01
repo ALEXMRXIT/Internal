@@ -2,6 +2,8 @@
 #include "framework.h"
 #include "Component.h"
 
+class Model;
+
 class GameObject {
 private:
 	Component* m_components;
@@ -11,6 +13,7 @@ public:
 	bool enable;
 	int selectedTag;
 	int selectedLayer;
+	Model* model;
 
 public:
 	GameObject();

@@ -1,8 +1,8 @@
 #pragma once
 #include "Engine.h"
 #include "AbstractBaseComponent.h"
-#include "Physics.h"
 #include "GameObject.h"
+#include "LoaderNotificationDevice.h"
 
 class MeshMaterial;
 
@@ -56,39 +56,31 @@ typedef struct _worldViewProjectionBuffer {
 	XMFLOAT2 texture_offset;
 } WorldViewProjection, * LPWorldViewProjection;
 
-struct SelectableConstantBuffer {
-	XMFLOAT4 selectable;
-	XMFLOAT4 texture_color;
-};
-
-class MeshComponent : public AbstractBaseComponent, public Physics {
+class MeshComponent : public AbstractBaseComponent, public LoaderNotificationDevice {
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
 	MeshMaterial* m_material;
 	WorldViewProjection m_bufferWVP;
-	SelectableConstantBuffer m_select;
 	ID3D11Buffer* m_preObjectBuffer;
-	ID3D11Buffer* m_preObjectSelect;
 	XMMATRIX* m_position;
 	uint32_t m_indices;
-	GameObject* m_obj;
-
-	bool m_selectable;
-	float alpha;
 
 private:
 	void IASetVertexAndIndexBuffer(ID3D11DeviceContext* context);
+
+public:
+	Model* model;
 
 public:
 	MeshComponent();
 	MeshComponent(const MeshComponent&) = delete;
 	MeshComponent& operator=(const MeshComponent&) = delete;
 
-	void Update(float deltaTime);
+	void UpdateWVPMatrix(ID3D11DeviceContext* context);
 	void Render(ID3D11DeviceContext* context);
 
-	void setMatrix(XMMATRIX& position);
+	void setMatrix(XMMATRIX& position) override;
 	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
@@ -100,11 +92,8 @@ public:
 	bool CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size);
 	bool CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size);
 
-	GameObject* gameObject() const { return m_obj; }
 	MeshMaterial* material() const { return m_material; }
-	void setGameObject(GameObject* obj) { m_obj = obj; }
 	XMMATRIX& position() const { return *m_position; }
-	void setSelectable(bool flag) { m_selectable = flag; }
 
 	void Release();
 };

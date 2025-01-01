@@ -10,7 +10,7 @@ class ImGUIDevice;
 class Shader;
 class Font;
 class Camera;
-class MeshComponent;
+class Model;
 class Location;
 class Skybox;
 class PrimitiveDrawable;
@@ -77,11 +77,10 @@ private:
 	XMFLOAT2 m_sceneSize;
 #endif
 
-	std::vector<MeshComponent*> m_meshes;
+	std::vector<Model*> m_meshes;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 	Location* m_location = nullptr;
-	Skybox* m_skybox = nullptr;
 	BufferDirectionLight m_bufferLight;
 	Shader* m_meshShader = nullptr;
 
@@ -102,7 +101,7 @@ private:
 public:
 	Engine();
 
-	MeshComponent* lastSelected = nullptr;
+	Model* lastSelected = nullptr;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
@@ -117,7 +116,7 @@ public:
 	void Release();
 	int messageWindow();
 	void Raycast(int mouseX, int mouseY);
-	void addMeshRenderer(MeshComponent* mesh);
+	void addMeshRenderer(Model* mesh);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
 	RECT& getWindowRect();

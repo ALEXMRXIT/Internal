@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "Location.h"
 #include "Component.h"
+#include "Model.h"
 
 void ImGUIDevice::InitWindowStyle(void) {
 #ifdef _DEBUG
@@ -327,9 +328,11 @@ void ImGUIDevice::Render() {
     {
         bool clickedOnElement = false;
         for (const GameObject* entity : engine.location()->staticObjects()) {
+            if (!entity->model)
+                continue;
             ImGui::PushID(entity);
-            MeshComponent* obj = entity->GetComponentByType<MeshComponent>();
-            bool isSelected = (engine.lastSelected == obj);
+            Model* model = entity->model;
+            bool isSelected = (engine.lastSelected == model);
     
             if (isSelected) {
                 ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.26f, 0.59f, 0.98f, 0.31f));
@@ -344,8 +347,8 @@ void ImGUIDevice::Render() {
                     engine.lastSelected->setSelectable(false);
                     engine.lastSelected = nullptr;
                 }
-                obj->setSelectable(true);
-                engine.lastSelected = obj;
+                model->setSelectable(true);
+                engine.lastSelected = model;
             }
     
             if (isSelected)

@@ -22,9 +22,11 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="LoaderNotificationDevice.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="LoaderNotificationDevice.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

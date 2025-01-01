@@ -81,6 +81,9 @@
     <ClCompile Include="ImGUI\imgui_impl_win32.cpp">
       <Filter>Исходные файлы\ImGUI</Filter>
     </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -157,6 +160,12 @@
     </ClInclude>
     <ClInclude Include="ImGUI\imgui_impl_win32.h">
       <Filter>Файлы заголовков\ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="SharedObject.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

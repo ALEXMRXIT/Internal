@@ -4,118 +4,21 @@
 #include "Camera.h"
 #include "Engine.h"
 
-void Skybox::CreateSphere(ID3D11Device* device, int llines, int longlines) {
-    HRESULT hr{};
-    verticesNum = ((llines - 2) * longlines) + 2;
-    indexesNum = ((llines - 3) * (longlines) * 2) + (longlines * 2);
-
-    std::vector<Vertex> vertices(verticesNum);
-    std::vector<DWORD> indices(indexesNum * 3);
-
-    vertices[0].position = XMFLOAT3(0.0f, 0.0f, 1.0f);
-    vertices[0].texCoord = XMFLOAT2(0.5f, 0.0f);
-
-    int vertexIndex = 1;
-    for (int i = 1; i < llines - 1; ++i) {
-        float phi = i * XM_PI / (llines - 1);
-        for (int j = 0; j < longlines; ++j) {
-            float theta = j * XM_2PI / longlines;
-            float x = sin(phi) * cos(theta);
-            float y = cos(phi);
-            float z = sin(phi) * sin(theta);
-            vertices[vertexIndex].position = XMFLOAT3(x, y, z);
-            vertices[vertexIndex].texCoord = XMFLOAT2((float)j / longlines, (float)i / (llines - 1));
-            vertexIndex++;
-        }
-    }
-
-    vertices[verticesNum - 1].position = XMFLOAT3(0.0f, 0.0f, -1.0f);
-    vertices[verticesNum - 1].texCoord = XMFLOAT2(0.5f, 1.0f);
-
-    int k = 0;
-    for (int j = 0; j < longlines - 1; ++j) {
-        indices[k++] = 0;
-        indices[k++] = j + 1;
-        indices[k++] = j + 2;
-    }
-    indices[k++] = 0;
-    indices[k++] = longlines;
-    indices[k++] = 1;
-
-    for (int i = 0; i < llines - 3; ++i) {
-        for (int j = 0; j < longlines - 1; ++j) {
-            indices[k++] = i * longlines + j + 1;
-            indices[k++] = i * longlines + j + 2;
-            indices[k++] = (i + 1) * longlines + j + 1;
-
-            indices[k++] = (i + 1) * longlines + j + 1;
-            indices[k++] = i * longlines + j + 2;
-            indices[k++] = (i + 1) * longlines + j + 2;
-        }
-        indices[k++] = (i * longlines) + longlines;
-        indices[k++] = (i * longlines) + 1;
-        indices[k++] = ((i + 1) * longlines) + longlines;
-
-        indices[k++] = ((i + 1) * longlines) + longlines;
-        indices[k++] = (i * longlines) + 1;
-        indices[k++] = ((i + 1) * longlines) + 1;
-    }
-
-    for (int j = 0; j < longlines - 1; ++j) {
-        indices[k++] = verticesNum - 1;
-        indices[k++] = (verticesNum - 1) - (j + 1);
-        indices[k++] = (verticesNum - 1) - (j + 2);
-    }
-    indices[k++] = verticesNum - 1;
-    indices[k++] = (verticesNum - 1) - longlines;
-    indices[k++] = verticesNum - 2;
-
-    CreateVertex(device, vertices.data(), sizeof(Vertex), verticesNum);
-    CreateIndex(device, indices.data(), sizeof(DWORD), indexesNum * 3);
-}
-
-Skybox::Skybox() {
-    m_vertexBuffer = nullptr;
-    m_indexBuffer = nullptr;
+Skybox::Skybox(MeshComponent& component) : m_component(component) {
     m_cullMode = nullptr;
     m_shader = nullptr;
     m_preObjectBuffer = nullptr;
-    m_sharedView = nullptr;
     m_depthState = nullptr;
-    m_textureSamplerState = nullptr;
-    verticesNum = 0;
-    indexesNum = 0;
     m_layout = nullptr;
 }
 
-void Skybox::Init(ID3D11Device* device) {
+HRESULT Skybox::Init(ID3D11Device* device) {
 	HRESULT hr{};
-    CreateSphere(device, 10, 10);
     m_shader = new Shader();
     hr = m_shader->LoadVertexShader(device, "VS", "shaders\\skybox.fx");
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to load Vertex shader.", hr);
     hr = m_shader->LoadPixelShader(device, "PS", "shaders\\skybox.fx");
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to load Pixel shader.", hr);
-    
-    D3DX11_IMAGE_LOAD_INFO loadSMInfo;
-    loadSMInfo.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
-
-    ID3D11Texture2D* texture = nullptr;
-    hr = D3DX11CreateTextureFromFile(device, "mesh\\skymap.dds", &loadSMInfo, 0, (ID3D11Resource**)&texture, 0);
-    if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loading skybox texture.", hr);
-
-    D3D11_TEXTURE2D_DESC textureDesc;
-    texture->GetDesc(&textureDesc);
-
-    D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
-    ZeroMemory(&viewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-    viewDesc.Format = textureDesc.Format;
-    viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-    viewDesc.TextureCube.MipLevels = textureDesc.MipLevels;
-    viewDesc.TextureCube.MostDetailedMip = 0;
-
-    hr = device->CreateShaderResourceView(texture, &viewDesc, &m_sharedView);
-    if (FAILED(hr)) DXUT_ERR_MSGBOX("Error create shared resources view.", hr);
 
     D3D11_RASTERIZER_DESC cmdesc;
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -144,18 +47,6 @@ void Skybox::Init(ID3D11Device* device) {
     hr = device->CreateBuffer(&bufferDesc, NULL, &m_preObjectBuffer);
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
 
-    D3D11_SAMPLER_DESC sampDesc;
-    ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
-    config.qualityTexture = D3D11_FILTER_MIN_MAG_MIP_POINT;
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    sampDesc.MinLOD = 0;
-    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-    hr = device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
-    if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
-
     D3D11_INPUT_ELEMENT_DESC layout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
@@ -166,11 +57,16 @@ void Skybox::Init(ID3D11Device* device) {
     SIZE_T size = m_shader->getVertexBlob()->GetBufferSize();
     hr = device->CreateInputLayout(layout, numElements, buffPtr, size, &m_layout);
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
+    hr = m_component.Init(device);
+    if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to Init MeshComponent by Skybox.", hr);
+    m_device_loader = true;
+    return hr;
 }
 
 void Skybox::Update(float deltaTime) {
+    if (!m_device_loader) return;
     m_pos = XMMatrixIdentity();
-    XMMATRIX scale = XMMatrixScaling(5.0f, 5.0f, 5.0f);
+    XMMATRIX scale = XMMatrixScaling(5.0f, 0.5f, 5.0f);
     XMMATRIX translate = XMMatrixTranslation(
         XMVectorGetX(camera.getPos()),
         XMVectorGetY(camera.getPos()),
@@ -179,7 +75,7 @@ void Skybox::Update(float deltaTime) {
 }
 
 void Skybox::Render(ID3D11DeviceContext* context) {
-    IASetVertexAndIndexBuffer(context);
+    if (!m_device_loader) return;
     m_wvp.WVP = m_pos * camera.getView() * camera.getProjection();
     m_wvp.WVP = XMMatrixTranspose(m_wvp.WVP);
     m_shader->setVertexShader(context);
@@ -187,51 +83,30 @@ void Skybox::Render(ID3D11DeviceContext* context) {
     context->IASetInputLayout(m_layout);
     context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_wvp, 0, 0);
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
-    context->PSSetShaderResources(0, 1, &m_sharedView);
-    context->PSSetSamplers(0, 1, &m_textureSamplerState);
     context->OMSetDepthStencilState(m_depthState, 0);
     context->RSSetState(m_cullMode);
-    context->DrawIndexed(indexesNum * 3, 0, 0);
+    m_component.Render(context);
 }
 
-void Skybox::IASetVertexAndIndexBuffer(ID3D11DeviceContext* context) {
-    context->IASetIndexBuffer(*m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-    UINT stride = sizeof(Vertex);
-    UINT offset = 0;
-    ID3D11Buffer* vertex = *m_vertexBuffer;
-    context->IASetVertexBuffers(0, 1, &vertex, &stride, &offset);
-    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+bool Skybox::CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size) {
+    return m_component.CreateVertex(device, vertices, sizeType, size);
 }
 
-bool Skybox::CreateVertex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
-    if (m_vertexBuffer = new VertexBuffer())
-        return m_vertexBuffer->Create(device, pBuffer, sizeType, size);
-    return false;
+bool Skybox::CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) {
+    return m_component.CreateIndex(device, indices, sizeType, size);
 }
 
-bool Skybox::CreateIndex(ID3D11Device* device, void* pBuffer, uint32_t sizeType, uint32_t size) {
-    if (m_indexBuffer = new IndexBuffer())
-        return m_indexBuffer->Create(device, pBuffer, sizeType, size);
-    return false;
+void Skybox::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset) {
+    m_component.setMaterial(name, scale, offset);
 }
 
 void Skybox::Release() {
-    if (m_vertexBuffer) {
-        m_vertexBuffer->Release();
-        delete m_vertexBuffer;
-    }
-    if (m_indexBuffer) {
-        m_indexBuffer->Release();
-        delete m_indexBuffer;
-    }
     if (m_cullMode) m_cullMode->Release();
     if (m_shader) {
         m_shader->Release();
         delete m_shader;
     }
     if (m_preObjectBuffer) m_preObjectBuffer->Release();
-    if (m_sharedView) m_sharedView->Release();
     if (m_depthState) m_depthState->Release();
-    if (m_textureSamplerState) m_textureSamplerState->Release();
     if (m_layout) m_layout->Release();
 }
