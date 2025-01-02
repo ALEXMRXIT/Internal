@@ -117,6 +117,7 @@ public:
 	const wchar_t* toStringVSync() const;
 
 	ID3D11Device* device() const { return m_device; }
+	ID3D11DeviceContext* deviceContext() const { return m_deviceContext; }
 	ID3D11ShaderResourceView* GetRenderTextureSRV() const { return m_renderTextureSRV; }
 	Location* location() const { return m_location; }
 	void setRaycast(bool status) { m_raycastEnabled = status; }

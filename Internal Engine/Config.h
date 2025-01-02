@@ -8,7 +8,7 @@ public:
 		fullscreen = true;
 		vSync = 1;
 		showCursor = true;
-		cameraSpeed = 15.0f;
+		cameraSpeed = 50.0f;
 		mouseIntensive = 25.0f;
 		additionalLShiftSpeed = 3.0f;
 		primitiveBufferSize = 512;

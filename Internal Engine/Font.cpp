@@ -93,7 +93,7 @@ HRESULT Font::Init(ID3D11Device* device) {
         DWRITE_FONT_WEIGHT_NORMAL,
         DWRITE_FONT_STYLE_NORMAL,
         DWRITE_FONT_STRETCH_NORMAL,
-        18.0f,
+        36.0f,
         L"en-US",
         &m_textFormat
     );
