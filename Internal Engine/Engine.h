@@ -13,6 +13,7 @@ class Camera;
 class Model;
 class Location;
 class Skybox;
+class GameObject;
 class PrimitiveDrawable;
 
 typedef struct _windowDescription {
@@ -45,13 +46,6 @@ typedef struct _multisampleityLevel {
 		SampleCount(count), QualityLevel(quality) { };
 } MultisampleQualityLevel, LPMultisampleQualityLevel;
 
-typedef struct bufferLight {
-	XMFLOAT4 direction;
-	XMFLOAT4 ambient;
-	XMFLOAT4 diffuse;
-	XMFLOAT4 specular;
-} BufferDirectionLight, *LPbufferDirectionLight;
-
 class Engine {
 private:
 	WindowDescription* m_windowDesc = nullptr;
@@ -67,7 +61,6 @@ private:
 	IDirectInputDevice8* m_keyboard = nullptr;
 	IDirectInputDevice8* m_mouse = nullptr;
 	LPDIRECTINPUT8 m_directInput = nullptr;
-	ID3D11Buffer* m_constantLightBuffer = nullptr;
 	ID3D11Texture2D* m_renderTexture = nullptr;
 	ID3D11ShaderResourceView* m_renderTextureSRV = nullptr;
 	ID3D11RenderTargetView* m_renderTextureRTV = nullptr;
@@ -81,7 +74,6 @@ private:
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
 	Location* m_location = nullptr;
-	BufferDirectionLight m_bufferLight;
 	Shader* m_meshShader = nullptr;
 
 	PerfomanceTimeInfo m_timeInfo;
@@ -101,7 +93,7 @@ private:
 public:
 	Engine();
 
-	Model* lastSelected = nullptr;
+	GameObject* lastSelected = nullptr;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;

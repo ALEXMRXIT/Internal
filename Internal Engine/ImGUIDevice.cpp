@@ -268,7 +268,7 @@ void ImGUIDevice::Render() {
     ImGui::Begin("Inspector");
     {
         if (engine.lastSelected) {
-            GameObject* gameObject = engine.lastSelected->gameObject();
+            GameObject* gameObject = engine.lastSelected;
             ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
             ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
@@ -327,12 +327,11 @@ void ImGUIDevice::Render() {
     ImGui::Begin("Hierarchy");
     {
         bool clickedOnElement = false;
-        for (const GameObject* entity : engine.location()->staticObjects()) {
-            if (!entity->model)
+        for (GameObject* entity : engine.location()->staticObjects()) {
+            if (!entity->serialize)
                 continue;
             ImGui::PushID(entity);
-            Model* model = entity->model;
-            bool isSelected = (engine.lastSelected == model);
+            bool isSelected = (engine.lastSelected == entity);
     
             if (isSelected) {
                 ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.26f, 0.59f, 0.98f, 0.31f));
@@ -344,11 +343,11 @@ void ImGUIDevice::Render() {
             if (ImGui::Selectable(entity->name.c_str(), isSelected)) {
                 clickedOnElement = true;
                 if (engine.lastSelected) {
-                    engine.lastSelected->setSelectable(false);
+                    engine.lastSelected->selectable = false;
                     engine.lastSelected = nullptr;
                 }
-                model->setSelectable(true);
-                engine.lastSelected = model;
+                entity->selectable = true;
+                engine.lastSelected = entity;
             }
     
             if (isSelected)
@@ -358,7 +357,7 @@ void ImGUIDevice::Render() {
     
         if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !clickedOnElement) {
             if (engine.lastSelected) {
-                engine.lastSelected->setSelectable(false);
+                engine.lastSelected->selectable = false;
                 engine.lastSelected = nullptr;
             }
         }

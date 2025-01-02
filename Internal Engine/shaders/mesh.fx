@@ -3,6 +3,7 @@ cbuffer cbPerFrame : register(b0)
     float4 direction;
     float4 ambient;
     float4 diffuse;
+    float intensity;
 };
 
 cbuffer cbPerObject : register(b1)
@@ -60,7 +61,7 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     float3 lightDir = normalize(-direction.xyz);
     
     float diffuseFactor = saturate(dot(input.Normal, lightDir));
-    float3 diffuseColor = diffuseFactor * diffuse.rgb * color.rgb;
+    float3 diffuseColor = diffuseFactor * diffuse.rgb * color.rgb * intensity;
     
     float3 finalColor = (ambient.rgb * color.rgb) + diffuseColor;
     float3 baseColor = finalColor + texture_color.rgb;

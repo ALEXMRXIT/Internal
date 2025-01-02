@@ -66,7 +66,7 @@ HRESULT Skybox::Init(ID3D11Device* device) {
 void Skybox::Update(float deltaTime) {
     if (!m_device_loader) return;
     m_pos = XMMatrixIdentity();
-    XMMATRIX scale = XMMatrixScaling(5.0f, 0.5f, 5.0f);
+    XMMATRIX scale = XMMatrixScaling(5.0f, 1.0f, 5.0f);
     XMMATRIX translate = XMMatrixTranslation(
         XMVectorGetX(camera.getPos()),
         XMVectorGetY(camera.getPos()),

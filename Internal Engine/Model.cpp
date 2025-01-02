@@ -7,7 +7,6 @@ Model::Model(MeshComponent& component) : m_component(component) {
 	m_obj = nullptr;
 	m_select.selectable = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	m_selectable = false;
 	alpha = 0.0f;
 }
 

@@ -17,7 +17,6 @@ private:
 	GameObject* m_obj;
 	MeshComponent& m_component;
 
-	bool m_selectable;
 	float alpha;
 
 public:
@@ -39,6 +38,5 @@ public:
 
 	GameObject* gameObject() const { return m_obj; }
 	void setGameObject(GameObject* obj) { m_obj = obj; }
-	void setSelectable(bool flag) { m_selectable = flag; }
 	MeshComponent& mesh() const { return m_component; }
 };

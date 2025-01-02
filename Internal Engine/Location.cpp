@@ -13,13 +13,22 @@ GameObject* Instantiate(const XMFLOAT3& pos, const XMFLOAT3& rot, const XMFLOAT3
     return obj;
 }
 
-Location::Location() {
+Location::Location(ID3D11Device* device) {
     m_meshLoader = new MeshLoader();
     m_loader = new ResourceLoader(engine, m_meshLoader);
+
+    GameObject* light = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
+        XMFLOAT3(-0.9f, -6.4f, 5.2f), XMFLOAT3(1.0f, 1.0f, 1.0f));
+    light->name = "Direction Light";
+    m_directionLight = light->AddComponent<DirectionLight>();
+    m_directionLight->m_transform = &light->transform();
+    m_directionLight->Init(device);
+    Insert(light);
 
     GameObject* objectSkybox = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
         XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
     objectSkybox->name = "Skybox";
+    objectSkybox->serialize = false;
     MeshComponent* meshSkybox = new MeshComponent();
     meshSkybox->setMatrix(objectSkybox->transform().getWorldMatrix());
     m_skybox = new Skybox(*meshSkybox);

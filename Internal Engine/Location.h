@@ -3,6 +3,7 @@
 #include "Skybox.h"
 #include "ResourceLoader.h"
 #include "FileSharedBuffer.h"
+#include "DirectionLight.h"
 
 class GameObject;
 
@@ -14,9 +15,10 @@ private:
 
 public:
 	Skybox* m_skybox;
+	DirectionLight* m_directionLight;
 
 public:
-	Location();
+	Location(ID3D11Device* device);
 
 	Location(const Location&) = delete;
 	Location& operator=(const Location&) = delete;

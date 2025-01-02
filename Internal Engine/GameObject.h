@@ -14,6 +14,8 @@ public:
 	int selectedTag;
 	int selectedLayer;
 	Model* model;
+	bool serialize;
+	bool selectable;
 
 public:
 	GameObject();

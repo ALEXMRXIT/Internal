@@ -304,19 +304,6 @@ bool Engine::InitRenderDevice() {
         return false;
     }
 
-    D3D11_BUFFER_DESC bufferDesc;
-    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth = sizeof(BufferDirectionLight);
-    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
-    hr = m_device->CreateBuffer(&bufferDesc, NULL, &m_constantLightBuffer);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
-        return false;
-    }
-
     if (!InitScene()) {
         DXUT_ERR_MSGBOX("Error initializing scene.", hr);
         delete m_font;
@@ -360,7 +347,7 @@ bool Engine::InitScene() {
 
     m_font = new Font();
     m_font->Init(m_device);
-    m_location = new Location();
+    m_location = new Location(m_device);
 
     gizmozRect.Init(m_device, m_deviceContext);
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
@@ -461,6 +448,7 @@ void Engine::Update(float deltaTime) {
         m_meshes[iterator]->Update(deltaTime);
     }
     m_location->m_skybox->Update(deltaTime);
+    m_location->m_directionLight->Update(deltaTime);
 }
 
 void Engine::Render() {
@@ -478,11 +466,7 @@ void Engine::Render() {
     float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
 
-    m_bufferLight.direction = XMFLOAT4(-15.0f, -15.0f, 1.0f, 1.0f);
-    m_bufferLight.ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
-    m_bufferLight.diffuse = XMFLOAT4(1.0f, 0.8f, 0.8f, 1.0f);
-    m_deviceContext->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
-    m_deviceContext->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
+    m_location->m_directionLight->Render(m_deviceContext);
 
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
@@ -636,11 +620,10 @@ void Engine::Raycast(int mouseX, int mouseY) {
 
     if (closestMesh != nullptr) {
         GameObject* obj = closestMesh->gameObject();
-        Model* model = obj->model;
         if (lastSelected)
-            lastSelected->setSelectable(false);
-        model->setSelectable(true);
-        lastSelected = model;
+            lastSelected->selectable = false;
+        obj->selectable = true;
+        lastSelected = obj;
     }
 }
 
@@ -722,10 +705,6 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_KEYDOWN: {
         if (wParam == VK_ESCAPE) {
             DestroyWindow(hWnd);
-        }
-        else if (wParam == VK_SPACE) {
-            config.fullscreen = !config.fullscreen;
-            engine.setFullScreen(hWnd, config.fullscreen);
         }
     } break;
     case WM_LBUTTONDOWN: {
