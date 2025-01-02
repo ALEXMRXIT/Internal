@@ -5,7 +5,10 @@
 DirectionLight::DirectionLight() {
     m_constantLightBuffer = nullptr;
     m_transform = nullptr;
-    m_bufferLight.intensity = 2.0f;
+    m_bufferLight.intensity = 1.25f;
+    m_bufferLight.ambient = XMFLOAT4(0.82f, 0.91f, 0.92f, 1.0f);
+    m_bufferLight.diffuse = XMFLOAT4(0.44f, 0.43f, 0.31f, 1.0f);
+    m_bufferLight.darkness = 0.5f;
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
@@ -34,8 +37,6 @@ void DirectionLight::Render(ID3D11DeviceContext* device_context) {
         m_transform->rotation().x,
         m_transform->rotation().y,
         m_transform->rotation().z, 1.0f);
-    m_bufferLight.ambient = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
-    m_bufferLight.diffuse = XMFLOAT4(1.0f, 0.8f, 0.8f, 1.0f);
     device_context->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
     device_context->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
 }
@@ -52,7 +53,7 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-        ImGui::BeginChild("Light", ImVec2(0, 105), true);
+        ImGui::BeginChild("Light", ImVec2(0, 135), true);
         {
             float maxTextWidth = ImGui::CalcTextSize("Light Intensity").x;
             maxTextWidth = ImMax(maxTextWidth, ImGui::CalcTextSize("Ambient Color").x);
@@ -87,6 +88,12 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
                     diffuseColorArray[1], diffuseColorArray[2], m_bufferLight.diffuse.w);
                 m_bufferLight.diffuse = color;
             }
+
+            ImGui::Text("Drakness");
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SliderFloat("##Drakness", &m_bufferLight.darkness, 0.0f, 1.0f, "%.2f");
         }
         ImGui::EndChild();
 

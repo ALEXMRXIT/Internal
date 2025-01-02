@@ -4,6 +4,7 @@ cbuffer cbPerFrame : register(b0)
     float4 ambient;
     float4 diffuse;
     float intensity;
+    float darkness;
 };
 
 cbuffer cbPerObject : register(b1)
@@ -61,9 +62,13 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     float3 lightDir = normalize(-direction.xyz);
     
     float diffuseFactor = saturate(dot(input.Normal, lightDir));
-    float3 diffuseColor = diffuseFactor * diffuse.rgb * color.rgb * intensity;
+    float shadowFactor = 1.0 - diffuseFactor;
     
-    float3 finalColor = (ambient.rgb * color.rgb) + diffuseColor;
+    float3 shadowColor = lerp(float3(0, 0, 0), color.rgb, darkness);
+    
+    float3 finalColor = (ambient.rgb * color.rgb) + (diffuseFactor * diffuse.rgb * color.rgb * intensity);
+    finalColor = lerp(finalColor, shadowColor, shadowFactor);
+    
     float3 baseColor = finalColor + texture_color.rgb;
     
     return float4(baseColor, color.a * selectable.y);

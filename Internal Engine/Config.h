@@ -8,10 +8,11 @@ public:
 		fullscreen = true;
 		vSync = 1;
 		showCursor = true;
-		cameraSpeed = 50.0f;
+		cameraSpeed = 100.0f;
 		mouseIntensive = 25.0f;
 		additionalLShiftSpeed = 3.0f;
 		primitiveBufferSize = 512;
+		debugRaycast = false;
 	}
 
 	int resolution;
@@ -24,4 +25,5 @@ public:
 	float mouseIntensive;
 	float additionalLShiftSpeed;
 	int primitiveBufferSize;
+	bool debugRaycast;
 };

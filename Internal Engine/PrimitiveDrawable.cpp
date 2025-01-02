@@ -90,6 +90,14 @@ void PrimitiveDrawable::DrawLine(const XMFLOAT3& start, const XMFLOAT3& end, con
     UpdateIndexBuffer(m_indices);
 }
 
+void PrimitiveDrawable::GizmosClear() {
+    m_vertices.clear();
+    m_indices.clear();
+
+    UpdateVertexBuffer(m_vertices);
+    UpdateIndexBuffer(m_indices);
+}
+
 void PrimitiveDrawable::Render() {
     if (!m_vertices.size())
         return;

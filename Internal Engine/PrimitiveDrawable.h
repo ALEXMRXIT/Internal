@@ -38,5 +38,6 @@ public:
 	void Release();
 
 	void DrawLine(const XMFLOAT3& start, const XMFLOAT3& end, const XMFLOAT4& color);
+	void GizmosClear();
 	void Render();
 };

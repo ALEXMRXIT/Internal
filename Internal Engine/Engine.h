@@ -81,6 +81,7 @@ private:
 
 	bool m_SwapChainOccluded;
 	bool m_raycastEnabled;
+	bool m_debugRaycast;
 
 private:
 	static LRESULT windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -121,6 +122,7 @@ public:
 	ID3D11ShaderResourceView* GetRenderTextureSRV() const { return m_renderTextureSRV; }
 	Location* location() const { return m_location; }
 	void setRaycast(bool status) { m_raycastEnabled = status; }
+	void setDebugRaycast(bool status) { m_debugRaycast = status; }
 	bool getRaycast() const { return m_raycastEnabled; }
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	void setMousePosition(XMFLOAT2 scenePos, XMFLOAT2 sceneSize) { m_scenePos = scenePos; m_sceneSize = sceneSize; }

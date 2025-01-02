@@ -4,6 +4,8 @@
 #include "Location.h"
 #include "Component.h"
 #include "Model.h"
+#include "Config.h"
+#include "PrimitiveDrawable.h"
 
 void ImGUIDevice::InitWindowStyle(void) {
 #ifdef _DEBUG
@@ -394,7 +396,6 @@ void ImGUIDevice::Render() {
                     case 2: BlackStyle(); break;
                     case 3: WhiteStyle(); break;
                     }
-                    m_styleSelectedState = false;
                 }
             }
             ImGui::EndGroup();
@@ -402,6 +403,16 @@ void ImGUIDevice::Render() {
             ImGui::BeginGroup();
             {
                 ImGui::SliderFloat("Font Size", &fontSize, 15.0f, 32.0f);
+            }
+            ImGui::EndGroup();
+            ImGui::BeginGroup();
+            {
+                static bool isRaycast = config.debugRaycast;
+                if (ImGui::Checkbox("Debug Raycast?", &isRaycast)) {
+                    engine.setDebugRaycast(isRaycast);
+                    if (!isRaycast)
+                        gizmozRect.GizmosClear();
+                }
             }
             ImGui::EndGroup();
             if (ImGui::Button("Ok")) {
@@ -413,6 +424,7 @@ void ImGUIDevice::Render() {
                 if (ImGui::Button("OK")) {
                     m_fontSize = fontSize;
                     ImGui::CloseCurrentPopup();
+                    m_styleSelectedState = false;
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Cancel")) {

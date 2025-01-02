@@ -9,6 +9,7 @@ typedef struct __declspec(align(16)) bufferLight {
 	XMFLOAT4 ambient;
 	XMFLOAT4 diffuse;
 	float intensity;
+	float darkness;
 } BufferDirectionLight, * LPbufferDirectionLight;
 
 class DirectionLight : public AbstractBaseComponent, public LoaderNotificationDevice {

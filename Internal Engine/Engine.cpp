@@ -343,6 +343,7 @@ bool Engine::InitRenderDevice() {
 
 bool Engine::InitScene() {
     setFullScreen(m_windowDesc->hWnd, config.fullscreen);
+    m_debugRaycast = config.debugRaycast;
     camera.SetProjection();
 
     m_font = new Font();
@@ -592,15 +593,16 @@ void Engine::Raycast(int mouseX, int mouseY) {
     XMVECTOR pickRayInWorldSpacePos = XMVector3TransformCoord(pickRayInViewSpacePos, pickRayToWorldSpaceMatrix);
     XMVECTOR pickRayInWorldSpaceDir = XMVector3TransformNormal(pickRayInViewSpaceDir, pickRayToWorldSpaceMatrix);
     pickRayInWorldSpaceDir = XMVector3Normalize(pickRayInWorldSpaceDir);
-
+    
 #ifdef INTERNAL_ENGINE_DEBUG_RAYCAST
-    XMFLOAT3 startPosFloat3;
-    XMStoreFloat3(&startPosFloat3, pickRayInWorldSpacePos);
+    if (m_debugRaycast) {
+        XMFLOAT3 startPosFloat3;
+        XMStoreFloat3(&startPosFloat3, pickRayInWorldSpacePos);
 
-    XMFLOAT3 newEndPosFloat3;
-    XMStoreFloat3(&newEndPosFloat3, pickRayInWorldSpacePos + pickRayInWorldSpaceDir * 100.0f);
-
-    gizmozRect.DrawLine(startPosFloat3, newEndPosFloat3, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+        XMFLOAT3 newEndPosFloat3;
+        XMStoreFloat3(&newEndPosFloat3, pickRayInWorldSpacePos + pickRayInWorldSpaceDir * 100.0f);
+        gizmozRect.DrawLine(startPosFloat3, newEndPosFloat3, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+    }
 #endif
 
     float closestDistance = FLT_MAX;
