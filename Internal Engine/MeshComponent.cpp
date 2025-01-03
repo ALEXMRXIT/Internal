@@ -100,34 +100,10 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
     
-        ImGui::BeginChild("MeshRenderer", ImVec2(0, 180), true);
+        ImGui::BeginChild("MeshRenderer", ImVec2(0, 150), true);
         {
             MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
             if (material) {
-                if (ImGui::Button("Select Texture")) {
-                    ImGui::OpenPopup("Texture Selection");
-                }
-    
-                if (ImGui::BeginPopupModal("Texture Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-                    static const char* textures[] = { "Texture1", "Texture2", "Texture3" };
-                    static int selectedTexture = 0;
-    
-                    ImGui::Text("Select a texture:");
-                    if (ImGui::Combo("##Textures", &selectedTexture, textures, IM_ARRAYSIZE(textures))) {
-    
-                    }
-    
-                    if (ImGui::Button("OK")) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("Cancel")) {
-                        ImGui::CloseCurrentPopup();
-                    }
-    
-                    ImGui::EndPopup();
-                }
-    
                 if (material->diffuseTex && material->diffuseTex->m_shaderView) {
                     ImGui::Image((void*)material->diffuseTex->m_shaderView, ImVec2(100, 100));
                     ImGui::SameLine();
