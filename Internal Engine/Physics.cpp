@@ -83,7 +83,7 @@ float Physics::IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& r
     return FLT_MAX;
 }
 
-void Physics::setVerticesPhysics(const std::vector<_Vertex>& vertices) {
+void Physics::setVerticesPhysics(const std::vector<Vertex>& vertices) {
     m_vertices = vertices;
 }
 

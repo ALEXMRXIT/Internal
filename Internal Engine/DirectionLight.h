@@ -4,13 +4,14 @@
 #include "AbstractBaseComponent.h"
 #include "LoaderNotificationDevice.h"
 
-typedef struct __declspec(align(16)) bufferLight {
+__declspec(align(16))
+struct BufferDirectionLight {
 	XMFLOAT4 direction;
 	XMFLOAT4 ambient;
 	XMFLOAT4 diffuse;
 	float intensity;
 	float darkness;
-} BufferDirectionLight, * LPbufferDirectionLight;
+};
 
 class DirectionLight : public AbstractBaseComponent, public LoaderNotificationDevice {
 private:

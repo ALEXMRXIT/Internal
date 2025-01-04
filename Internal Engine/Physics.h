@@ -2,11 +2,11 @@
 #include "framework.h"
 
 class MeshComponent;
-struct _Vertex;
+struct Vertex;
 
 class Physics {
 private:
-	std::vector<_Vertex> m_vertices;
+	std::vector<Vertex> m_vertices;
 	std::vector<DWORD> m_indices;
 
 	__forceinline bool IntersectTriangle(XMVECTOR& triV1, XMVECTOR& triV2, XMVECTOR& triV3, XMVECTOR& point);
@@ -19,6 +19,6 @@ public:
 
 	float IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& rayDirection, MeshComponent& mesh);
 
-	void setVerticesPhysics(const std::vector<_Vertex>& vertices);
+	void setVerticesPhysics(const std::vector<Vertex>& vertices);
 	void setIndecesPhysics(const std::vector<DWORD>& indices);
 };

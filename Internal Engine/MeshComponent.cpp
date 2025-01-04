@@ -72,6 +72,19 @@ MeshComponent::MeshComponent() {
     m_indices = 0;
     m_position = nullptr;
     model = nullptr;
+    m_preObjectSelect = nullptr;
+    m_additionalColor.alpha = 0.0f;
+    m_additionalColor.texture_color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+    m_spawned = false;
+}
+
+void MeshComponent::Update(float deltaTime) {
+    if (!m_spawned && m_additionalColor.alpha < 1.0f) {
+        m_additionalColor.alpha += deltaTime * 5.0f;
+        m_additionalColor.alpha = min(m_additionalColor.alpha, 1.0f);
+        if (m_additionalColor.alpha == 1.0f)
+            m_spawned = true;
+    }
 }
 
 void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context) {
@@ -87,6 +100,11 @@ void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context) {
 
 void MeshComponent::Render(ID3D11DeviceContext* context) {
     if (!m_device_loader) return;
+
+    m_additionalColor.texture_color = m_material->color();
+    context->UpdateSubresource(m_preObjectSelect, 0, NULL, &m_additionalColor, 0, 0);
+    context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
+
     IASetVertexAndIndexBuffer(context);
     m_material->Bind(context);
     context->DrawIndexed(m_indices, 0, 0);
@@ -100,7 +118,7 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
     
-        ImGui::BeginChild("MeshRenderer", ImVec2(0, 150), true);
+        ImGui::BeginChild("MeshRenderer", ImVec2(0, 185), true);
         {
             MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
             if (material) {
@@ -163,6 +181,12 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
                     material->setColor(newColor);
                 }
             }
+
+            ImGui::Dummy(ImVec2(0.0f, 2.0f));
+            ImGui::Text("Alpha:");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SliderFloat("##Alpha", &m_additionalColor.alpha, 0.0f, 1.0f, "%.3f");
         }
         ImGui::EndChild();
     
@@ -199,7 +223,18 @@ HRESULT MeshComponent::Init(ID3D11Device* device) {
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
         return hr;
     }
-
+    D3D11_BUFFER_DESC bufferDescSelectable;
+    ZeroMemory(&bufferDescSelectable, sizeof(D3D11_BUFFER_DESC));
+    bufferDescSelectable.Usage = D3D11_USAGE_DEFAULT;
+    bufferDescSelectable.ByteWidth = sizeof(AdditionalColored);
+    bufferDescSelectable.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDescSelectable.CPUAccessFlags = 0;
+    bufferDescSelectable.MiscFlags = 0;
+    hr = device->CreateBuffer(&bufferDescSelectable, NULL, &m_preObjectSelect);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
+        return hr;
+    }
     if (!m_material) {
         m_material = new MeshMaterial();
         m_material->diffuseTex = new Material::TextureMapInfo();
@@ -248,4 +283,5 @@ void MeshComponent::Release() {
         delete m_material;
     }
     if (m_preObjectBuffer) m_preObjectBuffer->Release();
+    if (m_preObjectSelect) m_preObjectSelect->Release();
 }

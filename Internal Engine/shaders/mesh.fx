@@ -15,10 +15,10 @@ cbuffer cbPerObject : register(b1)
     float2 texture_offset;
 };
 
-cbuffer cbSelectable : register(b2)
+cbuffer cbAdditionalColored : register(b2)
 {
-    float4 selectable;
     float4 texture_color;
+    float alpha;
 }
 
 struct VS_INPUT
@@ -56,8 +56,8 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
     
-    if (color.a == 0)
-        return float4(0.3f, 0.3f, 0.3f, 1.0f);
+    if (color.a == 0.0f)
+        return float4(0.3f, 0.3f, 0.3f, alpha);
     
     float3 lightDir = normalize(-direction.xyz);
     
@@ -71,5 +71,5 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     
     float3 baseColor = finalColor + texture_color.rgb;
     
-    return float4(baseColor, color.a * selectable.y);
+    return float4(baseColor, color.a * alpha);
 }

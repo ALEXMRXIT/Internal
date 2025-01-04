@@ -277,9 +277,11 @@ void ImGUIDevice::Render() {
     
             float availableWidth = ImGui::GetContentRegionAvail().x;
             float width = availableWidth - ImGui::GetStyle().ItemSpacing.x;
-    
+
             if (ImGui::BeginChild("ObjectEditorFrame", ImVec2(width, 80.0f), true)) {
-                ImGui::Checkbox("##ToggleObject", &gameObject->enable);
+                bool state = gameObject->isEnabled();
+                if (ImGui::Checkbox("##ToggleObject", &state))
+                    gameObject->Enable(state);
                 ImGui::SameLine();
     
                 static char buffer[128];

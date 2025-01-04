@@ -5,19 +5,10 @@
 
 class GameObject;
 
-struct SelectableConstantBuffer {
-	XMFLOAT4 selectable;
-	XMFLOAT4 texture_color;
-};
-
 class Model : public SharedObject, public Physics {
 private:
-	SelectableConstantBuffer m_select;
-	ID3D11Buffer* m_preObjectSelect;
 	GameObject* m_obj;
 	MeshComponent& m_component;
-
-	float alpha;
 
 public:
 	Model(MeshComponent& component);
@@ -39,4 +30,6 @@ public:
 	GameObject* gameObject() const { return m_obj; }
 	void setGameObject(GameObject* obj) { m_obj = obj; }
 	MeshComponent& mesh() const { return m_component; }
+	float alpha() const { return m_component.alpha(); }
+	void clearAlpha() { m_component.clearAlpha(); }
 };

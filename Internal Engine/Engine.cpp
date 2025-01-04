@@ -224,13 +224,6 @@ bool Engine::InitRenderDevice() {
         return false;
     }
 
-    hr = m_device->CreateRenderTargetView(backBuffer, NULL, &m_renderTargetView);
-    backBuffer->Release();
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Error creating render target view.", hr);
-        return false;
-    }
-
     D3D11_TEXTURE2D_DESC depthStencilDesc;
     ZeroMemory(&depthStencilDesc, sizeof(D3D11_TEXTURE2D_DESC));
     depthStencilDesc.Width = m_supportedResolution[config.resolution].Width;
@@ -251,16 +244,32 @@ bool Engine::InitRenderDevice() {
         return false;
     }
 
+    D3D11_TEXTURE2D_DESC backBufferDesc;
+    backBuffer->GetDesc(&backBufferDesc);
+
+    D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+    ZeroMemory(&renderTargetViewDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+    renderTargetViewDesc.Format = backBufferDesc.Format;
+    if (backBufferDesc.SampleDesc.Count > 1)
+        renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+    else
+        renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    renderTargetViewDesc.Texture2D.MipSlice = 0;
+    hr = m_device->CreateRenderTargetView(backBuffer, &renderTargetViewDesc, &m_renderTargetView);
+    backBuffer->Release();
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Error creating render target view.", hr);
+        return false;
+    }
+
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
     ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
     depthStencilViewDesc.Format = depthStencilDesc.Format;
-#if INTERNAL_ENGINE_GUI_INTERFACE
-    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-#else
-    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
-#endif
+    if (backBufferDesc.SampleDesc.Count > 1)
+        depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+    else
+        depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     depthStencilViewDesc.Texture2D.MipSlice = 0;
-
     hr = m_device->CreateDepthStencilView(m_depthTexture, &depthStencilViewDesc, &m_depthStencilView);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Error creating depth stencil view.", hr);
@@ -288,10 +297,10 @@ bool Engine::InitRenderDevice() {
     ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
     rtbd.BlendEnable = true;
     rtbd.SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    rtbd.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    rtbd.DestBlend = D3D11_BLEND_DEST_ALPHA;
     rtbd.BlendOp = D3D11_BLEND_OP_ADD;
     rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
-    rtbd.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    rtbd.DestBlendAlpha = D3D11_BLEND_ZERO;
     rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
     rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
@@ -320,9 +329,9 @@ bool Engine::InitRenderDevice() {
 
     m_meshShader = new Shader();
     hr = m_meshShader->LoadVertexShader(m_device, "VS", "shaders\\mesh.fx");
-    if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading vertex shader.", hr); return hr; }
+    if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loading vertex shader.", hr);
     hr = m_meshShader->LoadPixelShader(m_device, "PS", "shaders\\mesh.fx");
-    if (FAILED(hr)) { DXUT_ERR_MSGBOX("Error loading pixel shader.", hr); return hr; }
+    if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loading pixel shader.", hr);
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -473,8 +482,12 @@ void Engine::Render() {
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
-    for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
-        m_meshes[iterator]->Render(m_deviceContext);
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+        if (GameObject* obj = m_meshes[iterator]->gameObject()) {
+            if (obj->isEnabled())
+                m_meshes[iterator]->Render(m_deviceContext);
+        }
+    }
 
     m_location->m_skybox->Render(m_deviceContext);
     gizmozRect.Render();

@@ -7,15 +7,20 @@ class Model;
 class GameObject {
 private:
 	Component* m_components;
+	GameObject* m_parent;
+	GameObject* m_firstChild;
+	bool m_enable;
 
 public:
 	std::string name;
-	bool enable;
 	int selectedTag;
 	int selectedLayer;
 	Model* model;
 	bool serialize;
 	bool selectable;
+
+	GameObject* m_prev;
+	GameObject* m_next;
 
 public:
 	GameObject();
@@ -31,6 +36,14 @@ public:
 
 	uint32_t sizeComponents() const { return m_components->size(); }
 	std::list<AbstractBaseComponent*> getComponents() const { return m_components->components(); }
+
+	void SetParent(GameObject* parent);
+	void AddChild(GameObject* child);
+	void RemoveChild(GameObject* child);
+	GameObject* Parent() const { return m_parent; }
+
+	void Enable(bool enable);
+	bool isEnabled() const { return m_enable; }
 
 	__forceinline Transform& transform() const { return m_components->transform(); }
 
