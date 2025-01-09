@@ -297,10 +297,10 @@ bool Engine::InitRenderDevice() {
     ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
     rtbd.BlendEnable = true;
     rtbd.SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    rtbd.DestBlend = D3D11_BLEND_DEST_ALPHA;
+    rtbd.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
     rtbd.BlendOp = D3D11_BLEND_OP_ADD;
     rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
-    rtbd.DestBlendAlpha = D3D11_BLEND_ZERO;
+    rtbd.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
     rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
     rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
