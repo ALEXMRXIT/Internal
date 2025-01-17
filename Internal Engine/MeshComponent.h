@@ -107,6 +107,7 @@ public:
 	MeshMaterial* material() const { return m_material; }
 	XMMATRIX& position() const { return *m_position; }
 	float alpha() const { return m_additionalColor.alpha; }
+	void setlAlpha(float value) { m_additionalColor.alpha = value; }
 	void clearAlpha() { m_additionalColor.alpha = 0.0f; }
 
 	void Release();

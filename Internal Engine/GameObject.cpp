@@ -49,7 +49,5 @@ void GameObject::RemoveChild(GameObject* child) {
 }
 
 void GameObject::Enable(bool enable) {
-	if (model && enable)
-		model->clearAlpha();
 	m_enable = enable;
 }

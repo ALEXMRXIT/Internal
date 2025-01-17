@@ -33,7 +33,7 @@ HRESULT Font::Init(ID3D11Device* device) {
     ZeroMemory(&sharedTexDesc, sizeof(D3D11_TEXTURE2D_DESC));
     sharedTexDesc.Width = engine.getSupportedResolution().Width;
     sharedTexDesc.Height = engine.getSupportedResolution().Height;
-    sharedTexDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    sharedTexDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
     sharedTexDesc.MipLevels = 1;
     sharedTexDesc.ArraySize = 1;
     sharedTexDesc.SampleDesc.Count = 1;
@@ -139,7 +139,7 @@ HRESULT Font::Init(ID3D11Device* device) {
 
     D3D11_SAMPLER_DESC sampDesc;
     ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
-    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    sampDesc.Filter = D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
     sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
     sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
     sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;

@@ -95,12 +95,11 @@ HRESULT Engine::InitDirectInput(HINSTANCE hInstance) {
     hr = m_mouse->SetDataFormat(&c_dfDIMouse);
     hr = m_mouse->SetCooperativeLevel(m_windowDesc->hWnd, (config.showCursor ?
         DISCL_NONEXCLUSIVE : DISCL_EXCLUSIVE) | DISCL_NOWINKEY | DISCL_FOREGROUND);
-    hr = m_mouse->Acquire();
 
     return hr;
 }
 
-HRESULT Engine::GetSupportedResolutions() {
+HRESULT Engine::GetSupportedResolutions(DXGI_FORMAT format) {
     IDXGIFactory1* dxgiFactory = nullptr;
     HRESULT hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
     if (FAILED(hr)) {
@@ -126,7 +125,7 @@ HRESULT Engine::GetSupportedResolutions() {
     }
 
     UINT numModes = 0;
-    hr = output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 
+    hr = output->GetDisplayModeList(format, 
         DXGI_ENUM_MODES_INTERLACED, &numModes, nullptr);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to get display mode list.", hr);
@@ -137,7 +136,7 @@ HRESULT Engine::GetSupportedResolutions() {
     }
 
     std::vector<DXGI_MODE_DESC> displayModes(numModes);
-    hr = output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, 
+    hr = output->GetDisplayModeList(format, 
         DXGI_ENUM_MODES_INTERLACED, &numModes, displayModes.data());
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to get display mode list. %d error code.", hr);
@@ -276,10 +275,6 @@ bool Engine::InitRenderDevice() {
         return false;
     }
 
-    IDXGIFactory1* dxgiFactory = nullptr;
-    hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgiFactory);
-    dxgiFactory->MakeWindowAssociation(m_windowDesc->hWnd, DXGI_MWA_NO_ALT_ENTER);
-
     D3D11_VIEWPORT viewport;
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
     viewport.TopLeftX = 0;
@@ -292,22 +287,16 @@ bool Engine::InitRenderDevice() {
 
     D3D11_BLEND_DESC blendDesc;
     ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+    blendDesc.RenderTarget[0].BlendEnable = TRUE;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-    D3D11_RENDER_TARGET_BLEND_DESC rtbd;
-    ZeroMemory(&rtbd, sizeof(D3D11_RENDER_TARGET_BLEND_DESC));
-    rtbd.BlendEnable = true;
-    rtbd.SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    rtbd.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    rtbd.BlendOp = D3D11_BLEND_OP_ADD;
-    rtbd.SrcBlendAlpha = D3D11_BLEND_ONE;
-    rtbd.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
-    rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-    blendDesc.AlphaToCoverageEnable = true;
-    blendDesc.RenderTarget[0] = rtbd;
-
-    hr = m_device->CreateBlendState(&blendDesc, &m_transparency);
+    hr = m_device->CreateBlendState(&blendDesc, &m_blending);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to create blend state.", hr);
         return false;
@@ -376,7 +365,9 @@ void Engine::UpdateInput(float deltaTime) {
     HRESULT hr = m_keyboard->GetDeviceState(sizeof(BYTE) * 256, (LPVOID)&keyboardState);
     if (FAILED(hr))
         m_keyboard->Acquire();
-    m_mouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrState);
+    hr = m_mouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrState);
+    if (FAILED(hr))
+        m_mouse->Acquire();
 
     if (keyboardState[DIK_ESCAPE] & 0x80)
         PostMessage(m_windowDesc->hWnd, WM_DESTROY, 0, 0);
@@ -406,7 +397,7 @@ void Engine::CreateRenderTexture(int width, int height) {
     textureDesc.Height = height;
     textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -462,19 +453,21 @@ void Engine::Update(float deltaTime) {
 }
 
 void Engine::Render() {
-    float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
+    float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
+
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
-    m_deviceContext->ClearRenderTargetView(m_renderTextureRTV, clearColor);
     m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
+    float clr[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    m_deviceContext->ClearRenderTargetView(m_renderTextureRTV, clr);
 #endif
 
-    float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    m_deviceContext->OMSetBlendState(m_transparency, blendFactor, 0xffffffff);
+    m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xffffffff);
+
+    m_location->m_skybox->Render(m_deviceContext);
 
     m_location->m_directionLight->Render(m_deviceContext);
 
@@ -489,7 +482,6 @@ void Engine::Render() {
         }
     }
 
-    m_location->m_skybox->Render(m_deviceContext);
     gizmozRect.Render();
 
     wchar_t buffer[128];
@@ -549,6 +541,11 @@ int Engine::messageWindow() {
             DispatchMessage(&message);
         }
         else {
+            if (m_SwapChainOccluded && m_swapChain->Present(0, DXGI_PRESENT_TEST) == DXGI_STATUS_OCCLUDED) {
+                Sleep(10);
+                continue;
+            }
+
             UpdateFrequenceTime(m_timeInfo);
 
             while (m_timeInfo.accumulator >= m_timeInfo.targetFrameTime) {
@@ -558,10 +555,6 @@ int Engine::messageWindow() {
 
             UpdateInput(m_timeInfo.deltaTime);
             Update(m_timeInfo.deltaTime);
-            if (m_SwapChainOccluded && m_swapChain->Present(0, DXGI_PRESENT_TEST) == DXGI_STATUS_OCCLUDED) {
-                Sleep(10);
-                continue;
-            }
             m_SwapChainOccluded = false;
             Render();
         }

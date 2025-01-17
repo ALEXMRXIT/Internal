@@ -34,7 +34,7 @@ void ImGUIDevice::DefaultStyle(void) {
     ImVec4* colors = style.Colors;
 
     style.WindowPadding = ImVec2(8, 8);
-    style.WindowRounding = 4.0f;
+    style.WindowRounding = 6.0f;
     style.FramePadding = ImVec2(4, 3);
     style.FrameRounding = 2.0f;
     style.ItemSpacing = ImVec2(8, 4);
@@ -49,17 +49,17 @@ void ImGUIDevice::DefaultStyle(void) {
 
     colors[ImGuiCol_Text] = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
+    colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.06f, 1.00f);
     colors[ImGuiCol_ChildBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
-    colors[ImGuiCol_Border] = ImVec4(0.26f, 0.26f, 0.26f, 1.00f);
+    colors[ImGuiCol_PopupBg] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
+    colors[ImGuiCol_Border] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
     colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
     colors[ImGuiCol_FrameBg] = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
     colors[ImGuiCol_FrameBgHovered] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
     colors[ImGuiCol_FrameBgActive] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-    colors[ImGuiCol_TitleBg] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+    colors[ImGuiCol_TitleBg] = ImVec4(0.07f, 0.07f, 0.07f, 1.00f);
     colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
-    colors[ImGuiCol_TitleBgActive] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+    colors[ImGuiCol_TitleBgActive] = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
     colors[ImGuiCol_MenuBarBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
     colors[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
     colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
@@ -280,8 +280,11 @@ void ImGUIDevice::Render() {
 
             if (ImGui::BeginChild("ObjectEditorFrame", ImVec2(width, 80.0f), true)) {
                 bool state = gameObject->isEnabled();
-                if (ImGui::Checkbox("##ToggleObject", &state))
+                if (ImGui::Checkbox("##ToggleObject", &state)) {
                     gameObject->Enable(state);
+                    if (state && gameObject->model)
+                        gameObject->model->setlAlpha(gameObject->model->alpha());
+                }
                 ImGui::SameLine();
     
                 static char buffer[128];

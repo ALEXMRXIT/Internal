@@ -28,7 +28,23 @@ void MeshMaterial::Release() {
 }
 
 inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
-	HRESULT hr = D3DX11CreateShaderResourceViewFromFile(device, name, NULL, NULL, &m_shaderView, NULL);
+	D3DX11_IMAGE_LOAD_INFO loadInfo;
+	ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
+	loadInfo.Width = D3DX11_DEFAULT;
+	loadInfo.Height = D3DX11_DEFAULT;
+	loadInfo.Depth = D3DX11_DEFAULT;
+	loadInfo.FirstMipLevel = 0;
+	loadInfo.MipLevels = D3DX11_DEFAULT;
+	loadInfo.Usage = D3D11_USAGE_DEFAULT;
+	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	loadInfo.CpuAccessFlags = 0;
+	loadInfo.MiscFlags = 0;
+	loadInfo.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	loadInfo.Filter = D3DX11_FILTER_LINEAR;
+	loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
+	loadInfo.pSrcInfo = nullptr;
+
+	HRESULT hr = D3DX11CreateShaderResourceViewFromFile(device, name, &loadInfo, NULL, &m_shaderView, NULL);
 	if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to load texture.", hr);
 
 	D3D11_SAMPLER_DESC sampDesc;

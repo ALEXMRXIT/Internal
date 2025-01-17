@@ -31,5 +31,6 @@ public:
 	void setGameObject(GameObject* obj) { m_obj = obj; }
 	MeshComponent& mesh() const { return m_component; }
 	float alpha() const { return m_component.alpha(); }
+	void setlAlpha(float value) { m_component.setlAlpha(value); }
 	void clearAlpha() { m_component.clearAlpha(); }
 };

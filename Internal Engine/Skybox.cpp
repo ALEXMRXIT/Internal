@@ -27,13 +27,13 @@ HRESULT Skybox::Init(ID3D11Device* device) {
     cmdesc.FrontCounterClockwise = false;
     hr = device->CreateRasterizerState(&cmdesc, &m_cullMode);
 
-    D3D11_DEPTH_STENCIL_DESC depthDesc;
-    ZeroMemory(&depthDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-    depthDesc.DepthEnable = TRUE;
-    depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    depthDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+    ZeroMemory(&depthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+    depthStencilDesc.DepthEnable = TRUE;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
-    hr = device->CreateDepthStencilState(&depthDesc, &m_depthState);
+    hr = device->CreateDepthStencilState(&depthStencilDesc, &m_depthState);
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Error create depth stencil state.", hr);
 
     D3D11_BUFFER_DESC bufferDesc;

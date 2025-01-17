@@ -55,7 +55,7 @@ private:
 	ID3D11RenderTargetView* m_renderTargetView = nullptr;
 	ID3D11DepthStencilView* m_depthStencilView = nullptr;
 	ID3D11Texture2D* m_depthTexture = nullptr;
-	ID3D11BlendState* m_transparency = nullptr;
+	ID3D11BlendState* m_blending = nullptr;
 	ID3D11RasterizerState* m_cWcullMode = nullptr;
 	ID3D11InputLayout* m_layout = nullptr;
 	IDirectInputDevice8* m_keyboard = nullptr;
@@ -101,7 +101,7 @@ public:
 
 	bool InitWindowDevice(const WindowDescription* desc);
 	bool InitRenderDevice();
-	HRESULT GetSupportedResolutions();
+	HRESULT GetSupportedResolutions(DXGI_FORMAT format = DXGI_FORMAT_R16G16B16A16_FLOAT);
 	bool InitScene();
 	void FixedUpdate(float deltaTime);
 	void Update(float deltaTime);
