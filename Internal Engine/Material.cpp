@@ -39,7 +39,7 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
 	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	loadInfo.CpuAccessFlags = 0;
 	loadInfo.MiscFlags = 0;
-	loadInfo.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
+	loadInfo.Format = DXGI_FORMAT_FROM_FILE;
 	loadInfo.Filter = D3DX11_FILTER_LINEAR;
 	loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
 	loadInfo.pSrcInfo = nullptr;

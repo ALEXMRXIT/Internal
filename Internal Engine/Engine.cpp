@@ -470,7 +470,7 @@ void Engine::Render() {
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
-    m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+    m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
     m_location->m_directionLight->Render(m_deviceContext);
 
@@ -483,7 +483,7 @@ void Engine::Render() {
     }
 
     // рендерим все прозрачные объекты (включая directionLight, skybox...)
-    m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xffffffff);
+    m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xFFFFFFFF);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && obj->isTransparent())
@@ -493,7 +493,7 @@ void Engine::Render() {
 
     gizmozRect.Render();
 
-    wchar_t buffer[128];
+    static wchar_t buffer[128];
     swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
     m_font->Render(m_deviceContext, buffer);
 
