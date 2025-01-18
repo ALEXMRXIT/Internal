@@ -465,19 +465,28 @@ void Engine::Render() {
     m_deviceContext->ClearRenderTargetView(m_renderTextureRTV, clr);
 #endif
 
-    m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xffffffff);
-
     m_location->m_skybox->Render(m_deviceContext);
-
-    m_location->m_directionLight->Render(m_deviceContext);
-
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
+    m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+
+    m_location->m_directionLight->Render(m_deviceContext);
+
+    // рендерим все непрозрачные объекты
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
-            if (obj->isEnabled())
+            if (obj->isEnabled() && !obj->isTransparent())
+                m_meshes[iterator]->Render(m_deviceContext);
+        }
+    }
+
+    // рендерим все прозрачные объекты (включая directionLight, skybox...)
+    m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xffffffff);
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+        if (GameObject* obj = m_meshes[iterator]->gameObject()) {
+            if (obj->isEnabled() && obj->isTransparent())
                 m_meshes[iterator]->Render(m_deviceContext);
         }
     }

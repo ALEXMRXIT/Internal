@@ -44,6 +44,7 @@ public:
 
 	void Enable(bool enable);
 	bool isEnabled() const { return m_enable; }
+	bool isTransparent() const;
 
 	__forceinline Transform& transform() const { return m_components->transform(); }
 

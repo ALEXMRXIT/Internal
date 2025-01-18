@@ -16,7 +16,7 @@ int APIENTRY WinMain(
 	wndDesc.hInstance = hInstance;
 	wndDesc.fullScreen = true;
 	wndDesc.nCmdShow = nCmdShow;
-	engine.GetSupportedResolutions();
+	engine.GetSupportedResolutions(DXGI_FORMAT_R10G10B10A2_UNORM);
 	engine.InitWindowDevice(&wndDesc);
 	engine.InitRenderDevice();
 
