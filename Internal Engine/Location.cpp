@@ -34,39 +34,28 @@ Location::Location(ID3D11Device* device) {
     m_skybox = new Skybox(*meshSkybox);
     m_loader->AddResourceToLoad("mesh\\skybox.obj", m_skybox);
     Insert(objectSkybox);
-    
-    GameObject* obj = Instantiate(XMFLOAT3(-25.0f, 0.0f, 0.0f),
-        XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
-    obj->name = "Cart";
-    MeshComponent* mesh = obj->AddComponent<MeshComponent>();
-    Model* model = new Model(*mesh);
-    obj->model = model;
-    model->setGameObject(obj);
-    mesh->setMatrix(obj->transform().getWorldMatrix());
-    m_loader->AddResourceToLoad("mesh\\m_had033.obj", model);
-    Insert(obj);
-    
-    GameObject* plane = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
-        XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(100.0f, 1.0f, 100.0f));
-    plane->name = "Ground";
-    MeshComponent* planeMesh = plane->AddComponent<MeshComponent>();
-    Model* modelPlane = new Model(*planeMesh);
-    plane->model = modelPlane;
-    modelPlane->setGameObject(plane);
-    planeMesh->setMatrix(plane->transform().getWorldMatrix());
-    m_loader->AddResourceToLoad("mesh\\plane.obj", modelPlane);
-    Insert(plane);
-    
-    GameObject* house = Instantiate(XMFLOAT3(60.0f, 0.0f, 50.0f),
-        XMFLOAT3(0.0f, 180.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
-    house->name = "House";
-    MeshComponent* houseMesh = house->AddComponent<MeshComponent>();
-    Model* modelHouse = new Model(*houseMesh);
-    house->model = modelHouse;
-    modelHouse->setGameObject(house);
-    houseMesh->setMatrix(house->transform().getWorldMatrix());
-    m_loader->AddResourceToLoad("mesh\\m_hbf011.obj", modelHouse);
-    Insert(house);
+
+    GameObject* tarrain = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
+        XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(10.0f, 10.0f, 10.0f));
+    tarrain->name = "Tarrain";
+    MeshComponent* meshTarrain = tarrain->AddComponent<MeshComponent>();
+    Model* modelTarrain = new Model(*meshTarrain);
+    tarrain->model = modelTarrain;
+    modelTarrain->setGameObject(tarrain);
+    meshTarrain->setMatrix(tarrain->transform().getWorldMatrix());
+    m_loader->AddResourceToLoad("mesh\\terrain.obj", modelTarrain);
+    Insert(tarrain);
+
+    GameObject* home = Instantiate(XMFLOAT3(1307.100f, 24.400f, -1331.600f),
+        XMFLOAT3(0.0f, -0.500f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
+    home->name = "Bash";
+    MeshComponent* meshBash = home->AddComponent<MeshComponent>();
+    Model* modelBash = new Model(*meshBash);
+    home->model = modelBash;
+    modelBash->setGameObject(home);
+    meshBash->setMatrix(home->transform().getWorldMatrix());
+    m_loader->AddResourceToLoad("mesh\\m_had430000.obj", modelBash);
+    Insert(home);
 }
 
 void Location::Update(float deltaTime) {
@@ -75,4 +64,24 @@ void Location::Update(float deltaTime) {
 
 void Location::Insert(GameObject* obj) {
     m_objects.push_back(obj);
+    m_staticObjects.push_back(obj);
+}
+
+void Location::RebuildStaticObjects() {
+    m_objects.clear();
+    for (GameObject* rootObject : m_staticObjects) {
+        if (!rootObject->Parent())
+            AddObjectToStaticObjects(rootObject);
+    }
+}
+
+void Location::AddObjectToStaticObjects(GameObject* gameObject) {
+    if (!gameObject) return;
+
+    m_objects.push_back(gameObject);
+    GameObject* child = gameObject->FirstChild();
+    while (child) {
+        AddObjectToStaticObjects(child);
+        child = child->m_next;
+    }
 }

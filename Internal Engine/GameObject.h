@@ -41,6 +41,7 @@ public:
 	void AddChild(GameObject* child);
 	void RemoveChild(GameObject* child);
 	GameObject* Parent() const { return m_parent; }
+	GameObject* FirstChild() const { return m_firstChild; }
 
 	void Enable(bool enable);
 	bool isEnabled() const { return m_enable; }

@@ -427,7 +427,7 @@ void Engine::CreateRenderTexture(int width, int height) {
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
     srvDesc.Texture2D.MostDetailedMip = 0;
-
+    
     hr = m_device->CreateShaderResourceView(m_renderTexture, &srvDesc, &m_renderTextureSRV);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Failed to create SRV for render texture.", hr);
@@ -461,11 +461,10 @@ void Engine::Render() {
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
-    float clr[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    m_deviceContext->ClearRenderTargetView(m_renderTextureRTV, clr);
 #endif
 
     m_location->m_skybox->Render(m_deviceContext);
+    m_deviceContext->OMSetDepthStencilState(nullptr, 0);
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);

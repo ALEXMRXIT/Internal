@@ -261,6 +261,91 @@ void ImGUIDevice::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     ImGui_ImplDX11_Init(device, context);
 }
 
+bool ImGUIDevice::DisplayHierarchy(GameObject* parent) {
+    bool clickedOnElement = false;
+    if (!parent) return clickedOnElement;
+
+    ImGui::PushID(parent);
+    bool isSelected = (engine.lastSelected == parent);
+
+    if (isSelected) {
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.26f, 0.59f, 0.98f, 0.31f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.51f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.26f, 0.59f, 0.98f, 0.71f));
+    }
+    else ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.16f, 0.16f, 0.16f, 0.31f));
+
+    GameObject* current = parent->FirstChild();
+    bool nodeOpen = ImGui::TreeNodeEx(parent->name.c_str(), ImGuiTreeNodeFlags_OpenOnArrow |
+        ImGuiTreeNodeFlags_Framed | (current == nullptr ? ImGuiTreeNodeFlags_Leaf : 0) |
+        (isSelected ? ImGuiTreeNodeFlags_Selected : 0));
+    if (!isSelected) ImGui::PopStyleColor(1);
+
+    if (ImGui::IsItemClicked()) {
+        clickedOnElement = true;
+        if (engine.lastSelected) {
+            engine.lastSelected->selectable = false;
+            engine.lastSelected = nullptr;
+        }
+        parent->selectable = true;
+        engine.lastSelected = parent;
+    }
+
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover)) {
+        ImGui::SetDragDropPayload("GAMEOBJECT", &parent, sizeof(GameObject*));
+        ImGui::Text("Moving %s", parent->name.c_str());
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::GetDragDropPayload()) {
+        if (ImGui::IsMouseReleased(0) && !ImGui::IsItemHovered()) {
+            if (GameObject* ptr = parent->Parent()) {
+                ptr->RemoveChild(parent);
+                parent->SetParent(nullptr);
+            }
+        }
+    }
+
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("GAMEOBJECT")) {
+            IM_ASSERT(payload->DataSize == sizeof(GameObject*));
+            GameObject* droppedObject = *(GameObject**)payload->Data;
+            if (droppedObject != parent->Parent()) {
+                bool isDescendant = false;
+                GameObject* current = droppedObject;
+                while (current != nullptr) {
+                    if (current == parent) {
+                        isDescendant = true;
+                        break;
+                    }
+                    current = current->Parent();
+                }
+                if (!isDescendant && droppedObject != parent) {
+                    droppedObject->SetParent(parent);
+                    current = parent->FirstChild();
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    if (nodeOpen) {
+        while (current != nullptr) {
+            if (!current->serialize) {
+                current = current->m_next;
+                continue;
+            }
+            DisplayHierarchy(current);
+            current = current->m_next;
+        }
+        ImGui::TreePop();
+    }
+
+    if (isSelected) ImGui::PopStyleColor(3);
+    ImGui::PopID();
+    return clickedOnElement;
+}
+
 void ImGUIDevice::Render() {
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -335,31 +420,8 @@ void ImGUIDevice::Render() {
     {
         bool clickedOnElement = false;
         for (GameObject* entity : engine.location()->staticObjects()) {
-            if (!entity->serialize)
-                continue;
-            ImGui::PushID(entity);
-            bool isSelected = (engine.lastSelected == entity);
-    
-            if (isSelected) {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.26f, 0.59f, 0.98f, 0.31f));
-                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.51f));
-                ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.26f, 0.59f, 0.98f, 0.71f));
-            }
-    
-            ImGui::Dummy(ImVec2(0.0f, 1.0f));
-            if (ImGui::Selectable(entity->name.c_str(), isSelected)) {
-                clickedOnElement = true;
-                if (engine.lastSelected) {
-                    engine.lastSelected->selectable = false;
-                    engine.lastSelected = nullptr;
-                }
-                entity->selectable = true;
-                engine.lastSelected = entity;
-            }
-    
-            if (isSelected)
-                ImGui::PopStyleColor(3);
-            ImGui::PopID();
+            if (!entity->Parent())
+                clickedOnElement |= DisplayHierarchy(entity);
         }
     
         if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !clickedOnElement) {
