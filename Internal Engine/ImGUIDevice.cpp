@@ -300,8 +300,31 @@ bool ImGUIDevice::DisplayHierarchy(GameObject* parent) {
     if (ImGui::GetDragDropPayload()) {
         if (ImGui::IsMouseReleased(0) && !ImGui::IsItemHovered()) {
             if (GameObject* ptr = parent->Parent()) {
-                ptr->RemoveChild(parent);
-                parent->SetParent(nullptr);
+                if (GameObject* data = *(GameObject**)ImGui::GetDragDropPayload()->Data) {
+                    if (ptr != data) {
+                        ptr->RemoveChild(parent);
+                        parent->SetParent(nullptr);
+                    }
+                }
+            }
+            else {
+                ImVec2 mousePos = ImGui::GetMousePos();
+                ImVec2 itemMin = ImGui::GetItemRectMin();
+                ImVec2 itemMax = ImGui::GetItemRectMax();
+                bool insertAbove = (mousePos.y < (itemMin.y + itemMax.y) * 0.5f);
+
+                GameObject* dropped = *(GameObject**)ImGui::GetDragDropPayload()->Data;
+                std::list<GameObject*>& list = engine.location()->staticObjects();
+                auto itToMove = std::find(list.begin(), list.end(), dropped);
+                auto itTarget = std::find(list.begin(), list.end(), parent);
+
+                if (itToMove == list.end() || itTarget == list.end())
+                    return clickedOnElement;
+
+                if (insertAbove)
+                    list.splice(itTarget, list, itToMove);
+                else
+                    list.splice(std::next(itTarget), list, itToMove);
             }
         }
     }

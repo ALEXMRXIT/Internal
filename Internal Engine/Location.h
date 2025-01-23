@@ -10,7 +10,6 @@ class GameObject;
 class Location {
 private:
 	std::list<GameObject*> m_objects;
-	std::list<GameObject*> m_staticObjects;
 	ResourceLoader* m_loader;
 	MeshLoader* m_meshLoader;
 
@@ -27,10 +26,7 @@ public:
 	void Update(float deltaTime);
 	void Insert(GameObject* obj);
 
-	std::list<GameObject*> staticObjects() const { return m_objects; }
-
-	void RebuildStaticObjects();
-	void AddObjectToStaticObjects(GameObject* gameObject);
+	std::list<GameObject*>& staticObjects() { return m_objects; }
 };
 
 static GameObject* Instantiate(const XMFLOAT3& pos, const XMFLOAT3& rot, const XMFLOAT3& scale);

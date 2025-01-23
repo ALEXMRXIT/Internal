@@ -64,24 +64,4 @@ void Location::Update(float deltaTime) {
 
 void Location::Insert(GameObject* obj) {
     m_objects.push_back(obj);
-    m_staticObjects.push_back(obj);
-}
-
-void Location::RebuildStaticObjects() {
-    m_objects.clear();
-    for (GameObject* rootObject : m_staticObjects) {
-        if (!rootObject->Parent())
-            AddObjectToStaticObjects(rootObject);
-    }
-}
-
-void Location::AddObjectToStaticObjects(GameObject* gameObject) {
-    if (!gameObject) return;
-
-    m_objects.push_back(gameObject);
-    GameObject* child = gameObject->FirstChild();
-    while (child) {
-        AddObjectToStaticObjects(child);
-        child = child->m_next;
-    }
 }
