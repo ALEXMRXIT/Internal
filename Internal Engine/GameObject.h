@@ -3,6 +3,7 @@
 #include "Component.h"
 
 class Model;
+class Transform;
 
 class GameObject {
 private:

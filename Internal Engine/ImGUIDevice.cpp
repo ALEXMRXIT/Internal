@@ -88,119 +88,6 @@ void ImGUIDevice::DefaultStyle(void) {
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 }
 
-void ImGUIDevice::BlueStyle(void) {
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImVec4* colors = style.Colors;
-
-    style.Alpha = 1.0f;
-    style.ChildRounding = 3.0f;
-    style.WindowRounding = 3.0f;
-    style.GrabRounding = 1.0f;
-    style.GrabMinSize = 20.0f;
-    style.FrameRounding = 3.0f;
-
-    colors[ImGuiCol_Text] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_TextDisabled] = ImVec4(0.00f, 0.40f, 0.41f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    colors[ImGuiCol_Border] = ImVec4(0.00f, 1.00f, 1.00f, 0.65f);
-    colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    colors[ImGuiCol_FrameBg] = ImVec4(0.44f, 0.80f, 0.80f, 0.18f);
-    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.44f, 0.80f, 0.80f, 0.27f);
-    colors[ImGuiCol_FrameBgActive] = ImVec4(0.44f, 0.81f, 0.86f, 0.66f);
-    colors[ImGuiCol_TitleBg] = ImVec4(0.14f, 0.18f, 0.21f, 0.73f);
-    colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.54f);
-    colors[ImGuiCol_TitleBgActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.27f);
-    colors[ImGuiCol_MenuBarBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.20f);
-    colors[ImGuiCol_ScrollbarBg] = ImVec4(0.22f, 0.29f, 0.30f, 0.71f);
-    colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.00f, 1.00f, 1.00f, 0.44f);
-    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.00f, 1.00f, 1.00f, 0.74f);
-    colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.16f, 0.24f, 0.22f, 0.60f);
-    colors[ImGuiCol_CheckMark] = ImVec4(0.00f, 1.00f, 1.00f, 0.68f);
-    colors[ImGuiCol_SliderGrab] = ImVec4(0.00f, 1.00f, 1.00f, 0.36f);
-    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.76f);
-    colors[ImGuiCol_Button] = ImVec4(0.00f, 0.65f, 0.65f, 0.46f);
-    colors[ImGuiCol_ButtonHovered] = ImVec4(0.01f, 1.00f, 1.00f, 0.43f);
-    colors[ImGuiCol_ButtonActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.62f);
-    colors[ImGuiCol_Header] = ImVec4(0.00f, 1.00f, 1.00f, 0.33f);
-    colors[ImGuiCol_HeaderHovered] = ImVec4(0.00f, 1.00f, 1.00f, 0.42f);
-    colors[ImGuiCol_HeaderActive] = ImVec4(0.00f, 1.00f, 1.00f, 0.54f);
-    colors[ImGuiCol_Separator] = ImVec4(0.00f, 1.00f, 1.00f, 0.54f);
-    colors[ImGuiCol_SeparatorHovered] = ImVec4(0.00f, 1.00f, 1.00f, 0.74f);
-    colors[ImGuiCol_SeparatorActive] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 1.00f, 1.00f, 0.54f);
-    colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.00f, 1.00f, 1.00f, 0.74f);
-    colors[ImGuiCol_ResizeGripActive] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_PlotLines] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_PlotHistogram] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_TextSelectedBg] = ImVec4(0.00f, 1.00f, 1.00f, 0.22f);
-    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.04f, 0.10f, 0.09f, 0.51f);
-}
-
-void ImGUIDevice::BlackStyle(void) {
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImVec4* colors = style.Colors;
-
-    style.WindowPadding = ImVec2(9, 5);
-    style.WindowRounding = 10.0f;
-    style.ChildRounding = 10.0f;
-    style.FramePadding = ImVec2(5, 3);
-    style.FrameRounding = 6.0f;
-    style.ItemSpacing = ImVec2(9.0f, 3.0f);
-    style.ItemInnerSpacing = ImVec2(9.0f, 3.0f);
-    style.IndentSpacing = 21.0f;
-    style.ScrollbarSize = 6.0f;
-    style.ScrollbarRounding = 13.0f;
-    style.GrabMinSize = 17.0f;
-    style.GrabRounding = 16.0f;
-    style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
-    style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
-
-    colors[ImGuiCol_Text] = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
-    colors[ImGuiCol_TextDisabled] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImGuiCol_Border] = ImVec4(0.82f, 0.77f, 0.78f, 1.00f);
-    colors[ImGuiCol_BorderShadow] = ImVec4(0.35f, 0.35f, 0.35f, 0.66f);
-    colors[ImGuiCol_FrameBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.28f);
-    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.68f, 0.68f, 0.68f, 0.67f);
-    colors[ImGuiCol_FrameBgActive] = ImVec4(0.79f, 0.73f, 0.73f, 0.62f);
-    colors[ImGuiCol_TitleBg] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImGuiCol_TitleBgActive] = ImVec4(0.46f, 0.46f, 0.46f, 1.00f);
-    colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-    colors[ImGuiCol_MenuBarBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.80f);
-    colors[ImGuiCol_ScrollbarBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.60f);
-    colors[ImGuiCol_ScrollbarGrab] = ImVec4(1.00f, 1.00f, 1.00f, 0.87f);
-    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(1.00f, 1.00f, 1.00f, 0.79f);
-    colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.80f, 0.50f, 0.50f, 0.40f);
-    colors[ImGuiCol_PopupBg] = ImVec4(0.24f, 0.24f, 0.24f, 0.99f);
-    colors[ImGuiCol_CheckMark] = ImVec4(0.99f, 0.99f, 0.99f, 0.52f);
-    colors[ImGuiCol_SliderGrab] = ImVec4(1.00f, 1.00f, 1.00f, 0.42f);
-    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.76f, 0.76f, 0.76f, 1.00f);
-    colors[ImGuiCol_Button] = ImVec4(0.51f, 0.51f, 0.51f, 0.60f);
-    colors[ImGuiCol_ButtonHovered] = ImVec4(0.68f, 0.68f, 0.68f, 1.00f);
-    colors[ImGuiCol_ButtonActive] = ImVec4(0.67f, 0.67f, 0.67f, 1.00f);
-    colors[ImGuiCol_Header] = ImVec4(0.72f, 0.72f, 0.72f, 0.54f);
-    colors[ImGuiCol_HeaderHovered] = ImVec4(0.92f, 0.92f, 0.95f, 0.77f);
-    colors[ImGuiCol_HeaderActive] = ImVec4(0.82f, 0.82f, 0.82f, 0.80f);
-    colors[ImGuiCol_Separator] = ImVec4(0.73f, 0.73f, 0.73f, 1.00f);
-    colors[ImGuiCol_SeparatorHovered] = ImVec4(0.81f, 0.81f, 0.81f, 1.00f);
-    colors[ImGuiCol_SeparatorActive] = ImVec4(0.74f, 0.74f, 0.74f, 1.00f);
-    colors[ImGuiCol_ResizeGrip] = ImVec4(0.80f, 0.80f, 0.80f, 0.30f);
-    colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.95f, 0.95f, 0.95f, 0.60f);
-    colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 1.00f, 1.00f, 0.90f);
-    colors[ImGuiCol_PlotLines] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_PlotHistogram] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    colors[ImGuiCol_TextSelectedBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.35f);
-    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.88f, 0.88f, 0.88f, 0.35f);
-}
-
 void ImGUIDevice::WhiteStyle(void) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
@@ -261,6 +148,9 @@ void ImGUIDevice::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
     ImGui_ImplDX11_Init(device, context);
 }
 
+static bool isDragging = false;
+static GameObject* draggedObject = nullptr;
+
 bool ImGUIDevice::DisplayHierarchy(GameObject* parent) {
     bool clickedOnElement = false;
     if (!parent) return clickedOnElement;
@@ -292,13 +182,29 @@ bool ImGUIDevice::DisplayHierarchy(GameObject* parent) {
     }
 
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover)) {
+        isDragging = true;
+        draggedObject = parent;
         ImGui::SetDragDropPayload("GAMEOBJECT", &parent, sizeof(GameObject*));
         ImGui::Text("Moving %s", parent->name.c_str());
         ImGui::EndDragDropSource();
     }
 
-    if (ImGui::GetDragDropPayload()) {
-        if (ImGui::IsMouseReleased(0) && !ImGui::IsItemHovered()) {
+    bool dropedInParent = false;
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("GAMEOBJECT")) {
+            GameObject* droppedObject = *(GameObject**)payload->Data;
+            if (droppedObject != parent->Parent()) {
+                droppedObject->SetParent(parent);
+                current = parent->FirstChild();
+                dropedInParent = true;
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    if (!dropedInParent && isDragging && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+        if (ImGui::GetDragDropPayload() && draggedObject == parent) {
+            isDragging = false;
             if (GameObject* ptr = parent->Parent()) {
                 if (GameObject* data = *(GameObject**)ImGui::GetDragDropPayload()->Data) {
                     if (ptr != data) {
@@ -307,49 +213,36 @@ bool ImGUIDevice::DisplayHierarchy(GameObject* parent) {
                     }
                 }
             }
-            else {
-                ImVec2 mousePos = ImGui::GetMousePos();
-                ImVec2 itemMin = ImGui::GetItemRectMin();
-                ImVec2 itemMax = ImGui::GetItemRectMax();
-                bool insertAbove = (mousePos.y < (itemMin.y + itemMax.y) * 0.5f);
-
-                GameObject* dropped = *(GameObject**)ImGui::GetDragDropPayload()->Data;
+            else if (!ImGui::BeginDragDropTarget()) {
                 std::list<GameObject*>& list = engine.location()->staticObjects();
-                auto itToMove = std::find(list.begin(), list.end(), dropped);
-                auto itTarget = std::find(list.begin(), list.end(), parent);
+                auto itToMove = std::find(list.begin(), list.end(), draggedObject);
 
-                if (itToMove == list.end() || itTarget == list.end())
-                    return clickedOnElement;
+                if (itToMove != list.end()) {
+                    ImVec2 mousePos = ImGui::GetMousePos();
+                    ImVec2 windowPos = ImGui::GetWindowPos();
+                    ImVec2 relativeMousePos = ImVec2(mousePos.x - windowPos.x, mousePos.y - windowPos.y);
 
-                if (insertAbove)
-                    list.splice(itTarget, list, itToMove);
-                else
-                    list.splice(std::next(itTarget), list, itToMove);
-            }
-        }
-    }
+                    auto itTarget = list.begin();
+                    int iterator = 1;
+                    while (itTarget != list.end()) {
+                        GameObject* targetObject = *itTarget;
+                        ImVec2 itemMin = ImGui::GetItemRectMin();
 
-    if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("GAMEOBJECT")) {
-            IM_ASSERT(payload->DataSize == sizeof(GameObject*));
-            GameObject* droppedObject = *(GameObject**)payload->Data;
-            if (droppedObject != parent->Parent()) {
-                bool isDescendant = false;
-                GameObject* current = droppedObject;
-                while (current != nullptr) {
-                    if (current == parent) {
-                        isDescendant = true;
-                        break;
+                        const float height = ImGui::GetItemRectMax().y - ImGui::GetItemRectMin().y;
+                        const float offset = 10.0f;
+
+                        if (relativeMousePos.y - (offset * iterator) < height * iterator) {
+                            list.splice(itTarget, list, itToMove);
+                            break;
+                        }
+                        ++itTarget;
+                        ++iterator;
                     }
-                    current = current->Parent();
-                }
-                if (!isDescendant && droppedObject != parent) {
-                    droppedObject->SetParent(parent);
-                    current = parent->FirstChild();
+                    if (itTarget == list.end())
+                        list.splice(list.end(), list, itToMove);
                 }
             }
         }
-        ImGui::EndDragDropTarget();
     }
 
     if (nodeOpen) {
@@ -358,7 +251,7 @@ bool ImGUIDevice::DisplayHierarchy(GameObject* parent) {
                 current = current->m_next;
                 continue;
             }
-            DisplayHierarchy(current);
+            clickedOnElement = DisplayHierarchy(current);
             current = current->m_next;
         }
         ImGui::TreePop();
@@ -478,13 +371,11 @@ void ImGUIDevice::Render() {
         {
             ImGui::BeginGroup();
             {
-                const char* styles[] = { "Default", "Blue", "Black", "White" };
+                const char* styles[] = { "Default", "White" };
                 if (ImGui::Combo("Select Style", &m_selectedStyle, styles, IM_ARRAYSIZE(styles))) {
                     switch (m_selectedStyle) {
                     case 0: DefaultStyle(); break;
-                    case 1: BlueStyle(); break;
-                    case 2: BlackStyle(); break;
-                    case 3: WhiteStyle(); break;
+                    case 1: WhiteStyle(); break;
                     }
                 }
             }

@@ -28,7 +28,7 @@ Location::Location(ID3D11Device* device) {
     GameObject* objectSkybox = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
         XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
     objectSkybox->name = "Skybox";
-    objectSkybox->serialize = false;
+    objectSkybox->serialize = true;
     MeshComponent* meshSkybox = new MeshComponent();
     meshSkybox->setMatrix(objectSkybox->transform().getWorldMatrix());
     m_skybox = new Skybox(*meshSkybox);
@@ -36,7 +36,7 @@ Location::Location(ID3D11Device* device) {
     Insert(objectSkybox);
 
     GameObject* tarrain = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f),
-        XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(10.0f, 10.0f, 10.0f));
+        XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
     tarrain->name = "Tarrain";
     MeshComponent* meshTarrain = tarrain->AddComponent<MeshComponent>();
     Model* modelTarrain = new Model(*meshTarrain);
@@ -46,8 +46,8 @@ Location::Location(ID3D11Device* device) {
     m_loader->AddResourceToLoad("mesh\\terrain.obj", modelTarrain);
     Insert(tarrain);
 
-    GameObject* home = Instantiate(XMFLOAT3(1307.100f, 24.400f, -1331.600f),
-        XMFLOAT3(0.0f, -0.500f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
+    GameObject* home = Instantiate(XMFLOAT3(130.1f, 2.4f, -131.600f),
+        XMFLOAT3(0.0f, -0.500f, 0.0f), XMFLOAT3(0.1f, 0.1f, 0.1f));
     home->name = "Bash";
     MeshComponent* meshBash = home->AddComponent<MeshComponent>();
     Model* modelBash = new Model(*meshBash);

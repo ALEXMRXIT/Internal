@@ -5,7 +5,7 @@
 class Component {
 private:
 	std::list<AbstractBaseComponent*> m_components;
-	Transform* m_transform; // компонент этот вытащен, так как очень часто используется. Сделано ради оптимизации
+	Transform* m_transform;
 
 public:
 	Component();

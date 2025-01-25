@@ -17,8 +17,6 @@ private:
 	void InitWindowStyle(void);
 
 	void DefaultStyle(void);
-	void BlueStyle(void);
-	void BlackStyle(void);
 	void WhiteStyle(void);
 
 	bool DisplayHierarchy(GameObject* parent);
