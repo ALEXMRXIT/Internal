@@ -3,7 +3,11 @@
 
 void Transform::UpdateWorldCoord() {
     XMMATRIX translation = XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
-    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(m_rotation.x),
+        XMConvertToRadians(m_rotation.y),
+        XMConvertToRadians(m_rotation.z)
+    );
     XMMATRIX scaling = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
 
     XMMATRIX localMatrix = scaling * rotation * translation;
@@ -69,7 +73,7 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
 
             ImGui::BeginGroup();
             {
-                XMFLOAT3 pos = gameObject->position();
+                XMFLOAT3& pos = gameObject->position();
                 float position[3] = { pos.x, pos.y, pos.z };
 
                 const float availableWidth = ImGui::GetContentRegionAvail().x;
@@ -104,7 +108,7 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                     gameObject->setPosition(XMFLOAT3(position[0], position[1], position[2]));
                 ImGui::PopStyleVar();
 
-                XMFLOAT3 rot = gameObject->rotation();
+                XMFLOAT3& rot = gameObject->rotation();
                 float rotation[3] = { rot.x, rot.y, rot.z };
 
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 5.0f));
@@ -134,7 +138,7 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                     gameObject->setRotation(XMFLOAT3(rotation[0], rotation[1], rotation[2]));
                 ImGui::PopStyleVar();
 
-                XMFLOAT3 scale = gameObject->scale();
+                XMFLOAT3& scale = gameObject->scale();
                 float scaleData[3] = { scale.x, scale.y, scale.z };
 
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 5.0f));
@@ -173,11 +177,6 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
     }
 }
 #endif
-
-void Transform::setPosition(const XMFLOAT3& position) {
-    m_position = position;
-    UpdateWorldCoord();
-}
 
 void Transform::setLocalPosition(const XMFLOAT3& position) {
     if (m_gameObject->Parent()) {

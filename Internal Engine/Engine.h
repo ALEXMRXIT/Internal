@@ -15,13 +15,16 @@ class Location;
 class Skybox;
 class GameObject;
 class PrimitiveDrawable;
+class ShadowMap;
+class ViewProjectonData;
 
 typedef struct _windowDescription {
 	const char* title;
 	HINSTANCE hInstance;
 	DWORD windowStyle;
 	HWND hWnd;
-	RECT rect;
+	LONG width;
+	LONG height;
 	bool fullScreen;
 	int nCmdShow;
 } WindowDescription, *LPWindowDescription;
@@ -64,12 +67,14 @@ private:
 	ID3D11Texture2D* m_renderTexture = nullptr;
 	ID3D11ShaderResourceView* m_renderTextureSRV = nullptr;
 	ID3D11RenderTargetView* m_renderTextureRTV = nullptr;
+	D3D11_VIEWPORT m_viewport;
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	ImGUIDevice* m_gui = nullptr;
 	XMFLOAT2 m_scenePos;
 	XMFLOAT2 m_sceneSize;
 #endif
 
+	ViewProjectonData* m_viewProjectionData;
 	std::vector<Model*> m_meshes;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;
@@ -112,7 +117,6 @@ public:
 	void addMeshRenderer(Model* mesh);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
-	RECT& getWindowRect();
 	IDXGISwapChain* getChain() const;
 	const DXGI_MODE_DESC& getSupportedResolution() const;
 	const wchar_t* toStringVSync() const;
@@ -133,3 +137,4 @@ extern Engine engine;
 extern Config config;
 extern Camera camera;
 extern PrimitiveDrawable gizmozRect;
+extern ShadowMap shadowMap;

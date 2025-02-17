@@ -14,7 +14,7 @@ int APIENTRY WinMain(
 	ZeroMemory(&wndDesc, sizeof(WindowDescription));
 	wndDesc.title = "Internal Engine - Beta Test v1.0.3 DirectX 11";
 	wndDesc.hInstance = hInstance;
-	wndDesc.fullScreen = true;
+	wndDesc.fullScreen = false;
 	wndDesc.nCmdShow = nCmdShow;
 	engine.GetSupportedResolutions(DXGI_FORMAT_R10G10B10A2_UNORM);
 	engine.InitWindowDevice(&wndDesc);

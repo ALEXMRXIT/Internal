@@ -19,6 +19,12 @@
     <Filter Include="Файлы заголовков\ImGUI">
       <UniqueIdentifier>{15466912-562c-4c89-a600-894145dc2d73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\Light">
+      <UniqueIdentifier>{7388d641-0945-4553-9a3e-b19d49fd7f9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\Light">
+      <UniqueIdentifier>{12f0b177-5be6-4946-aed5-63cfbeadd059}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.cpp">
@@ -85,7 +91,10 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="DirectionLight.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Исходные файлы\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowMap.cpp">
+      <Filter>Исходные файлы\Light</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +180,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="DirectionLight.h">
+      <Filter>Файлы заголовков\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowMap.h">
+      <Filter>Файлы заголовков\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewProjectonData.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

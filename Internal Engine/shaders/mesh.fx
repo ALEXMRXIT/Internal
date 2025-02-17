@@ -1,10 +1,8 @@
 cbuffer cbPerFrame : register(b0)
 {
     float4 direction;
-    float4 ambient;
-    float4 diffuse;
     float intensity;
-    float darkness;
+    float4x4 lightViewProj;
 };
 
 cbuffer cbPerObject : register(b1)
@@ -33,7 +31,7 @@ struct VS_OUTPUT
     float4 Pos : SV_POSITION;
     float2 TexCoord : TEXCOORD;
     float3 Normal : NORMAL;
-    float3 WorldPos : TEXCOORD1;
+    float4 ShadowPos : TEXCOORD2;
 };
 
 VS_OUTPUT VS(VS_INPUT input)
@@ -41,35 +39,39 @@ VS_OUTPUT VS(VS_INPUT input)
     VS_OUTPUT output;
     
     output.Pos = mul(input.Pos, WVP);
-    output.Normal = mul(input.Normal, (float3x3) World);
+    output.Normal = mul(input.Normal, (float3x3)World);
     output.Normal = normalize(output.Normal);
     output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
-    output.WorldPos = mul(input.Pos, World).xyz;
+    output.ShadowPos = mul(float4(input.Pos.xyz, 1.0f), lightViewProj);
     
     return output;
 }
 
-Texture2D ObjTexture;
-SamplerState ObjSamplerState;
+Texture2D ObjTexture : register(t0);
+Texture2D<float> ShadowMap : register(t1);
+
+SamplerState ObjSamplerState : register(s0);
+SamplerComparisonState gSamShadow : register(s1);
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    float diffuseFactor = dot(input.Normal, normalize(direction.xyz));
+    float4 lightIntensity = lerp(0.2f, 1.0f, saturate(diffuseFactor));
     
-    if (color.a == 0.0f)
-        return float4(0.3f, 0.3f, 0.3f, alpha);
+    float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
+    shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
+    shadowPos.y = 1.0f - shadowPos.y;
+
+    float shadowBias = max(0.01 * (1.0 - diffuseFactor), 0.001);
+    float shadow = 1.0f;
+    if (all(shadowPos.xy < 0) || all(shadowPos.xy > 1))
+    {
+        shadow = ShadowMap.SampleCmpLevelZero(gSamShadow, shadowPos.xy, shadowPos.z - shadowBias);
+    }
     
-    float3 lightDir = normalize(-direction.xyz);
+    float4 finalColor = color * lightIntensity * shadow;
+    finalColor.a = color.a;
     
-    float diffuseFactor = saturate(dot(input.Normal, lightDir));
-    float shadowFactor = 1.0 - diffuseFactor;
-    
-    float3 shadowColor = lerp(float3(0, 0, 0), color.rgb, darkness);
-    
-    float3 finalColor = (ambient.rgb * color.rgb) + (diffuseFactor * diffuse.rgb * color.rgb * intensity);
-    finalColor = lerp(finalColor, shadowColor, shadowFactor);
-    
-    float3 baseColor = finalColor + texture_color.rgb;
-    
-    return float4(baseColor, color.a * alpha);
+    return finalColor;
 }

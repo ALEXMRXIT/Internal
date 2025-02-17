@@ -1,14 +1,23 @@
 #include "DirectionLight.h"
 #include "debug.h"
 #include "ImGUI/imgui_internal.h"
+#include "ViewProjectonData.h"
+
+void DirectionLight::UpdateMatrix() {
+    XMFLOAT3 rotation = m_transform->rotation();
+    XMVECTOR direction = XMLoadFloat3(&rotation);
+    direction = XMVector3Equal(direction, XMVectorZero()) ? XMVectorSet(0, 0, 1, 0) : XMVector3Normalize(direction);
+    XMVECTOR lightPos = direction * 50.0f;
+
+    m_bufferLight.lightViewProj = XMMatrixLookAtLH(lightPos, -direction, XMVectorSet(0, 1, 0, 0));
+    m_bufferLight.direction = XMFLOAT4(XMVectorGetX(direction), XMVectorGetY(direction), XMVectorGetZ(direction), 1.0f);
+}
 
 DirectionLight::DirectionLight() {
     m_constantLightBuffer = nullptr;
     m_transform = nullptr;
     m_bufferLight.intensity = 1.25f;
-    m_bufferLight.ambient = XMFLOAT4(0.82f, 0.91f, 0.92f, 1.0f);
-    m_bufferLight.diffuse = XMFLOAT4(0.44f, 0.43f, 0.31f, 1.0f);
-    m_bufferLight.darkness = 0.5f;
+    m_viewProjectionData = nullptr;
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
@@ -23,6 +32,15 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
     hr = device->CreateBuffer(&bufferDesc, NULL, &m_constantLightBuffer);
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
+
+    const float orthoWidth = 640.0f;
+    const float screenAspect = 360.0f;
+    const float nearZ = 0.1f;
+    const float farZ = 200.0f;
+    m_lightProjectionMatrix = XMMatrixOrthographicLH(orthoWidth, screenAspect, nearZ, farZ);
+    UpdateMatrix();
+    m_viewProjectionData = new ViewProjectonData(m_bufferLight.lightViewProj, m_lightProjectionMatrix);
+
     m_device_loader = true;
     return hr;
 }
@@ -33,16 +51,15 @@ void DirectionLight::Update(float deltaTime) {
 
 void DirectionLight::Render(ID3D11DeviceContext* device_context) {
     if (!m_device_loader) return;
-    m_bufferLight.direction = XMFLOAT4(
-        m_transform->rotation().x,
-        m_transform->rotation().y,
-        m_transform->rotation().z, 1.0f);
+
+    UpdateMatrix();
     device_context->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
     device_context->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
 }
 
 void DirectionLight::Release() {
     if (m_constantLightBuffer) m_constantLightBuffer->Release();
+    if (m_viewProjectionData) delete m_viewProjectionData;
 }
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
@@ -64,36 +81,6 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SliderFloat("##Intensity", &m_bufferLight.intensity, 0.0f, 10.0f, "%.2f");
-
-            float ambientColorArray[3] = { 
-                m_bufferLight.ambient.x, m_bufferLight.ambient.y, m_bufferLight.ambient.z };
-            ImGui::Text("Ambient Color");
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::ColorEdit3("##AmbientColorEdit", ambientColorArray)) {
-                XMFLOAT4 color = XMFLOAT4(ambientColorArray[0],
-                    ambientColorArray[1], ambientColorArray[2], m_bufferLight.ambient.w);
-                m_bufferLight.ambient = color;
-            }
-
-            float diffuseColorArray[3] = { 
-                m_bufferLight.diffuse.x, m_bufferLight.diffuse.y, m_bufferLight.diffuse.z };
-            ImGui::Text("Diffuse Color");
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::ColorEdit3("##DiffuseColorEdit", diffuseColorArray)) {
-                XMFLOAT4 color = XMFLOAT4(diffuseColorArray[0],
-                    diffuseColorArray[1], diffuseColorArray[2], m_bufferLight.diffuse.w);
-                m_bufferLight.diffuse = color;
-            }
-
-            ImGui::Text("Drakness");
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SliderFloat("##Drakness", &m_bufferLight.darkness, 0.0f, 1.0f, "%.2f");
         }
         ImGui::EndChild();
 

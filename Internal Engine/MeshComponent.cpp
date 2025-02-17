@@ -3,6 +3,8 @@
 #include "Camera.h"
 #include "Material.h"
 #include "Shader.h"
+#include "ViewProjectonData.h"
+#include "ShadowMap.h"
 
 VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
@@ -87,14 +89,14 @@ void MeshComponent::Update(float deltaTime) {
     }
 }
 
-void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context) {
+void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
     if (!m_device_loader) return;
-    m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
+    m_bufferWVP.WVP = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
     m_bufferWVP.World = XMMatrixTranspose(*m_position);
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
 
-    context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
+    context->UpdateSubresource(m_preObjectBuffer, 0, nullptr, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
 }
 
@@ -102,11 +104,27 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     if (!m_device_loader) return;
 
     m_additionalColor.texture_color = m_material->color();
-    context->UpdateSubresource(m_preObjectSelect, 0, NULL, &m_additionalColor, 0, 0);
+    context->UpdateSubresource(m_preObjectSelect, 0, nullptr, &m_additionalColor, 0, 0);
     context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
 
     IASetVertexAndIndexBuffer(context);
     m_material->Bind(context);
+    context->DrawIndexed(m_indices, 0, 0);
+}
+
+void MeshComponent::RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
+    XMMatrixCPerBuffer view;
+    view.lightView = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
+
+    ID3D11Buffer* buffer = shadowMap.ConstantShadowBuffer();
+    context->UpdateSubresource(buffer, 0, nullptr, &view, 0, 0);
+    context->VSSetConstantBuffers(0, 1, &buffer);
+
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    ID3D11Buffer* vertex = *m_vertexBuffer;
+    context->IASetVertexBuffers(0, 1, &vertex, &stride, &offset);
+    context->IASetIndexBuffer(*m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     context->DrawIndexed(m_indices, 0, 0);
 }
 

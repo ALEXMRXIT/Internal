@@ -11,11 +11,14 @@
 #include "Skybox.h"
 #include "PrimitiveDrawable.h"
 #include "MeshComponent.h"
+#include "ShadowMap.h"
+#include "ViewProjectonData.h"
 
 Engine engine;
 Camera camera;
 Config config;
 PrimitiveDrawable gizmozRect;
+ShadowMap shadowMap;
 
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
     SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -38,18 +41,28 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
 
     RegisterClassEx(&wndClassEx);
 
-    m_windowDesc->windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
+    RECT desiredClientRect = {
+        0, 0,
+        m_supportedResolution[config.resolution].Width,
+        m_supportedResolution[config.resolution].Height
+    };
+
+    DWORD& windowStyle = m_windowDesc->windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
+    AdjustWindowRectEx(&desiredClientRect, windowStyle, FALSE, 0);
 
     m_windowDesc->hWnd = CreateWindowEx(NULL, m_windowDesc->title, m_windowDesc->title,
-        m_windowDesc->windowStyle, 0, 0, m_supportedResolution[config.resolution].Width,
-        m_supportedResolution[config.resolution].Height, NULL, NULL, m_windowDesc->hInstance, NULL);
+        windowStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+        desiredClientRect.right - desiredClientRect.left, 
+        desiredClientRect.bottom - desiredClientRect.top, 
+        NULL, NULL, m_windowDesc->hInstance, NULL);
 
     ShowWindow(m_windowDesc->hWnd, m_windowDesc->nCmdShow);
     UpdateWindow(m_windowDesc->hWnd);
 
-    RECT windowRect;
-    GetWindowRect(m_windowDesc->hWnd, &windowRect);
-    m_windowDesc->rect = windowRect;
+    RECT clientRect;
+    GetClientRect(m_windowDesc->hWnd, &clientRect);
+    m_windowDesc->width = clientRect.right - clientRect.left;
+    m_windowDesc->height = clientRect.bottom - clientRect.top;
 
     return true;
 }
@@ -181,7 +194,7 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
     swapChainDesc.Windowed = TRUE;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    swapChainDesc.Flags = config.fullscreen ? DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH : 0;
 
     D3D_DRIVER_TYPE driverTypes[] = {
         D3D_DRIVER_TYPE_HARDWARE,
@@ -275,15 +288,13 @@ bool Engine::InitRenderDevice() {
         return false;
     }
 
-    D3D11_VIEWPORT viewport;
-    ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.Width = (FLOAT)m_supportedResolution[config.resolution].Width;
-    viewport.Height = (FLOAT)m_supportedResolution[config.resolution].Height;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    m_deviceContext->RSSetViewports(1, &viewport);
+    ZeroMemory(&m_viewport, sizeof(D3D11_VIEWPORT));
+    m_viewport.TopLeftX = 0;
+    m_viewport.TopLeftY = 0;
+    m_viewport.Width = (FLOAT)m_supportedResolution[config.resolution].Width;
+    m_viewport.Height = (FLOAT)m_supportedResolution[config.resolution].Height;
+    m_viewport.MinDepth = 0.0f;
+    m_viewport.MaxDepth = 1.0f;
 
     D3D11_BLEND_DESC blendDesc;
     ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
@@ -312,9 +323,17 @@ bool Engine::InitRenderDevice() {
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
     cmdesc.FillMode = D3D11_FILL_SOLID;
     cmdesc.CullMode = D3D11_CULL_BACK;
-    cmdesc.MultisampleEnable = true;
-    cmdesc.DepthClipEnable = false;
+    cmdesc.FrontCounterClockwise = FALSE;
+    cmdesc.DepthBias = 0;
+    cmdesc.DepthBiasClamp = 0.0f;
+    cmdesc.SlopeScaledDepthBias = 0.0f;
+    cmdesc.DepthClipEnable = TRUE;
+    cmdesc.ScissorEnable = FALSE;
+    cmdesc.MultisampleEnable = FALSE;
+    cmdesc.AntialiasedLineEnable = FALSE;
     hr = m_device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
+    if (FAILED(hr))
+        DXUT_ERR_MSGBOX("Failed to create rasterizer.", hr);
 
     m_meshShader = new Shader();
     hr = m_meshShader->LoadVertexShader(m_device, "VS", "shaders\\mesh.fx");
@@ -323,9 +342,9 @@ bool Engine::InitRenderDevice() {
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loading pixel shader.", hr);
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
     UINT numElements = ARRAYSIZE(layout);
 
@@ -344,9 +363,14 @@ bool Engine::InitScene() {
     m_debugRaycast = config.debugRaycast;
     camera.SetProjection();
 
+    m_viewProjectionData = new ViewProjectonData(camera.getView(), camera.getProjection());
+
     m_font = new Font();
     m_font->Init(m_device);
+
     m_location = new Location(m_device);
+
+    shadowMap.Init(m_device);
 
     gizmozRect.Init(m_device, m_deviceContext);
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
@@ -445,39 +469,48 @@ void Engine::FixedUpdate(float deltaTime) {
 void Engine::Update(float deltaTime) {
     camera.Update();
     m_location->Update(deltaTime);
-    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
         m_meshes[iterator]->Update(deltaTime);
-    }
     m_location->m_skybox->Update(deltaTime);
     m_location->m_directionLight->Update(deltaTime);
 }
 
 void Engine::Render() {
-    float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
+    shadowMap.Render(m_deviceContext, m_location->m_directionLight);
+
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+        if (GameObject* obj = m_meshes[iterator]->gameObject()) {
+            if (obj->isEnabled() && !obj->isTransparent())
+                m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight->viewProjection());
+        }
+    }
 
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+
+    float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
 #endif
 
+    m_deviceContext->RSSetViewports(1, &m_viewport);
+
     m_location->m_skybox->Render(m_deviceContext);
     m_deviceContext->OMSetDepthStencilState(nullptr, 0);
+    m_location->m_directionLight->Render(m_deviceContext);
+
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
     m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-
-    m_location->m_directionLight->Render(m_deviceContext);
-
     // рендерим все непрозрачные объекты
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && !obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext);
+                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData);
         }
     }
 
@@ -486,15 +519,15 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext);
+                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData);
         }
     }
 
     gizmozRect.Render();
 
-    static wchar_t buffer[128];
-    swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
-    m_font->Render(m_deviceContext, buffer);
+    //static wchar_t buffer[128];
+    //swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
+    //m_font->Render(m_deviceContext, buffer);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
@@ -521,12 +554,13 @@ void Engine::Release() {
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_gui->Release();
 #endif
-    if (m_cWcullMode) m_cWcullMode->Release();\
+    if (m_cWcullMode) m_cWcullMode->Release();
     if (m_meshShader) {
         m_meshShader->Release();
         delete m_meshShader;
     }
     if (m_layout) m_layout->Release();
+    if (m_viewProjectionData) delete m_viewProjectionData;
 }
 
 int Engine::messageWindow() {
@@ -648,43 +682,37 @@ void Engine::addMeshRenderer(Model* mesh) {
 }
 
 void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
-    if (!fullscreen) {
-        RECT windowRect;
-        GetWindowRect(hwnd, &windowRect);
-        engine.getWindowRect() = windowRect;
+    static WINDOWPLACEMENT prevPlacement = { sizeof(WINDOWPLACEMENT) };
+    static RECT prevRect = { 0 };
+    DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+    MONITORINFO mi = { sizeof(MONITORINFO) };
 
-        SetWindowLongPtr(hwnd, GWL_STYLE, m_windowDesc->windowStyle);
-        SetWindowPos(hwnd, HWND_TOP, 0, 0,
-            m_supportedResolution[config.resolution].Width,
-            m_supportedResolution[config.resolution].Height,
-            SWP_FRAMECHANGED | SWP_NOACTIVATE);
-        ShowWindow(hwnd, SW_NORMAL);
+    if (!fullscreen) {
+        SetWindowLong(hwnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
+        SetWindowPlacement(hwnd, &prevPlacement);
+        SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+            SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
     }
     else {
-        SetWindowLongPtr(hwnd, GWL_STYLE, m_windowDesc->windowStyle & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
-        RECT rect{};
-        if (IDXGISwapChain* chain = engine.getChain()) {
-            IDXGIOutput* output = nullptr;
-            chain->GetContainingOutput(&output);
-            DXGI_OUTPUT_DESC desc;
-            ZeroMemory(&desc, sizeof(DXGI_OUTPUT_DESC));
-            output->GetDesc(&desc);
-            rect = desc.DesktopCoordinates;
+        GetWindowPlacement(hwnd, &prevPlacement);
+        GetWindowRect(hwnd, &prevRect);
+
+        if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY), &mi)) {
+            SetWindowLong(hwnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN);
+
+            SetWindowPos(hwnd, HWND_TOP,
+                mi.rcMonitor.left, mi.rcMonitor.top,
+                mi.rcMonitor.right - mi.rcMonitor.left,
+                mi.rcMonitor.bottom - mi.rcMonitor.top,
+                SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
         }
-        SetWindowPos(hwnd, HWND_NOTOPMOST,
-            rect.left, rect.top,
-            rect.right, rect.bottom,
-            SWP_FRAMECHANGED | SWP_NOACTIVATE);
-        ShowWindow(hwnd, SW_MAXIMIZE);
     }
+    //engine.getChain()->SetFullscreenState(fullscreen, NULL);
 }
 
 const WindowDescription* Engine::getWindowDesc() const {
     return m_windowDesc;
-}
-
-RECT& Engine::getWindowRect() {
-    return m_windowDesc->rect;
 }
 
 IDXGISwapChain* Engine::getChain() const {

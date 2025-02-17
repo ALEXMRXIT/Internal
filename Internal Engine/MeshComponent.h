@@ -5,6 +5,7 @@
 #include "LoaderNotificationDevice.h"
 
 class MeshMaterial;
+class ViewProjectonData;
 
 struct Vertex {
 	XMFLOAT3 position;
@@ -89,8 +90,9 @@ public:
 	MeshComponent& operator=(const MeshComponent&) = delete;
 
 	void Update(float deltaTime);
-	void UpdateWVPMatrix(ID3D11DeviceContext* context);
+	void UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection);
 	void Render(ID3D11DeviceContext* context);
+	void RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection);
 
 	void setMatrix(XMMATRIX& position) override;
 	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);

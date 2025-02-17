@@ -3,20 +3,24 @@
 #include "Transform.h"
 #include "AbstractBaseComponent.h"
 #include "LoaderNotificationDevice.h"
+#include "ViewProjectonData.h"
 
 __declspec(align(16))
 struct BufferDirectionLight {
 	XMFLOAT4 direction;
-	XMFLOAT4 ambient;
-	XMFLOAT4 diffuse;
 	float intensity;
-	float darkness;
+	XMMATRIX lightViewProj;
 };
 
 class DirectionLight : public AbstractBaseComponent, public LoaderNotificationDevice {
 private:
 	ID3D11Buffer* m_constantLightBuffer;
 	BufferDirectionLight m_bufferLight;
+	XMMATRIX m_lightProjectionMatrix;
+	ViewProjectonData* m_viewProjectionData;
+
+private:
+	void UpdateMatrix();
 
 public:
 	Transform* m_transform;
@@ -29,6 +33,7 @@ public:
 	void Update(float deltaTime);
 	void Render(ID3D11DeviceContext* device_context);
 	void Release();
+	inline const ViewProjectonData& viewProjection() const { return *m_viewProjectionData; }
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	void UpdateInterfaceInInspector(GameObject* gameObject) override;
