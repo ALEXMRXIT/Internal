@@ -11,6 +11,7 @@
 #include "Skybox.h"
 #include "PrimitiveDrawable.h"
 #include "MeshComponent.h"
+#include "ShadowMap.h"
 
 Engine engine;
 Camera camera;
@@ -275,15 +276,13 @@ bool Engine::InitRenderDevice() {
         return false;
     }
 
-    D3D11_VIEWPORT viewport;
-    ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.Width = (FLOAT)m_supportedResolution[config.resolution].Width;
-    viewport.Height = (FLOAT)m_supportedResolution[config.resolution].Height;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    m_deviceContext->RSSetViewports(1, &viewport);
+    ZeroMemory(&m_viewport, sizeof(D3D11_VIEWPORT));
+    m_viewport.TopLeftX = 0;
+    m_viewport.TopLeftY = 0;
+    m_viewport.Width = (FLOAT)m_supportedResolution[config.resolution].Width;
+    m_viewport.Height = (FLOAT)m_supportedResolution[config.resolution].Height;
+    m_viewport.MinDepth = 0.0f;
+    m_viewport.MaxDepth = 1.0f;
 
     D3D11_BLEND_DESC blendDesc;
     ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
@@ -323,9 +322,9 @@ bool Engine::InitRenderDevice() {
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loading pixel shader.", hr);
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
     UINT numElements = ARRAYSIZE(layout);
 
@@ -346,7 +345,11 @@ bool Engine::InitScene() {
 
     m_font = new Font();
     m_font->Init(m_device);
+
     m_location = new Location(m_device);
+
+    m_shadowMap = new ShadowMap();
+    m_shadowMap->Init(m_device);
 
     gizmozRect.Init(m_device, m_deviceContext);
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
@@ -453,24 +456,41 @@ void Engine::Update(float deltaTime) {
 }
 
 void Engine::Render() {
+    m_shadowMap->Render(m_deviceContext, m_location->m_directionLight);
+
     float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
-
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-#ifdef INTERNAL_ENGINE_GUI_INTERFACE
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
-#endif
-
-    m_location->m_skybox->Render(m_deviceContext);
-    m_deviceContext->OMSetDepthStencilState(nullptr, 0);
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
     m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+    m_location->m_directionLight->Render(m_deviceContext);
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+        if (GameObject* obj = m_meshes[iterator]->gameObject()) {
+            if (obj->isEnabled() && !obj->isTransparent())
+                m_meshes[iterator]->Render(m_deviceContext);
+        }
+    }
 
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
+#endif
+
+    m_deviceContext->RSSetViewports(1, &m_viewport);
+
+    m_location->m_skybox->Render(m_deviceContext);
+    m_deviceContext->OMSetDepthStencilState(nullptr, 0);
+
+    m_deviceContext->IASetInputLayout(m_layout);
+    m_meshShader->setVertexShader(m_deviceContext);
+    m_meshShader->setPiexlShader(m_deviceContext);
+    m_deviceContext->RSSetState(m_cWcullMode);
+    m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
     m_location->m_directionLight->Render(m_deviceContext);
 
     // рендерим все непрозрачные объекты

@@ -64,11 +64,11 @@ HRESULT Shader::LoadPixelShader(ID3D11Device* device, const char* entry, const c
 }
 
 void Shader::setVertexShader(ID3D11DeviceContext* context) const {
-    context->VSSetShader(m_vertexShader, 0, 0);
+    context->VSSetShader(m_vertexShader, nullptr, 0);
 }
 
 void Shader::setPiexlShader(ID3D11DeviceContext* context) const {
-    context->PSSetShader(m_pixelShader, 0, 0);
+    context->PSSetShader(m_pixelShader, nullptr, 0);
 }
 
 void Shader::Release() {

@@ -15,6 +15,7 @@ class Location;
 class Skybox;
 class GameObject;
 class PrimitiveDrawable;
+class ShadowMap;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -64,6 +65,7 @@ private:
 	ID3D11Texture2D* m_renderTexture = nullptr;
 	ID3D11ShaderResourceView* m_renderTextureSRV = nullptr;
 	ID3D11RenderTargetView* m_renderTextureRTV = nullptr;
+	D3D11_VIEWPORT m_viewport;
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	ImGUIDevice* m_gui = nullptr;
 	XMFLOAT2 m_scenePos;
@@ -78,6 +80,7 @@ private:
 
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font = nullptr;
+	ShadowMap* m_shadowMap = nullptr;
 
 	bool m_SwapChainOccluded;
 	bool m_raycastEnabled;

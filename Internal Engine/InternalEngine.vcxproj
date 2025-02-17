@@ -157,6 +157,7 @@
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="PrimitiveDrawable.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
@@ -186,6 +187,7 @@
     <ClInclude Include="Physics.h" />
     <ClInclude Include="PrimitiveDrawable.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="SharedObject.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Transform.h" />

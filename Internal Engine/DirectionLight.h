@@ -11,12 +11,14 @@ struct BufferDirectionLight {
 	XMFLOAT4 diffuse;
 	float intensity;
 	float darkness;
+	XMMATRIX lightView;
 };
 
 class DirectionLight : public AbstractBaseComponent, public LoaderNotificationDevice {
 private:
 	ID3D11Buffer* m_constantLightBuffer;
 	BufferDirectionLight m_bufferLight;
+	XMMATRIX m_lightProjectionMatrix;
 
 public:
 	Transform* m_transform;
@@ -28,6 +30,7 @@ public:
 
 	void Update(float deltaTime);
 	void Render(ID3D11DeviceContext* device_context);
+	XMMATRIX& ProjectionLightView();
 	void Release();
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE

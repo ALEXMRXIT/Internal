@@ -94,7 +94,7 @@ void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context) {
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
 
-    context->UpdateSubresource(m_preObjectBuffer, 0, NULL, &m_bufferWVP, 0, 0);
+    context->UpdateSubresource(m_preObjectBuffer, 0, nullptr, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
 }
 
@@ -102,7 +102,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
     if (!m_device_loader) return;
 
     m_additionalColor.texture_color = m_material->color();
-    context->UpdateSubresource(m_preObjectSelect, 0, NULL, &m_additionalColor, 0, 0);
+    context->UpdateSubresource(m_preObjectSelect, 0, nullptr, &m_additionalColor, 0, 0);
     context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
 
     IASetVertexAndIndexBuffer(context);

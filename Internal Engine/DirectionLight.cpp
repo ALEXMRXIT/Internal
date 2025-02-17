@@ -23,6 +23,13 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
     hr = device->CreateBuffer(&bufferDesc, NULL, &m_constantLightBuffer);
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
+
+    const float orthoWidth = 20.0f;
+    const float orthoHeight = 20.0f;
+    const float nearZ = 0.1f;
+    const float farZ = 1000.0f;
+    m_lightProjectionMatrix = XMMatrixOrthographicLH(orthoWidth, orthoHeight, nearZ, farZ);
+
     m_device_loader = true;
     return hr;
 }
@@ -33,12 +40,27 @@ void DirectionLight::Update(float deltaTime) {
 
 void DirectionLight::Render(ID3D11DeviceContext* device_context) {
     if (!m_device_loader) return;
+    
+    ProjectionLightView();
+    device_context->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
+    device_context->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
+}
+
+XMMATRIX& DirectionLight::ProjectionLightView() {
     m_bufferLight.direction = XMFLOAT4(
         m_transform->rotation().x,
         m_transform->rotation().y,
         m_transform->rotation().z, 1.0f);
-    device_context->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
-    device_context->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
+
+    XMVECTOR lightDirection = XMVector3Normalize(XMLoadFloat3(&m_transform->rotation()));
+    XMMATRIX lightViewMatrix = XMMatrixLookAtLH(
+        XMVectorSet(m_transform->position().x, m_transform->position().y, m_transform->position().z, 1.0f),
+        lightDirection,
+        XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+    );
+
+    m_bufferLight.lightView = XMMatrixTranspose(lightViewMatrix * m_lightProjectionMatrix);
+    return m_bufferLight.lightView;
 }
 
 void DirectionLight::Release() {
