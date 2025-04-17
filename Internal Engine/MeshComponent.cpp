@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "Shader.h"
 #include "ViewProjectonData.h"
+#include "ShadowMap.h"
 
 VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
@@ -108,6 +109,16 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 
     IASetVertexAndIndexBuffer(context);
     m_material->Bind(context);
+    context->DrawIndexed(m_indices, 0, 0);
+}
+
+void MeshComponent::RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
+    IASetVertexAndIndexBuffer(context);
+
+    XMMatrixCPerBuffer view;
+    view.lightView = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
+    ID3D11Buffer* buffer = shadowMap.ConstantShadowBuffer();
+    context->UpdateSubresource(buffer, 0, nullptr, &view, 0, 0);
     context->DrawIndexed(m_indices, 0, 0);
 }
 

@@ -16,6 +16,7 @@ public:
 	struct TextureMapInfo {
 		ID3D11ShaderResourceView* m_shaderView;
 		ID3D11SamplerState* m_textureSamplerState;
+		ID3D11SamplerState* m_shadowSamplerState;
 		const char* name;
 		void Load(ID3D11Device* device);
 		void Release();

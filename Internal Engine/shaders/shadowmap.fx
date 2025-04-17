@@ -3,26 +3,12 @@ cbuffer cbPerObject : register(b0)
     float4x4 WVP;
 };
 
-struct VS_INPUT
+float4 VS(float3 position : POSITION) : SV_POSITION
 {
-    float4 Pos : POSITION;
-};
-
-struct VS_OUTPUT
-{
-    float4 Pos : SV_POSITION;
-    float Depth : TEXCOORD0;
-};
-
-VS_OUTPUT VS(VS_INPUT input)
-{
-    VS_OUTPUT output;
-    output.Pos = mul(input.Pos, WVP);
-    output.Depth = input.Pos.z / input.Pos.w;
-    return output;
+    return mul(float4(position, 1.0f), WVP);
 }
 
-float4 PS(VS_OUTPUT input) : SV_Target
+float4 PS() : SV_Target
 {
-    return float4(input.Depth, input.Depth, input.Depth, 1.0f);
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
 }

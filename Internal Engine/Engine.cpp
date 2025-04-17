@@ -18,6 +18,7 @@ Engine engine;
 Camera camera;
 Config config;
 PrimitiveDrawable gizmozRect;
+ShadowMap shadowMap;
 
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
     SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -312,9 +313,17 @@ bool Engine::InitRenderDevice() {
     ZeroMemory(&cmdesc, sizeof(D3D11_RASTERIZER_DESC));
     cmdesc.FillMode = D3D11_FILL_SOLID;
     cmdesc.CullMode = D3D11_CULL_BACK;
-    cmdesc.MultisampleEnable = true;
-    cmdesc.DepthClipEnable = false;
+    cmdesc.FrontCounterClockwise = FALSE;
+    cmdesc.DepthBias = 0;
+    cmdesc.DepthBiasClamp = 0.0f;
+    cmdesc.SlopeScaledDepthBias = 0.0f;
+    cmdesc.DepthClipEnable = TRUE;
+    cmdesc.ScissorEnable = FALSE;
+    cmdesc.MultisampleEnable = FALSE;
+    cmdesc.AntialiasedLineEnable = FALSE;
     hr = m_device->CreateRasterizerState(&cmdesc, &m_cWcullMode);
+    if (FAILED(hr))
+        DXUT_ERR_MSGBOX("Failed to create rasterizer.", hr);
 
     m_meshShader = new Shader();
     hr = m_meshShader->LoadVertexShader(m_device, "VS", "shaders\\mesh.fx");
@@ -351,8 +360,7 @@ bool Engine::InitScene() {
 
     m_location = new Location(m_device);
 
-    m_shadowMap = new ShadowMap();
-    m_shadowMap->Init(m_device);
+    shadowMap.Init(m_device);
 
     gizmozRect.Init(m_device, m_deviceContext);
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
@@ -459,32 +467,28 @@ void Engine::Update(float deltaTime) {
 }
 
 void Engine::Render() {
-    float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
-    m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    shadowMap.Render(m_deviceContext, m_location->m_directionLight);
 
-    m_shadowMap->Render(m_deviceContext, m_location->m_directionLight);
-
-    m_deviceContext->IASetInputLayout(m_layout);
-    m_meshShader->setVertexShader(m_deviceContext);
-    m_meshShader->setPiexlShader(m_deviceContext);
-    m_deviceContext->RSSetState(m_cWcullMode);
-    m_location->m_directionLight->Render(m_deviceContext);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && !obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight->viewProjection());
+                m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight->viewProjection());
         }
     }
 
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
+    float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
+    m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
+    //m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
 #endif
 
     m_deviceContext->RSSetViewports(1, &m_viewport);
 
+    m_location->m_directionLight->Render(m_deviceContext);
     m_location->m_skybox->Render(m_deviceContext);
     m_deviceContext->OMSetDepthStencilState(nullptr, 0);
 
@@ -493,7 +497,6 @@ void Engine::Render() {
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
     m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-
     // рендерим все непрозрачные объекты
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
@@ -511,15 +514,15 @@ void Engine::Render() {
         }
     }
 
-    gizmozRect.Render();
+    //gizmozRect.Render();
 
-    static wchar_t buffer[128];
-    swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
-    m_font->Render(m_deviceContext, buffer);
+    //static wchar_t buffer[128];
+    //swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
+    //m_font->Render(m_deviceContext, buffer);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
-    m_gui->Render();
+    //m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+    //m_gui->Render();
 #endif
 
     HRESULT hr = m_swapChain->Present(min(config.vSync, 2), 0);

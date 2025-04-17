@@ -17,6 +17,10 @@ void Model::Render(ID3D11DeviceContext* context, const ViewProjectonData& viewPr
 	m_component.Render(context);
 }
 
+void Model::RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
+	m_component.RenderShadow(context, viewProjection);
+}
+
 void Model::Release() {
 	if (m_obj) delete m_obj;
 

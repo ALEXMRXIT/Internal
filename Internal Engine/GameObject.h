@@ -48,12 +48,12 @@ public:
 	bool isEnabled() const { return m_enable; }
 	bool isTransparent() const;
 
-	__forceinline Transform& transform() const { return m_components->transform(); }
+	Transform& transform() const { return m_components->transform(); }
 
-	void setPosition(const XMFLOAT3& vector) const { transform().setPosition(vector); }
+	inline void setPosition(const XMFLOAT3& vector) const { transform().setPosition(vector); }
 	XMFLOAT3& position() const { return transform().position(); }
-	void setRotation(const XMFLOAT3& vector) const { transform().setRotation(vector); }
+	inline void setRotation(const XMFLOAT3& vector) const { transform().setRotation(vector); }
 	XMFLOAT3& rotation() const { return transform().rotation(); }
-	void setScale(const XMFLOAT3& vector) const { transform().setScale(vector); }
+	inline void setScale(const XMFLOAT3& vector) const { transform().setScale(vector); }
 	XMFLOAT3& scale() const { return transform().scale(); }
 };

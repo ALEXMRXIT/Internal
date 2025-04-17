@@ -31,6 +31,15 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
     const float farZ = 5000.0f;
     m_lightProjectionMatrix = XMMatrixOrthographicLH(orthoWidth, screenAspect, nearZ, farZ);
 
+    XMFLOAT3 rotation = m_transform->rotation();
+    XMVECTOR rotationNormalize = XMVector3Normalize(XMLoadFloat3(&rotation));
+    XMVECTOR camLookAt = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+    XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+    XMMATRIX lightViewMatrix = XMMatrixLookAtLH(rotationNormalize, camLookAt, Up);
+    m_bufferLight.lightView = XMMatrixTranspose(lightViewMatrix);
+    m_bufferLight.direction = XMFLOAT4(rotation.x, rotation.y, rotation.z, 1.0f);
+
     m_viewProjectionData = new ViewProjectonData(m_bufferLight.lightView, m_lightProjectionMatrix);
 
     m_device_loader = true;
@@ -39,16 +48,6 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
 
 void DirectionLight::Update(float deltaTime) {
     if (!m_device_loader) return;
-
-    XMFLOAT3 rotation = m_transform->rotation();
-    XMVECTOR rotationNormalize = XMVector3Normalize(XMLoadFloat3(&rotation));
-    XMVECTOR camLookAt = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-    XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-    XMMATRIX lightViewMatrix = XMMatrixLookAtLH(rotationNormalize, camLookAt, Up);
-    XMMATRIX lightViewAndProj = lightViewMatrix * m_lightProjectionMatrix;
-    m_bufferLight.lightView = XMMatrixTranspose(lightViewAndProj);
-    m_bufferLight.direction = XMFLOAT4(rotation.x, rotation.y, rotation.z, 1.0f);
 }
 
 void DirectionLight::Render(ID3D11DeviceContext* device_context) {

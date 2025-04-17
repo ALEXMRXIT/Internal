@@ -34,7 +34,6 @@ struct VS_OUTPUT
     float4 Pos : SV_POSITION;
     float2 TexCoord : TEXCOORD;
     float3 Normal : NORMAL;
-    float3 WorldPos : TEXCOORD1;
     float4 ShadowPos : TEXCOORD2;
 };
 
@@ -43,67 +42,79 @@ VS_OUTPUT VS(VS_INPUT input)
     VS_OUTPUT output;
     
     output.Pos = mul(input.Pos, WVP);
-    output.Normal = mul(input.Normal, (float3x3) World);
+    output.Normal = mul(input.Normal, (float3x3)World);
     output.Normal = normalize(output.Normal);
     output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
-    output.WorldPos = mul(input.Pos, World).xyz;
-    output.ShadowPos = mul(float4(output.WorldPos, 1.0f), lightView);
+    output.ShadowPos = mul(input.Pos, lightView);
     
     return output;
 }
 
 Texture2D ObjTexture : register(t0);
 Texture2D ShadowMap : register(t1);
+
 SamplerState ObjSamplerState : register(s0);
-SamplerState ShadowSamplerState : register(s1);
+SamplerComparisonState gSamShadow : register(s1)
+{
+    Filter = COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+    AddressU = Border;
+    AddressV = Border;
+    BorderColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    ComparisonFunc = LESS_EQUAL;
+};
 
 float CalculateShadow(float4 shadowPos)
 {
-    shadowPos.xyz /= shadowPos.w;
-    float2 shadowUV = shadowPos.xy * 0.5f + 0.5f;
-    shadowUV.y = 1.0f - shadowUV.y; // Flip Y для DirectX текстуры
-
-    // Глубина в пространстве света [0, 1]
-    float depth = shadowPos.z;
-
-    // Bias для избежания self-shadowing
+    float3 projCoords = shadowPos.xyz / shadowPos.w;
+    
+    projCoords.xy = 0.5f * projCoords.xy + 0.5f;
+    projCoords.y = 1.0f - projCoords.y;
+    
+    if (projCoords.z > 1.0f || projCoords.x < 0.0f || projCoords.x > 1.0f ||
+       projCoords.y < 0.0f || projCoords.y > 1.0f)
+        return 1.0f;
+    
     const float bias = 0.001f;
-    depth -= bias;
-
-    // Проверка границ
-    if (shadowUV.x < 0.0f || shadowUV.x > 1.0f ||
-        shadowUV.y < 0.0f || shadowUV.y > 1.0f ||
-        depth < 0.0f || depth > 1.0f)
+    float shadow = 0.0f;
+    float2 texelSize = 1.0f / 2048.0f;
+    
+    for (int x = -1; x <= 1; ++x)
     {
-        return 1.0f; // Вне тени
+        for (int y = -1; y <= 1; ++y)
+        {
+            float depth = ShadowMap.SampleCmpLevelZero(gSamShadow,
+                projCoords.xy + float2(x, y) * texelSize, projCoords.z - bias);
+            shadow += depth;
+        }
     }
-
-    // Сравниваем глубину
-    float shadowDepth = ShadowMap.Sample(ShadowSamplerState, shadowUV).r;
-    return (depth <= shadowDepth) ? 1.0f : darkness; // darkness = 0.3f например
+    
+    return shadow / 9.0f;
 }
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    //float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    //
+    //if (color.a == 0.0f)
+    //    return float4(0.3f, 0.3f, 0.3f, alpha);
+    //
+    //float3 lightDir = normalize(-direction.xyz);
+    //
+    //float diffuseFactor = saturate(dot(input.Normal, lightDir));
+    //float shadowFactor = 1.0 - diffuseFactor;
+    //
+    //float3 shadowColor = lerp(float3(0, 0, 0), color.rgb, darkness);
+    //
+    //float3 finalColor = (ambient.rgb * color.rgb) + (diffuseFactor * diffuse.rgb * color.rgb * intensity);
+    //finalColor = lerp(finalColor, shadowColor, shadowFactor);
+    //
+    //float shadow = CalculateShadow(input.ShadowPos);
+    //finalColor *= shadow;
+    //
+    //float3 baseColor = finalColor + texture_color.rgb;
+    //
+    //return float4(baseColor, color.a * alpha);
     
-    if (color.a == 0.0f)
-        return float4(0.3f, 0.3f, 0.3f, alpha);
-    
-    float3 lightDir = normalize(-direction.xyz);
-    
-    float diffuseFactor = saturate(dot(input.Normal, lightDir));
-    float shadowFactor = 1.0 - diffuseFactor;
-    
-    float3 shadowColor = lerp(float3(0, 0, 0), color.rgb, darkness);
-    
-    float3 finalColor = (ambient.rgb * color.rgb) + (diffuseFactor * diffuse.rgb * color.rgb * intensity);
-    finalColor = lerp(finalColor, shadowColor, shadowFactor);
-    
-    float shadow = CalculateShadow(input.ShadowPos);
-    finalColor *= shadow;
-    
-    float3 baseColor = finalColor + texture_color.rgb;
-    
-    return float4(baseColor, color.a * alpha);
+    float depth = ShadowMap.SampleLevel(ObjSamplerState, input.ShadowPos.xy, 0).r;
+    return float4(depth, depth, depth, 1.0f);
 }

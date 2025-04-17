@@ -82,7 +82,6 @@ private:
 
 	PerfomanceTimeInfo m_timeInfo;
 	Font* m_font = nullptr;
-	ShadowMap* m_shadowMap = nullptr;
 
 	bool m_SwapChainOccluded;
 	bool m_raycastEnabled;
@@ -138,3 +137,4 @@ extern Engine engine;
 extern Config config;
 extern Camera camera;
 extern PrimitiveDrawable gizmozRect;
+extern ShadowMap shadowMap;
