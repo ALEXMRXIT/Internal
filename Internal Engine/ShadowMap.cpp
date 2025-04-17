@@ -98,6 +98,8 @@ void ShadowMap::Init(ID3D11Device* device) {
 }
 
 void ShadowMap::Render(ID3D11DeviceContext* context, DirectionLight* light) {
+    ID3D11ShaderResourceView* nullSRVs[2] = { nullptr, nullptr };
+    context->PSSetShaderResources(1, 2, nullSRVs);
     context->OMSetRenderTargets(0, nullptr, m_shadowMapDepthStencilView);
     context->ClearDepthStencilView(m_shadowMapDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -105,7 +107,7 @@ void ShadowMap::Render(ID3D11DeviceContext* context, DirectionLight* light) {
 
     context->IASetInputLayout(m_pShadowLayout);
     m_shadowShader->setVertexShader(context);
-    m_shadowShader->setPiexlShader(context);
+    context->PSSetShader(nullptr, nullptr, 0);
 
     context->RSSetState(m_pShadowRasterizerState);
 

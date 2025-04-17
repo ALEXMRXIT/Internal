@@ -45,7 +45,7 @@ VS_OUTPUT VS(VS_INPUT input)
     output.Normal = mul(input.Normal, (float3x3)World);
     output.Normal = normalize(output.Normal);
     output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
-    output.ShadowPos = mul(input.Pos, lightView);
+    output.ShadowPos = mul(float4(input.Pos.xyz, 1.0f), lightView);
     
     return output;
 }
@@ -56,7 +56,7 @@ Texture2D ShadowMap : register(t1);
 SamplerState ObjSamplerState : register(s0);
 SamplerComparisonState gSamShadow : register(s1)
 {
-    Filter = COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+    Filter = COMPARISON_MIN_MAG_MIP_LINEAR;
     AddressU = Border;
     AddressV = Border;
     BorderColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -115,6 +115,6 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     //
     //return float4(baseColor, color.a * alpha);
     
-    float depth = ShadowMap.SampleLevel(ObjSamplerState, input.ShadowPos.xy, 0).r;
+    float depth = ShadowMap.SampleLevel(ObjSamplerState, input.ShadowPos.xy, input.ShadowPos.w).r;
     return float4(depth, depth, depth, 1.0f);
 }

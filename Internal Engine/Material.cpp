@@ -69,7 +69,7 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
 
 	D3D11_SAMPLER_DESC shadowSampDesc;
 	ZeroMemory(&shadowSampDesc, sizeof(D3D11_SAMPLER_DESC));
-	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
 	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;

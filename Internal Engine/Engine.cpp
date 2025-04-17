@@ -488,9 +488,9 @@ void Engine::Render() {
 
     m_deviceContext->RSSetViewports(1, &m_viewport);
 
-    m_location->m_directionLight->Render(m_deviceContext);
     m_location->m_skybox->Render(m_deviceContext);
     m_deviceContext->OMSetDepthStencilState(nullptr, 0);
+    m_location->m_directionLight->Render(m_deviceContext);
 
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
