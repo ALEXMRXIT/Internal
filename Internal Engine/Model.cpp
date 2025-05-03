@@ -1,5 +1,6 @@
 #include "Model.h"
 #include "Material.h"
+#include "ViewProjectonData.h"
 
 Model::Model(MeshComponent& component) : m_component(component) {
 	m_component.model = this;
@@ -10,8 +11,8 @@ void Model::Update(float deltaTime) {
 	m_component.Update(deltaTime);
 }
 
-void Model::Render(ID3D11DeviceContext* context) {
-	m_component.UpdateWVPMatrix(context);
+void Model::Render(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
+	m_component.UpdateWVPMatrix(context, viewProjection);
 
 	m_component.Render(context);
 }

@@ -13,6 +13,8 @@ class ShadowMap {
 private:
 	UINT m_width, m_height = 0;
 	ID3D11Texture2D* m_shadowMapTexture = nullptr;
+	ID3D11Texture2D* m_depthTexture = nullptr;
+	ID3D11RenderTargetView* m_renderTargetView = nullptr;
 	ID3D11DepthStencilView* m_shadowMapDepthStencilView = nullptr;
 	ID3D11ShaderResourceView* m_shadowMapSRV = nullptr;
 	ID3D11SamplerState* m_shadowMapSampler = nullptr;

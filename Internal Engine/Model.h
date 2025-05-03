@@ -4,6 +4,7 @@
 #include "SharedObject.h"
 
 class GameObject;
+class ViewProjectonData;
 
 class Model : public SharedObject, public Physics {
 private:
@@ -17,7 +18,7 @@ public:
 	Model& operator=(const Model&) = delete;
 
 	void Update(float deltaTime);
-	void Render(ID3D11DeviceContext* context);
+	void Render(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection);
 	void Release();
 
 	HRESULT Init(ID3D11Device* device) override;

@@ -25,7 +25,7 @@ public:
 	void Update();
 	void SetProjection();
 
-	XMMATRIX getView() const { return view; }
-	XMMATRIX getProjection() const { return projection; }
-	XMVECTOR getPos() const { return position; }
+	inline const XMMATRIX& getView() const { return view; }
+	inline const XMMATRIX& getProjection() const { return projection; }
+	inline const XMVECTOR& getPos() const { return position; }
 } camera;

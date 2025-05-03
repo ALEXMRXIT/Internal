@@ -12,6 +12,7 @@
 #include "PrimitiveDrawable.h"
 #include "MeshComponent.h"
 #include "ShadowMap.h"
+#include "ViewProjectonData.h"
 
 Engine engine;
 Camera camera;
@@ -343,6 +344,8 @@ bool Engine::InitScene() {
     m_debugRaycast = config.debugRaycast;
     camera.SetProjection();
 
+    m_viewProjectionData = new ViewProjectonData(camera.getView(), camera.getProjection());
+
     m_font = new Font();
     m_font->Init(m_device);
 
@@ -456,22 +459,21 @@ void Engine::Update(float deltaTime) {
 }
 
 void Engine::Render() {
-    m_shadowMap->Render(m_deviceContext, m_location->m_directionLight);
-
     float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+    m_location->m_directionLight->Render(m_deviceContext);
+    m_shadowMap->Render(m_deviceContext, m_location->m_directionLight);
 
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
-    m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-    m_location->m_directionLight->Render(m_deviceContext);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && !obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext);
+                m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight->viewProjection());
         }
     }
 
@@ -491,13 +493,12 @@ void Engine::Render() {
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
     m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-    m_location->m_directionLight->Render(m_deviceContext);
 
     // рендерим все непрозрачные объекты
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && !obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext);
+                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData);
         }
     }
 
@@ -506,7 +507,7 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext);
+                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData);
         }
     }
 
@@ -547,6 +548,7 @@ void Engine::Release() {
         delete m_meshShader;
     }
     if (m_layout) m_layout->Release();
+    if (m_viewProjectionData) delete m_viewProjectionData;
 }
 
 int Engine::messageWindow() {

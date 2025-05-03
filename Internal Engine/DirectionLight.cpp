@@ -1,6 +1,7 @@
 #include "DirectionLight.h"
 #include "debug.h"
 #include "ImGUI/imgui_internal.h"
+#include "ViewProjectonData.h"
 
 DirectionLight::DirectionLight() {
     m_constantLightBuffer = nullptr;
@@ -24,11 +25,13 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
 
-    const float orthoWidth = 20.0f;
-    const float orthoHeight = 20.0f;
-    const float nearZ = 0.1f;
-    const float farZ = 1000.0f;
-    m_lightProjectionMatrix = XMMatrixOrthographicLH(orthoWidth, orthoHeight, nearZ, farZ);
+    const float orthoWidth = (float)XM_PI / 2.0f;
+    const float screenAspect = 1.0f;
+    const float nearZ = 1.0f;
+    const float farZ = 100.0f;
+    m_lightProjectionMatrix = XMMatrixPerspectiveFovLH(orthoWidth, screenAspect, nearZ, farZ);
+
+    m_viewProjectionData = new ViewProjectonData(m_bufferLight.lightView, m_lightProjectionMatrix);
 
     m_device_loader = true;
     return hr;
@@ -46,25 +49,20 @@ void DirectionLight::Render(ID3D11DeviceContext* device_context) {
     device_context->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
 }
 
-XMMATRIX& DirectionLight::ProjectionLightView() {
-    m_bufferLight.direction = XMFLOAT4(
-        m_transform->rotation().x,
-        m_transform->rotation().y,
-        m_transform->rotation().z, 1.0f);
+XMMATRIX DirectionLight::ProjectionLightView() {
+    XMFLOAT3& pos = m_transform->position();
+    XMVECTOR camPos = XMVectorSet(pos.x, pos.y, pos.z, 0.0f);
+    XMVECTOR camLookAt = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+    XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-    XMVECTOR lightDirection = XMVector3Normalize(XMLoadFloat3(&m_transform->rotation()));
-    XMMATRIX lightViewMatrix = XMMatrixLookAtLH(
-        XMVectorSet(m_transform->position().x, m_transform->position().y, m_transform->position().z, 1.0f),
-        lightDirection,
-        XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
-    );
-
-    m_bufferLight.lightView = XMMatrixTranspose(lightViewMatrix * m_lightProjectionMatrix);
-    return m_bufferLight.lightView;
+    XMMATRIX lightViewMatrix = XMMatrixLookAtLH(camPos, camLookAt, Up);
+    m_bufferLight.lightView = XMMatrixTranspose(lightViewMatrix);
+    return XMMatrixMultiply(lightViewMatrix, m_lightProjectionMatrix);
 }
 
 void DirectionLight::Release() {
     if (m_constantLightBuffer) m_constantLightBuffer->Release();
+    if (m_viewProjectionData) delete m_viewProjectionData;
 }
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE

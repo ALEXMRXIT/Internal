@@ -20,15 +20,50 @@ void ShadowMap::Init(ID3D11Device* device) {
     texDesc.Height = m_height;
     texDesc.MipLevels = 1;
     texDesc.ArraySize = 1;
-    texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     texDesc.SampleDesc.Count = 1;
     texDesc.SampleDesc.Quality = 0;
     texDesc.Usage = D3D11_USAGE_DEFAULT;
-    texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+    texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
     texDesc.CPUAccessFlags = 0;
     texDesc.MiscFlags = 0;
-
     HRESULT hr = device->CreateTexture2D(&texDesc, nullptr, &m_shadowMapTexture);
+    if (FAILED(hr))
+        DXUT_ERR_MSGBOX("Failed to create texture.", hr);
+
+    D3D11_RENDER_TARGET_VIEW_DESC renderTargetDesc;
+    ZeroMemory(&renderTargetDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+    renderTargetDesc.Format = texDesc.Format;
+    renderTargetDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    renderTargetDesc.Texture2D.MipSlice = 0;
+    hr = device->CreateRenderTargetView(m_shadowMapTexture, &renderTargetDesc, &m_renderTargetView);
+    if (FAILED(hr))
+        DXUT_ERR_MSGBOX("Failed to create render target shadow map.", hr);
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+    srvDesc.Format = texDesc.Format;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    hr = device->CreateShaderResourceView(m_shadowMapTexture, &srvDesc, &m_shadowMapSRV);
+    if (FAILED(hr))
+        DXUT_ERR_MSGBOX("Failed to create shader resource view.", hr);
+
+    D3D11_TEXTURE2D_DESC depthBufferDesc;
+    ZeroMemory(&depthBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    depthBufferDesc.Width = m_width;
+    depthBufferDesc.Height = m_height;
+    depthBufferDesc.MipLevels = 1;
+    depthBufferDesc.ArraySize = 1;
+    depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthBufferDesc.SampleDesc.Count = 1;
+    depthBufferDesc.SampleDesc.Quality = 0;
+    depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthBufferDesc.CPUAccessFlags = 0;
+    depthBufferDesc.MiscFlags = 0;
+    hr = device->CreateTexture2D(&depthBufferDesc, nullptr, &m_depthTexture);
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create texture.", hr);
 
@@ -37,21 +72,9 @@ void ShadowMap::Init(ID3D11Device* device) {
     dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     dsvDesc.Texture2D.MipSlice = 0;
-
-    hr = device->CreateDepthStencilView(m_shadowMapTexture, &dsvDesc, &m_shadowMapDepthStencilView);
+    hr = device->CreateDepthStencilView(m_depthTexture, &dsvDesc, &m_shadowMapDepthStencilView);
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create depth stencil view.", hr);
-
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-    ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-
-    hr = device->CreateShaderResourceView(m_shadowMapTexture, &srvDesc, &m_shadowMapSRV);
-    if (FAILED(hr))
-        DXUT_ERR_MSGBOX("Failed to create shader resource view.", hr);
 
     D3D11_SAMPLER_DESC samplerDesc;
     ZeroMemory(&samplerDesc, sizeof(samplerDesc));
@@ -104,33 +127,30 @@ void ShadowMap::Init(ID3D11Device* device) {
 }
 
 void ShadowMap::Render(ID3D11DeviceContext* context, DirectionLight* light) {
+    context->OMSetRenderTargets(1, &m_renderTargetView, m_shadowMapDepthStencilView);
     context->RSSetViewports(1, &m_viewport);
+    const float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    context->ClearRenderTargetView(m_renderTargetView, color);
     context->ClearDepthStencilView(m_shadowMapDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-    context->OMSetRenderTargets(0, nullptr, m_shadowMapDepthStencilView);
 
+    context->IASetInputLayout(m_layout);
     m_shadowShader->setVertexShader(context);
     m_shadowShader->setPiexlShader(context);
-    context->IASetInputLayout(m_layout);
 
     XMMatrixCPerBuffer view;
     view.lightView = light->ProjectionLightView();
 
     context->UpdateSubresource(m_constantBuffer, 0, nullptr, &view, 0, 0);
+
     context->VSSetConstantBuffers(0, 1, &m_constantBuffer);
-
-    ID3D11DepthStencilView* nullDSV = nullptr;
-    context->OMSetRenderTargets(0, nullptr, nullDSV);
-
-    ID3D11RenderTargetView* nullRTV = nullptr;
-    context->OMSetRenderTargets(1, &nullRTV, nullptr);
-
-    context->PSSetShaderResources(1, 1, &m_shadowMapSRV);
 
     context->PSSetSamplers(1, 1, &m_shadowMapSampler);
 }
 
 void ShadowMap::Release() {
     if (m_shadowMapSRV) m_shadowMapSRV->Release();
+    if (m_depthTexture) m_depthTexture->Release();
+    if (m_renderTargetView) m_renderTargetView->Release();
     if (m_shadowMapDepthStencilView) m_shadowMapDepthStencilView->Release();
     if (m_shadowMapTexture) m_shadowMapTexture->Release();
 }

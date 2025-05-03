@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "Material.h"
 #include "Shader.h"
+#include "ViewProjectonData.h"
 
 VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
@@ -87,9 +88,9 @@ void MeshComponent::Update(float deltaTime) {
     }
 }
 
-void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context) {
+void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
     if (!m_device_loader) return;
-    m_bufferWVP.WVP = XMMatrixTranspose(*m_position * camera.getView() * camera.getProjection());
+    m_bufferWVP.WVP = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
     m_bufferWVP.World = XMMatrixTranspose(*m_position);
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
