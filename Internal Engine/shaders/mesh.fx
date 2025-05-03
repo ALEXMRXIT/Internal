@@ -60,20 +60,27 @@ SamplerState ShadowSamplerState : register(s1);
 float CalculateShadow(float4 shadowPos)
 {
     shadowPos.xyz /= shadowPos.w;
-    
-    shadowPos.x = shadowPos.x * 0.5f + 0.5f;
-    shadowPos.y = shadowPos.y * -0.5f + 0.5f;
-    float depth = shadowPos.z - 0.0005f;
-    
-    if (shadowPos.x < 0.0f || shadowPos.x > 1.0f ||
-       shadowPos.y < 0.0f || shadowPos.y > 1.0f ||
-       depth < 0.0f || depth > 1.0f)
+    float2 shadowUV = shadowPos.xy * 0.5f + 0.5f;
+    shadowUV.y = 1.0f - shadowUV.y; // Flip Y для DirectX текстуры
+
+    // Глубина в пространстве света [0, 1]
+    float depth = shadowPos.z;
+
+    // Bias для избежания self-shadowing
+    const float bias = 0.001f;
+    depth -= bias;
+
+    // Проверка границ
+    if (shadowUV.x < 0.0f || shadowUV.x > 1.0f ||
+        shadowUV.y < 0.0f || shadowUV.y > 1.0f ||
+        depth < 0.0f || depth > 1.0f)
     {
-        return 1.0f;
+        return 1.0f; // Вне тени
     }
-    
-    float shadowDepth = ShadowMap.Sample(ShadowSamplerState, shadowPos.xy).r;
-    return (depth <= shadowDepth) ? 1.0f : 0.0f;
+
+    // Сравниваем глубину
+    float shadowDepth = ShadowMap.Sample(ShadowSamplerState, shadowUV).r;
+    return (depth <= shadowDepth) ? 1.0f : darkness; // darkness = 0.3f например
 }
 
 float4 PS(VS_OUTPUT input) : SV_TARGET

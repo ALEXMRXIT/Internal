@@ -11,19 +11,18 @@ struct VS_INPUT
 struct VS_OUTPUT
 {
     float4 Pos : SV_POSITION;
-    float4 depthPosition : TEXCOORD0;
+    float Depth : TEXCOORD0;
 };
 
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output;
     output.Pos = mul(input.Pos, WVP);
-    output.depthPosition = input.Pos;
+    output.Depth = input.Pos.z / input.Pos.w;
     return output;
 }
 
 float4 PS(VS_OUTPUT input) : SV_Target
 {
-    float depth = input.depthPosition.z / input.depthPosition.w;
-    return float4(depth, depth, depth, 1.0f);
+    return float4(input.Depth, input.Depth, input.Depth, 1.0f);
 }

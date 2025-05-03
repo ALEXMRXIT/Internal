@@ -463,13 +463,13 @@ void Engine::Render() {
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-    m_location->m_directionLight->Render(m_deviceContext);
     m_shadowMap->Render(m_deviceContext, m_location->m_directionLight);
 
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
     m_deviceContext->RSSetState(m_cWcullMode);
+    m_location->m_directionLight->Render(m_deviceContext);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && !obj->isTransparent())

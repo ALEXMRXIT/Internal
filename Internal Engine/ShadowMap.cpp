@@ -78,14 +78,16 @@ void ShadowMap::Init(ID3D11Device* device) {
 
     D3D11_SAMPLER_DESC samplerDesc;
     ZeroMemory(&samplerDesc, sizeof(samplerDesc));
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
     samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
     samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
     samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
     samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
-    samplerDesc.MinLOD = 0;
+    samplerDesc.BorderColor[0] = 1.0f;
+    samplerDesc.BorderColor[1] = 1.0f;
+    samplerDesc.BorderColor[2] = 1.0f;
+    samplerDesc.BorderColor[3] = 1.0f;
     samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
     hr = device->CreateSamplerState(&samplerDesc, &m_shadowMapSampler);
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create shadow map sampler state.", hr);
@@ -138,7 +140,7 @@ void ShadowMap::Render(ID3D11DeviceContext* context, DirectionLight* light) {
     m_shadowShader->setPiexlShader(context);
 
     XMMatrixCPerBuffer view;
-    view.lightView = light->ProjectionLightView();
+    view.lightView = light->viewProjection().m_projection;
 
     context->UpdateSubresource(m_constantBuffer, 0, nullptr, &view, 0, 0);
 

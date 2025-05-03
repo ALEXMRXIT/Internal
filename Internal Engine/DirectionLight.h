@@ -32,7 +32,6 @@ public:
 
 	void Update(float deltaTime);
 	void Render(ID3D11DeviceContext* device_context);
-	XMMATRIX ProjectionLightView();
 	void Release();
 	inline const ViewProjectonData& viewProjection() const { return *m_viewProjectionData; }
 
