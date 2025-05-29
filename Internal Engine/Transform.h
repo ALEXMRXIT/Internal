@@ -34,7 +34,7 @@ public:
     void UpdateInterfaceInInspector(GameObject* gameObject) override;
 #endif
 
-    __forceinline void setPosition(const XMFLOAT3& position);
+    __forceinline void setPosition(const XMFLOAT3& position) { m_position = position; UpdateWorldCoord(); }
     __forceinline void setLocalPosition(const XMFLOAT3& position);
 
     __forceinline XMFLOAT3& position() { return m_position; }
@@ -47,10 +47,7 @@ public:
 
     __forceinline XMFLOAT3& rotation() { return m_rotation; }
 
-    __forceinline void setScale(const XMFLOAT3& vector) {
-        m_scale = vector;
-        UpdateWorldCoord();
-    }
+    __forceinline void setScale(const XMFLOAT3& vector) { m_scale = vector; UpdateWorldCoord(); }
 
     __forceinline XMFLOAT3& scale() { return m_scale; }
     __forceinline XMMATRIX& getWorldMatrix() { return m_worldMatrix; }

@@ -41,18 +41,28 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
 
     RegisterClassEx(&wndClassEx);
 
-    m_windowDesc->windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
+    RECT desiredClientRect = {
+        0, 0,
+        m_supportedResolution[config.resolution].Width,
+        m_supportedResolution[config.resolution].Height
+    };
+
+    DWORD& windowStyle = m_windowDesc->windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
+    AdjustWindowRectEx(&desiredClientRect, windowStyle, FALSE, 0);
 
     m_windowDesc->hWnd = CreateWindowEx(NULL, m_windowDesc->title, m_windowDesc->title,
-        m_windowDesc->windowStyle, 0, 0, m_supportedResolution[config.resolution].Width,
-        m_supportedResolution[config.resolution].Height, NULL, NULL, m_windowDesc->hInstance, NULL);
+        windowStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+        desiredClientRect.right - desiredClientRect.left, 
+        desiredClientRect.bottom - desiredClientRect.top, 
+        NULL, NULL, m_windowDesc->hInstance, NULL);
 
     ShowWindow(m_windowDesc->hWnd, m_windowDesc->nCmdShow);
     UpdateWindow(m_windowDesc->hWnd);
 
-    RECT windowRect;
-    GetWindowRect(m_windowDesc->hWnd, &windowRect);
-    m_windowDesc->rect = windowRect;
+    RECT clientRect;
+    GetClientRect(m_windowDesc->hWnd, &clientRect);
+    m_windowDesc->width = clientRect.right - clientRect.left;
+    m_windowDesc->height = clientRect.bottom - clientRect.top;
 
     return true;
 }
@@ -184,7 +194,7 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
     swapChainDesc.Windowed = TRUE;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    swapChainDesc.Flags = config.fullscreen ? DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH : 0;
 
     D3D_DRIVER_TYPE driverTypes[] = {
         D3D_DRIVER_TYPE_HARDWARE,
@@ -483,7 +493,7 @@ void Engine::Render() {
     m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
-    //m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
 #endif
 
     m_deviceContext->RSSetViewports(1, &m_viewport);
@@ -514,15 +524,15 @@ void Engine::Render() {
         }
     }
 
-    //gizmozRect.Render();
+    gizmozRect.Render();
 
     //static wchar_t buffer[128];
     //swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
     //m_font->Render(m_deviceContext, buffer);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
-    //m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
-    //m_gui->Render();
+    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+    m_gui->Render();
 #endif
 
     HRESULT hr = m_swapChain->Present(min(config.vSync, 2), 0);
@@ -545,7 +555,7 @@ void Engine::Release() {
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_gui->Release();
 #endif
-    if (m_cWcullMode) m_cWcullMode->Release();\
+    if (m_cWcullMode) m_cWcullMode->Release();
     if (m_meshShader) {
         m_meshShader->Release();
         delete m_meshShader;
@@ -673,43 +683,37 @@ void Engine::addMeshRenderer(Model* mesh) {
 }
 
 void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
-    if (!fullscreen) {
-        RECT windowRect;
-        GetWindowRect(hwnd, &windowRect);
-        engine.getWindowRect() = windowRect;
+    static WINDOWPLACEMENT prevPlacement = { sizeof(WINDOWPLACEMENT) };
+    static RECT prevRect = { 0 };
+    DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+    MONITORINFO mi = { sizeof(MONITORINFO) };
 
-        SetWindowLongPtr(hwnd, GWL_STYLE, m_windowDesc->windowStyle);
-        SetWindowPos(hwnd, HWND_TOP, 0, 0,
-            m_supportedResolution[config.resolution].Width,
-            m_supportedResolution[config.resolution].Height,
-            SWP_FRAMECHANGED | SWP_NOACTIVATE);
-        ShowWindow(hwnd, SW_NORMAL);
+    if (!fullscreen) {
+        SetWindowLong(hwnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
+        SetWindowPlacement(hwnd, &prevPlacement);
+        SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+            SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
     }
     else {
-        SetWindowLongPtr(hwnd, GWL_STYLE, m_windowDesc->windowStyle & ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_THICKFRAME));
-        RECT rect{};
-        if (IDXGISwapChain* chain = engine.getChain()) {
-            IDXGIOutput* output = nullptr;
-            chain->GetContainingOutput(&output);
-            DXGI_OUTPUT_DESC desc;
-            ZeroMemory(&desc, sizeof(DXGI_OUTPUT_DESC));
-            output->GetDesc(&desc);
-            rect = desc.DesktopCoordinates;
+        GetWindowPlacement(hwnd, &prevPlacement);
+        GetWindowRect(hwnd, &prevRect);
+
+        if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY), &mi)) {
+            SetWindowLong(hwnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN);
+
+            SetWindowPos(hwnd, HWND_TOP,
+                mi.rcMonitor.left, mi.rcMonitor.top,
+                mi.rcMonitor.right - mi.rcMonitor.left,
+                mi.rcMonitor.bottom - mi.rcMonitor.top,
+                SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
         }
-        SetWindowPos(hwnd, HWND_NOTOPMOST,
-            rect.left, rect.top,
-            rect.right, rect.bottom,
-            SWP_FRAMECHANGED | SWP_NOACTIVATE);
-        ShowWindow(hwnd, SW_MAXIMIZE);
     }
+    engine.getChain()->SetFullscreenState(fullscreen, NULL);
 }
 
 const WindowDescription* Engine::getWindowDesc() const {
     return m_windowDesc;
-}
-
-RECT& Engine::getWindowRect() {
-    return m_windowDesc->rect;
 }
 
 IDXGISwapChain* Engine::getChain() const {

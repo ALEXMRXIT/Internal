@@ -23,7 +23,8 @@ typedef struct _windowDescription {
 	HINSTANCE hInstance;
 	DWORD windowStyle;
 	HWND hWnd;
-	RECT rect;
+	LONG width;
+	LONG height;
 	bool fullScreen;
 	int nCmdShow;
 } WindowDescription, *LPWindowDescription;
@@ -116,7 +117,6 @@ public:
 	void addMeshRenderer(Model* mesh);
 	void setFullScreen(HWND hwnd, bool fullscreen);
 	const WindowDescription* getWindowDesc() const;
-	RECT& getWindowRect();
 	IDXGISwapChain* getChain() const;
 	const DXGI_MODE_DESC& getSupportedResolution() const;
 	const wchar_t* toStringVSync() const;

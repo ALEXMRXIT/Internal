@@ -174,11 +174,6 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
 }
 #endif
 
-void Transform::setPosition(const XMFLOAT3& position) {
-    m_position = position;
-    UpdateWorldCoord();
-}
-
 void Transform::setLocalPosition(const XMFLOAT3& position) {
     if (m_gameObject->Parent()) {
         XMFLOAT3 parentWorldPos = m_gameObject->Parent()->position();
