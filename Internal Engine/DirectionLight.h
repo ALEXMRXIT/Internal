@@ -8,10 +8,7 @@
 __declspec(align(16))
 struct BufferDirectionLight {
 	XMFLOAT4 direction;
-	XMFLOAT4 ambient;
-	XMFLOAT4 diffuse;
 	float intensity;
-	float darkness;
 	XMMATRIX lightView;
 };
 

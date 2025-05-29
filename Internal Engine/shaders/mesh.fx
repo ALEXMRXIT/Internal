@@ -1,10 +1,7 @@
 cbuffer cbPerFrame : register(b0)
 {
     float4 direction;
-    float4 ambient;
-    float4 diffuse;
     float intensity;
-    float darkness;
     float4x4 lightView;
 };
 
@@ -93,12 +90,11 @@ float CalculateShadow(float4 shadowPos)
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    //float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
-    //
-    //if (color.a == 0.0f)
-    //    return float4(0.3f, 0.3f, 0.3f, alpha);
-    //
-    //float3 lightDir = normalize(-direction.xyz);
+    float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    float4 I = saturate(dot(input.Normal, normalize(direction.xyz)));
+    return float4(color.rgb, 1.0f) * I;
+    
+    //float3 lightDir = normalize(direction.xyz);
     //
     //float diffuseFactor = saturate(dot(input.Normal, lightDir));
     //float shadowFactor = 1.0 - diffuseFactor;
@@ -114,7 +110,4 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     //float3 baseColor = finalColor + texture_color.rgb;
     //
     //return float4(baseColor, color.a * alpha);
-    
-    float depth = ShadowMap.SampleLevel(ObjSamplerState, input.ShadowPos.xy, input.ShadowPos.w).r;
-    return float4(depth, depth, depth, 1.0f);
 }

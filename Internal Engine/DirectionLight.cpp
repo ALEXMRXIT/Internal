@@ -7,9 +7,6 @@ DirectionLight::DirectionLight() {
     m_constantLightBuffer = nullptr;
     m_transform = nullptr;
     m_bufferLight.intensity = 1.25f;
-    m_bufferLight.ambient = XMFLOAT4(0.82f, 0.91f, 0.92f, 1.0f);
-    m_bufferLight.diffuse = XMFLOAT4(0.44f, 0.43f, 0.31f, 1.0f);
-    m_bufferLight.darkness = 0.5f;
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
@@ -81,36 +78,6 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::SliderFloat("##Intensity", &m_bufferLight.intensity, 0.0f, 10.0f, "%.2f");
-
-            float ambientColorArray[3] = { 
-                m_bufferLight.ambient.x, m_bufferLight.ambient.y, m_bufferLight.ambient.z };
-            ImGui::Text("Ambient Color");
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::ColorEdit3("##AmbientColorEdit", ambientColorArray)) {
-                XMFLOAT4 color = XMFLOAT4(ambientColorArray[0],
-                    ambientColorArray[1], ambientColorArray[2], m_bufferLight.ambient.w);
-                m_bufferLight.ambient = color;
-            }
-
-            float diffuseColorArray[3] = { 
-                m_bufferLight.diffuse.x, m_bufferLight.diffuse.y, m_bufferLight.diffuse.z };
-            ImGui::Text("Diffuse Color");
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::ColorEdit3("##DiffuseColorEdit", diffuseColorArray)) {
-                XMFLOAT4 color = XMFLOAT4(diffuseColorArray[0],
-                    diffuseColorArray[1], diffuseColorArray[2], m_bufferLight.diffuse.w);
-                m_bufferLight.diffuse = color;
-            }
-
-            ImGui::Text("Drakness");
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(maxTextWidth + ImGui::GetStyle().ItemSpacing.x);
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SliderFloat("##Drakness", &m_bufferLight.darkness, 0.0f, 1.0f, "%.2f");
         }
         ImGui::EndChild();
 
