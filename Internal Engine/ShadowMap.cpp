@@ -110,13 +110,6 @@ void ShadowMap::Render(ID3D11DeviceContext* context, DirectionLight* light) {
     context->PSSetShader(nullptr, nullptr, 0);
 
     context->RSSetState(m_pShadowRasterizerState);
-
-    XMMatrixCPerBuffer view;
-    const ViewProjectonData& viewLight = light->viewProjection();
-    view.lightView = XMMatrixTranspose(viewLight.m_view * viewLight.m_projection);
-
-    context->UpdateSubresource(m_constantBuffer, 0, nullptr, &view, 0, 0);
-    context->VSSetConstantBuffers(0, 1, &m_constantBuffer);
 }
 
 void ShadowMap::Release() {

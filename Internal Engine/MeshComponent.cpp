@@ -113,12 +113,18 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 }
 
 void MeshComponent::RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
-    IASetVertexAndIndexBuffer(context);
-
     XMMatrixCPerBuffer view;
     view.lightView = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
+
     ID3D11Buffer* buffer = shadowMap.ConstantShadowBuffer();
     context->UpdateSubresource(buffer, 0, nullptr, &view, 0, 0);
+    context->VSSetConstantBuffers(0, 1, &buffer);
+
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
+    ID3D11Buffer* vertex = *m_vertexBuffer;
+    context->IASetVertexBuffers(0, 1, &vertex, &stride, &offset);
+    context->IASetIndexBuffer(*m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
     context->DrawIndexed(m_indices, 0, 0);
 }
 

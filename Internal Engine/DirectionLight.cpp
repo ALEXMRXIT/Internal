@@ -3,10 +3,21 @@
 #include "ImGUI/imgui_internal.h"
 #include "ViewProjectonData.h"
 
+void DirectionLight::UpdateMatrix() {
+    XMFLOAT3 rotation = m_transform->rotation();
+    XMVECTOR direction = XMLoadFloat3(&rotation);
+    direction = XMVector3Equal(direction, XMVectorZero()) ? XMVectorSet(0, 0, 1, 0) : XMVector3Normalize(direction);
+    XMVECTOR lightPos = direction * 50.0f;
+
+    m_bufferLight.lightViewProj = XMMatrixLookAtLH(lightPos, -direction, XMVectorSet(0, 1, 0, 0));
+    m_bufferLight.direction = XMFLOAT4(XMVectorGetX(direction), XMVectorGetY(direction), XMVectorGetZ(direction), 1.0f);
+}
+
 DirectionLight::DirectionLight() {
     m_constantLightBuffer = nullptr;
     m_transform = nullptr;
     m_bufferLight.intensity = 1.25f;
+    m_viewProjectionData = nullptr;
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
@@ -22,22 +33,13 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
 
-    const float orthoWidth = 1024.0f;
-    const float screenAspect = 1024.0f;
-    const float nearZ = 1.0f;
-    const float farZ = 5000.0f;
+    const float orthoWidth = 640.0f;
+    const float screenAspect = 360.0f;
+    const float nearZ = 0.1f;
+    const float farZ = 200.0f;
     m_lightProjectionMatrix = XMMatrixOrthographicLH(orthoWidth, screenAspect, nearZ, farZ);
-
-    XMFLOAT3 rotation = m_transform->rotation();
-    XMVECTOR rotationNormalize = XMVector3Normalize(XMLoadFloat3(&rotation));
-    XMVECTOR camLookAt = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-    XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-    XMMATRIX lightViewMatrix = XMMatrixLookAtLH(rotationNormalize, camLookAt, Up);
-    m_bufferLight.lightView = XMMatrixTranspose(lightViewMatrix);
-    m_bufferLight.direction = XMFLOAT4(rotation.x, rotation.y, rotation.z, 1.0f);
-
-    m_viewProjectionData = new ViewProjectonData(m_bufferLight.lightView, m_lightProjectionMatrix);
+    UpdateMatrix();
+    m_viewProjectionData = new ViewProjectonData(m_bufferLight.lightViewProj, m_lightProjectionMatrix);
 
     m_device_loader = true;
     return hr;
@@ -49,7 +51,8 @@ void DirectionLight::Update(float deltaTime) {
 
 void DirectionLight::Render(ID3D11DeviceContext* device_context) {
     if (!m_device_loader) return;
-    
+
+    UpdateMatrix();
     device_context->UpdateSubresource(m_constantLightBuffer, 0, nullptr, &m_bufferLight, 0, 0);
     device_context->PSSetConstantBuffers(0, 1, &m_constantLightBuffer);
 }

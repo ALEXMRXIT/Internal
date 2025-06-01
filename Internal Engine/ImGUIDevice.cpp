@@ -6,6 +6,7 @@
 #include "Model.h"
 #include "Config.h"
 #include "PrimitiveDrawable.h"
+#include "ShadowMap.h"
 
 void ImGUIDevice::InitWindowStyle(void) {
 #ifdef _DEBUG
@@ -432,6 +433,22 @@ void ImGUIDevice::Render() {
     
     }
     ImGui::End();
+
+    if (ImGui::Begin("Shadow Map Debug")) {
+        ImGui::Text("Sun Camera Depth Texture");
+        ImVec2 availSize = ImGui::GetContentRegionAvail();
+        ImVec2 textureSize(512.0f, 512.0f);
+        float offsetX = (availSize.x - textureSize.x) * 0.5f;
+        float offsetY = (availSize.y - textureSize.y) * 0.5f;
+        if (offsetX > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+        if (offsetY > 0.0f) ImGui::SetCursorPosY(ImGui::GetCursorPosY() + offsetY);
+        ImGui::Image(
+            (ImTextureID)shadowMap.ShadowShaderResources(),
+            textureSize,
+            ImVec2(0, -1), ImVec2(1, 0)
+        );
+        ImGui::End();
+    }
     
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("Scene");

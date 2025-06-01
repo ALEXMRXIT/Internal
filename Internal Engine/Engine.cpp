@@ -469,9 +469,8 @@ void Engine::FixedUpdate(float deltaTime) {
 void Engine::Update(float deltaTime) {
     camera.Update();
     m_location->Update(deltaTime);
-    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+    for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
         m_meshes[iterator]->Update(deltaTime);
-    }
     m_location->m_skybox->Update(deltaTime);
     m_location->m_directionLight->Update(deltaTime);
 }
@@ -709,7 +708,7 @@ void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
         }
     }
-    engine.getChain()->SetFullscreenState(fullscreen, NULL);
+    //engine.getChain()->SetFullscreenState(fullscreen, NULL);
 }
 
 const WindowDescription* Engine::getWindowDesc() const {

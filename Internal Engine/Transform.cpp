@@ -3,7 +3,11 @@
 
 void Transform::UpdateWorldCoord() {
     XMMATRIX translation = XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
-    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(m_rotation.x),
+        XMConvertToRadians(m_rotation.y),
+        XMConvertToRadians(m_rotation.z)
+    );
     XMMATRIX scaling = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
 
     XMMATRIX localMatrix = scaling * rotation * translation;

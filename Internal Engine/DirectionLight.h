@@ -9,7 +9,7 @@ __declspec(align(16))
 struct BufferDirectionLight {
 	XMFLOAT4 direction;
 	float intensity;
-	XMMATRIX lightView;
+	XMMATRIX lightViewProj;
 };
 
 class DirectionLight : public AbstractBaseComponent, public LoaderNotificationDevice {
@@ -18,6 +18,9 @@ private:
 	BufferDirectionLight m_bufferLight;
 	XMMATRIX m_lightProjectionMatrix;
 	ViewProjectonData* m_viewProjectionData;
+
+private:
+	void UpdateMatrix();
 
 public:
 	Transform* m_transform;

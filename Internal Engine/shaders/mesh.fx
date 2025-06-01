@@ -2,7 +2,7 @@ cbuffer cbPerFrame : register(b0)
 {
     float4 direction;
     float intensity;
-    float4x4 lightView;
+    float4x4 lightViewProj;
 };
 
 cbuffer cbPerObject : register(b1)
@@ -42,72 +42,36 @@ VS_OUTPUT VS(VS_INPUT input)
     output.Normal = mul(input.Normal, (float3x3)World);
     output.Normal = normalize(output.Normal);
     output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
-    output.ShadowPos = mul(float4(input.Pos.xyz, 1.0f), lightView);
+    output.ShadowPos = mul(float4(input.Pos.xyz, 1.0f), lightViewProj);
     
     return output;
 }
 
 Texture2D ObjTexture : register(t0);
-Texture2D ShadowMap : register(t1);
+Texture2D<float> ShadowMap : register(t1);
 
 SamplerState ObjSamplerState : register(s0);
-SamplerComparisonState gSamShadow : register(s1)
-{
-    Filter = COMPARISON_MIN_MAG_MIP_LINEAR;
-    AddressU = Border;
-    AddressV = Border;
-    BorderColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    ComparisonFunc = LESS_EQUAL;
-};
-
-float CalculateShadow(float4 shadowPos)
-{
-    float3 projCoords = shadowPos.xyz / shadowPos.w;
-    
-    projCoords.xy = 0.5f * projCoords.xy + 0.5f;
-    projCoords.y = 1.0f - projCoords.y;
-    
-    if (projCoords.z > 1.0f || projCoords.x < 0.0f || projCoords.x > 1.0f ||
-       projCoords.y < 0.0f || projCoords.y > 1.0f)
-        return 1.0f;
-    
-    const float bias = 0.001f;
-    float shadow = 0.0f;
-    float2 texelSize = 1.0f / 2048.0f;
-    
-    for (int x = -1; x <= 1; ++x)
-    {
-        for (int y = -1; y <= 1; ++y)
-        {
-            float depth = ShadowMap.SampleCmpLevelZero(gSamShadow,
-                projCoords.xy + float2(x, y) * texelSize, projCoords.z - bias);
-            shadow += depth;
-        }
-    }
-    
-    return shadow / 9.0f;
-}
+SamplerComparisonState gSamShadow : register(s1);
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
-    float4 I = saturate(dot(input.Normal, normalize(direction.xyz)));
-    return float4(color.rgb, 1.0f) * I;
+    float diffuseFactor = dot(input.Normal, normalize(direction.xyz));
+    float4 lightIntensity = lerp(0.2f, 1.0f, saturate(diffuseFactor));
     
-    //float3 lightDir = normalize(direction.xyz);
-    //
-    //float diffuseFactor = saturate(dot(input.Normal, lightDir));
-    //float shadowFactor = 1.0 - diffuseFactor;
-    //
-    //float3 shadowColor = lerp(float3(0, 0, 0), color.rgb, darkness);
-    //
-    //float3 finalColor = (ambient.rgb * color.rgb) + (diffuseFactor * diffuse.rgb * color.rgb * intensity);
-    //finalColor = lerp(finalColor, shadowColor, shadowFactor);
-    //
-    //float shadow = CalculateShadow(input.ShadowPos);
-    //finalColor *= shadow;
-    //
-    //float3 baseColor = finalColor + texture_color.rgb;
-    //
-    //return float4(baseColor, color.a * alpha);
+    float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
+    shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
+    shadowPos.y = 1.0f - shadowPos.y;
+
+    float shadowBias = max(0.01 * (1.0 - diffuseFactor), 0.001);
+    float shadow = 1.0f;
+    if (all(shadowPos.xy < 0) || all(shadowPos.xy > 1))
+    {
+        shadow = ShadowMap.SampleCmpLevelZero(gSamShadow, shadowPos.xy, shadowPos.z - shadowBias);
+    }
+    
+    float4 finalColor = color * lightIntensity * shadow;
+    finalColor.a = color.a;
+    
+    return finalColor;
 }
