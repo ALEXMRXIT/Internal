@@ -2,7 +2,8 @@
 class Config {
 public:
 	Config() {
-		resolution = 7;
+		automaticSetResolution = true;
+		resolution = 30;
 		multiply = 0;
 		qualityTexture = 10;
 		fullscreen = true;
@@ -15,6 +16,7 @@ public:
 		debugRaycast = false;
 	}
 
+	bool automaticSetResolution;
 	int resolution;
 	int multiply;
 	int qualityTexture;

@@ -67,18 +67,18 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
 	if (FAILED(hr))
 		DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
 
-	D3D11_SAMPLER_DESC shadowSampDesc;
-	ZeroMemory(&shadowSampDesc, sizeof(D3D11_SAMPLER_DESC));
-	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
-	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
-	shadowSampDesc.BorderColor[0] = 1.0f;
-	shadowSampDesc.BorderColor[1] = 1.0f;
-	shadowSampDesc.BorderColor[2] = 1.0f;
-	shadowSampDesc.BorderColor[3] = 1.0f;
-	hr = device->CreateSamplerState(&shadowSampDesc, &m_shadowSamplerState);
+	D3D11_SAMPLER_DESC shadowSamplerDesc;
+	ZeroMemory(&shadowSamplerDesc, sizeof(D3D11_SAMPLER_DESC));
+	shadowSamplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	shadowSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSamplerDesc.BorderColor[0] = 1.0f;
+	shadowSamplerDesc.BorderColor[1] = 1.0f;
+	shadowSamplerDesc.BorderColor[2] = 1.0f;
+	shadowSamplerDesc.BorderColor[3] = 1.0f;
+	shadowSamplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+	hr = device->CreateSamplerState(&shadowSamplerDesc, &m_shadowSamplerState);
 	if (FAILED(hr))
 		DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
 }

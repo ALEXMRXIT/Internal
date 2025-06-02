@@ -31,7 +31,8 @@ struct VS_OUTPUT
     float4 Pos : SV_POSITION;
     float2 TexCoord : TEXCOORD;
     float3 Normal : NORMAL;
-    float4 ShadowPos : TEXCOORD2;
+    float4 ShadowPos : TEXCOORD1;
+    float3 WorldPos : TEXCOORD2;
 };
 
 VS_OUTPUT VS(VS_INPUT input)
@@ -39,6 +40,7 @@ VS_OUTPUT VS(VS_INPUT input)
     VS_OUTPUT output;
     
     output.Pos = mul(input.Pos, WVP);
+    output.WorldPos = mul(input.Pos, World).xyz;
     output.Normal = mul(input.Normal, (float3x3)World);
     output.Normal = normalize(output.Normal);
     output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
@@ -53,25 +55,29 @@ Texture2D<float> ShadowMap : register(t1);
 SamplerState ObjSamplerState : register(s0);
 SamplerComparisonState gSamShadow : register(s1);
 
+float CalculateShadow(float4 shadowPos, float3 normal, float3 lightDir)
+{
+    float3 projCoords = shadowPos.xyz / shadowPos.w;
+    
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+    projCoords.y = 1.0 - projCoords.y;
+    
+    float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.0005);
+    
+    if (projCoords.z > 1.0 || projCoords.x < 0.0 || projCoords.x > 1.0 || projCoords.y < 0.0 || projCoords.y > 1.0)
+        return 1.0;
+    
+    return ShadowMap.SampleCmpLevelZero(gSamShadow, projCoords.xy, projCoords.z - bias);
+}
+
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
-    float diffuseFactor = dot(input.Normal, normalize(direction.xyz));
-    float4 lightIntensity = lerp(0.2f, 1.0f, saturate(diffuseFactor));
+    float3 projCoords = input.ShadowPos.xyz / input.ShadowPos.w;
     
-    float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
-    shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
-    shadowPos.y = 1.0f - shadowPos.y;
-
-    float shadowBias = max(0.01 * (1.0 - diffuseFactor), 0.001);
-    float shadow = 1.0f;
-    if (all(shadowPos.xy < 0) || all(shadowPos.xy > 1))
-    {
-        shadow = ShadowMap.SampleCmpLevelZero(gSamShadow, shadowPos.xy, shadowPos.z - shadowBias);
-    }
-    
-    float4 finalColor = color * lightIntensity * shadow;
-    finalColor.a = color.a;
-    
-    return finalColor;
+    if (any(abs(projCoords.xy) > 1.0f))
+        return float4(1, 0, 0, 1); // Красный - за пределами XY
+    if (projCoords.z < 0.0 || projCoords.z > 1.0)
+        return float4(0, 0, 1, 1); // Синий - за пределами Z
+        
+    return float4(0, 1, 0, 1); // Зеленый - внутри frustum
 }

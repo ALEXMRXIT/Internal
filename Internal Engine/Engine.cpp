@@ -166,6 +166,9 @@ HRESULT Engine::GetSupportedResolutions(DXGI_FORMAT format) {
     adapter->Release();
     dxgiFactory->Release();
 
+    if (config.automaticSetResolution)
+        config.resolution = m_supportedResolution.size() - 1;
+
     return hr;
 }
 
@@ -368,9 +371,8 @@ bool Engine::InitScene() {
     m_font = new Font();
     m_font->Init(m_device);
 
-    m_location = new Location(m_device);
-
     shadowMap.Init(m_device);
+    m_location = new Location(m_device);
 
     gizmozRect.Init(m_device, m_deviceContext);
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE

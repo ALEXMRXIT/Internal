@@ -2,15 +2,34 @@
 #include "debug.h"
 #include "ImGUI/imgui_internal.h"
 #include "ViewProjectonData.h"
+#include "ShadowMap.h"
 
 void DirectionLight::UpdateMatrix() {
     XMFLOAT3 rotation = m_transform->rotation();
-    XMVECTOR direction = XMLoadFloat3(&rotation);
-    direction = XMVector3Equal(direction, XMVectorZero()) ? XMVectorSet(0, 0, 1, 0) : XMVector3Normalize(direction);
-    XMVECTOR lightPos = direction * 50.0f;
+    XMFLOAT3 position = m_transform->position();
 
-    m_bufferLight.lightViewProj = XMMatrixLookAtLH(lightPos, -direction, XMVectorSet(0, 1, 0, 0));
-    m_bufferLight.direction = XMFLOAT4(XMVectorGetX(direction), XMVectorGetY(direction), XMVectorGetZ(direction), 1.0f);
+    XMVECTOR direction = XMVector3Rotate(
+        XMVectorSet(0, 0, 1, 0),
+        XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z)
+    );
+    direction = XMVector3Normalize(direction);
+
+    XMVECTOR lightPos = XMLoadFloat3(&position);
+    if (XMVector3Equal(lightPos, XMVectorZero()))
+        lightPos = XMVectorSet(0, 50, 0, 0);
+
+    const float orthoWidth = 1000.0f;
+    const float screenAspect = shadowMap.ShadowScreenAspect() + 300;
+    const float nearZ = 0.1f;
+    const float farZ = 1000.0f;
+    m_lightProjectionMatrix = XMMatrixOrthographicLH(orthoWidth, screenAspect, nearZ, farZ);
+
+    m_bufferLight.lightViewProj = XMMatrixLookAtLH(
+        lightPos,
+        lightPos + direction,
+        XMVectorSet(0, 1, 0, 0)
+    );
+    XMStoreFloat4(&m_bufferLight.direction, direction);
 }
 
 DirectionLight::DirectionLight() {
@@ -33,11 +52,6 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
 
-    const float orthoWidth = 640.0f;
-    const float screenAspect = 360.0f;
-    const float nearZ = 0.1f;
-    const float farZ = 200.0f;
-    m_lightProjectionMatrix = XMMatrixOrthographicLH(orthoWidth, screenAspect, nearZ, farZ);
     UpdateMatrix();
     m_viewProjectionData = new ViewProjectonData(m_bufferLight.lightViewProj, m_lightProjectionMatrix);
 
@@ -73,8 +87,6 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::BeginChild("Light", ImVec2(0, 135), true);
         {
             float maxTextWidth = ImGui::CalcTextSize("Light Intensity").x;
-            maxTextWidth = ImMax(maxTextWidth, ImGui::CalcTextSize("Ambient Color").x);
-            maxTextWidth = ImMax(maxTextWidth, ImGui::CalcTextSize("Diffuse Color").x);
 
             ImGui::Text("Light Intensity");
             ImGui::SameLine();

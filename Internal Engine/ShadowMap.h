@@ -34,5 +34,7 @@ public:
 	inline ID3D11Buffer* ConstantShadowBuffer() const { return m_constantBuffer; }
 	inline ID3D11ShaderResourceView* ShadowShaderResources() const { return m_shadowMapSRV; }
 
+	inline float ShadowScreenAspect() const { return (float)m_width / m_height; }
+
 	void Release();
 };

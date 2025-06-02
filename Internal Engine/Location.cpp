@@ -17,8 +17,8 @@ Location::Location(ID3D11Device* device) {
     m_meshLoader = new MeshLoader();
     m_loader = new ResourceLoader(engine, m_meshLoader);
 
-    GameObject* light = Instantiate(XMFLOAT3(1.0f, 0.0f, 0.0f),
-        XMFLOAT3(-90.0f, 45.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
+    GameObject* light = Instantiate(XMFLOAT3(187.7f, 92.2f, -21.5f),
+        XMFLOAT3(2.5f, 0.5f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f));
     light->name = "Direction Light";
     m_directionLight = light->AddComponent<DirectionLight>();
     m_directionLight->m_transform = &light->transform();
