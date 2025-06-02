@@ -4,11 +4,6 @@
 class Shader;
 class DirectionLight;
 
-__declspec(align(16))
-struct XMMatrixCPerBuffer {
-	XMMATRIX lightView;
-};
-
 class ShadowMap {
 private:
 	UINT m_width = 0, m_height = 0;

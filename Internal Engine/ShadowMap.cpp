@@ -88,7 +88,7 @@ void ShadowMap::Init(ID3D11Device* device) {
     D3D11_BUFFER_DESC matrixBufferDesc;
     ZeroMemory(&matrixBufferDesc, sizeof(D3D11_BUFFER_DESC));
     matrixBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    matrixBufferDesc.ByteWidth = sizeof(XMMatrixCPerBuffer);
+    matrixBufferDesc.ByteWidth = sizeof(BufferDirectionLight);
     matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     matrixBufferDesc.CPUAccessFlags = 0;
     matrixBufferDesc.MiscFlags = 0;

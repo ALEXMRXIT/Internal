@@ -2,6 +2,7 @@ cbuffer cbPerFrame : register(b0)
 {
     float4 direction;
     float intensity;
+    float3 padding;
     float4x4 lightViewProj;
 };
 
@@ -51,27 +52,32 @@ Texture2D ObjTexture : register(t0);
 Texture2D<float> ShadowMap : register(t1);
 
 SamplerState ObjSamplerState : register(s0);
-SamplerComparisonState gSamShadow : register(s1);
+SamplerState gSamShadow : register(s1);
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
-    float diffuseFactor = dot(input.Normal, normalize(direction.xyz));
-    float4 lightIntensity = lerp(0.2f, 1.0f, saturate(diffuseFactor));
-    
     float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
     shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
     shadowPos.y = 1.0f - shadowPos.y;
-
-    float shadowBias = max(0.01 * (1.0 - diffuseFactor), 0.001);
-    float shadow = 1.0f;
-    if (all(shadowPos.xy < 0) || all(shadowPos.xy > 1))
-    {
-        shadow = ShadowMap.SampleCmpLevelZero(gSamShadow, shadowPos.xy, shadowPos.z - shadowBias);
-    }
-    
-    float4 finalColor = color * lightIntensity * shadow;
-    finalColor.a = color.a;
-    
-    return finalColor;
+    return float4(shadowPos.xyz, 1.0f);
+    //return ShadowMap.Sample(gSamShadow, input.TexCoord);
+    //float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    //float diffuseFactor = dot(input.Normal, normalize(direction.xyz));
+    //float4 lightIntensity = lerp(0.2f, 1.0f, saturate(diffuseFactor));
+    //
+    //float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
+    //shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
+    //shadowPos.y = 1.0f - shadowPos.y;
+    //
+    //float shadowBias = max(0.01 * (1.0 - diffuseFactor), 0.001);
+    //float shadow = 1.0f;
+    //if (all(shadowPos.xy < 0) || all(shadowPos.xy > 1))
+    //{
+    //    shadow = ShadowMap.Sample(gSamShadow, shadowPos.xy /*0shadowPos.z - shadowBias*/);
+    //}
+    //
+    //float4 finalColor = color * lightIntensity * shadow;
+    //finalColor.a = color.a;
+    //
+    //return finalColor;
 }

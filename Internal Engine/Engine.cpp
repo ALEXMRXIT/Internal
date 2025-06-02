@@ -365,8 +365,8 @@ bool Engine::InitScene() {
 
     m_viewProjectionData = new ViewProjectonData(camera.getView(), camera.getProjection());
 
-    m_font = new Font();
-    m_font->Init(m_device);
+    //m_font = new Font();
+    //m_font->Init(m_device);
 
     m_location = new Location(m_device);
 

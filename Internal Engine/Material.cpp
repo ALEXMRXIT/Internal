@@ -70,10 +70,10 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
 	D3D11_SAMPLER_DESC shadowSampDesc;
 	ZeroMemory(&shadowSampDesc, sizeof(D3D11_SAMPLER_DESC));
 	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
-	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 	shadowSampDesc.BorderColor[0] = 1.0f;
 	shadowSampDesc.BorderColor[1] = 1.0f;
 	shadowSampDesc.BorderColor[2] = 1.0f;

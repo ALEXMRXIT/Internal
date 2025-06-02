@@ -5,10 +5,10 @@
 #include "LoaderNotificationDevice.h"
 #include "ViewProjectonData.h"
 
-__declspec(align(16))
 struct BufferDirectionLight {
 	XMFLOAT4 direction;
 	float intensity;
+	float padding[3];
 	XMMATRIX lightViewProj;
 };
 

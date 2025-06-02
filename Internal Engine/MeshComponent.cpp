@@ -5,6 +5,7 @@
 #include "Shader.h"
 #include "ViewProjectonData.h"
 #include "ShadowMap.h"
+#include "DirectionLight.h"
 
 VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
@@ -113,8 +114,10 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 }
 
 void MeshComponent::RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
-    XMMatrixCPerBuffer view;
-    view.lightView = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
+    BufferDirectionLight view;
+    view.direction = XMFLOAT4(1.0f, 2.0f, 3.0f, 1.0f);
+    view.intensity = 5.0f;
+    view.lightViewProj = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
 
     ID3D11Buffer* buffer = shadowMap.ConstantShadowBuffer();
     context->UpdateSubresource(buffer, 0, nullptr, &view, 0, 0);
