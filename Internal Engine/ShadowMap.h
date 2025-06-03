@@ -11,7 +11,6 @@ private:
 	ID3D11DepthStencilView* m_shadowMapDepthStencilView = nullptr;
 	ID3D11RasterizerState* m_pShadowRasterizerState = nullptr;
 	ID3D11ShaderResourceView* m_shadowMapSRV = nullptr;
-	ID3D11Buffer* m_constantBuffer = nullptr;
 	Shader* m_shadowShader = nullptr;
 	ID3D11InputLayout* m_pShadowLayout = nullptr;
 	D3D11_VIEWPORT m_viewport;
@@ -26,7 +25,6 @@ public:
 
 	void Render(ID3D11DeviceContext* context, DirectionLight* light);
 
-	inline ID3D11Buffer* ConstantShadowBuffer() const { return m_constantBuffer; }
 	inline ID3D11ShaderResourceView* ShadowShaderResources() const { return m_shadowMapSRV; }
 
 	void Release();

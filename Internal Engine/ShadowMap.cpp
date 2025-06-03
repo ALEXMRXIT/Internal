@@ -6,8 +6,8 @@
 #include "DirectionLight.h"
 
 void ShadowMap::Init(ID3D11Device* device) {
-    m_width = 1024;
-    m_height = 1024;
+    m_width = 4192;
+    m_height = 4192;
 
     D3D11_TEXTURE2D_DESC depthBufferDesc;
     ZeroMemory(&depthBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -50,9 +50,9 @@ void ShadowMap::Init(ID3D11Device* device) {
     rasterDesc.FillMode = D3D11_FILL_SOLID;
     rasterDesc.CullMode = D3D11_CULL_BACK;
     rasterDesc.FrontCounterClockwise = FALSE;
-    rasterDesc.DepthBias = 100;
+    rasterDesc.DepthBias = 1000;
     rasterDesc.DepthBiasClamp = 0.0f;
-    rasterDesc.SlopeScaledDepthBias = 1.0f;
+    rasterDesc.SlopeScaledDepthBias = 2.0f;
     rasterDesc.DepthClipEnable = TRUE;
     rasterDesc.ScissorEnable = FALSE;
     rasterDesc.MultisampleEnable = FALSE;
@@ -84,17 +84,6 @@ void ShadowMap::Init(ID3D11Device* device) {
     SIZE_T size = m_shadowShader->getVertexBlob()->GetBufferSize();
     hr = device->CreateInputLayout(layout, numElements, buffPtr, size, &m_pShadowLayout);
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
-
-    D3D11_BUFFER_DESC matrixBufferDesc;
-    ZeroMemory(&matrixBufferDesc, sizeof(D3D11_BUFFER_DESC));
-    matrixBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    matrixBufferDesc.ByteWidth = sizeof(BufferDirectionLight);
-    matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    matrixBufferDesc.CPUAccessFlags = 0;
-    matrixBufferDesc.MiscFlags = 0;
-    hr = device->CreateBuffer(&matrixBufferDesc, nullptr, &m_constantBuffer);
-    if (FAILED(hr))
-        DXUT_ERR_MSGBOX("Failed to create matrix buffer.", hr);
 }
 
 void ShadowMap::Render(ID3D11DeviceContext* context, DirectionLight* light) {

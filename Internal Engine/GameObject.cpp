@@ -55,4 +55,4 @@ void GameObject::Enable(bool enable) {
 	m_enable = enable;
 }
 
-bool GameObject::isTransparent() const { return model ? model->alpha() < 1.0f : false; }
+bool GameObject::isTransparent() const { return false; }

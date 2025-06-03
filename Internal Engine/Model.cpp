@@ -1,6 +1,7 @@
 #include "Model.h"
 #include "Material.h"
 #include "ViewProjectonData.h"
+#include "DirectionLight.h"
 
 Model::Model(MeshComponent& component) : m_component(component) {
 	m_component.model = this;
@@ -11,14 +12,14 @@ void Model::Update(float deltaTime) {
 	m_component.Update(deltaTime);
 }
 
-void Model::Render(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
-	m_component.UpdateWVPMatrix(context, viewProjection);
+void Model::Render(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight) {
+	m_component.UpdateWVPMatrix(context, viewProjection, directionLight);
 
 	m_component.Render(context);
 }
 
-void Model::RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
-	m_component.RenderShadow(context, viewProjection);
+void Model::RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight) {
+	m_component.RenderShadow(context, directionLight);
 }
 
 void Model::Release() {

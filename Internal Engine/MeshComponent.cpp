@@ -75,25 +75,19 @@ MeshComponent::MeshComponent() {
     m_indices = 0;
     m_position = nullptr;
     model = nullptr;
-    m_preObjectSelect = nullptr;
-    m_additionalColor.alpha = 0.0f;
-    m_additionalColor.texture_color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
     m_spawned = false;
+    m_shadowConstantBuffer = nullptr;
 }
 
 void MeshComponent::Update(float deltaTime) {
-    if (!m_spawned && m_additionalColor.alpha < 1.0f) {
-        m_additionalColor.alpha += deltaTime * 5.0f;
-        m_additionalColor.alpha = min(m_additionalColor.alpha, 1.0f);
-        if (m_additionalColor.alpha == 1.0f)
-            m_spawned = true;
-    }
+
 }
 
-void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
+void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight) {
     if (!m_device_loader) return;
     m_bufferWVP.WVP = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
     m_bufferWVP.World = XMMatrixTranspose(*m_position);
+    m_bufferWVP.LightPos = XMMatrixTranspose(directionLight->GetViewProjectionMatrix());
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
 
@@ -104,24 +98,16 @@ void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProj
 void MeshComponent::Render(ID3D11DeviceContext* context) {
     if (!m_device_loader) return;
 
-    m_additionalColor.texture_color = m_material->color();
-    context->UpdateSubresource(m_preObjectSelect, 0, nullptr, &m_additionalColor, 0, 0);
-    context->PSSetConstantBuffers(2, 1, &m_preObjectSelect);
-
     IASetVertexAndIndexBuffer(context);
     m_material->Bind(context);
     context->DrawIndexed(m_indices, 0, 0);
 }
 
-void MeshComponent::RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection) {
-    BufferDirectionLight view;
-    view.direction = XMFLOAT4(1.0f, 2.0f, 3.0f, 1.0f);
-    view.intensity = 5.0f;
-    view.lightViewProj = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
+void MeshComponent::RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight) {
+    BufferDirectionLight view = directionLight->UpdateMatrixByDirectionLight(*m_position);
 
-    ID3D11Buffer* buffer = shadowMap.ConstantShadowBuffer();
-    context->UpdateSubresource(buffer, 0, nullptr, &view, 0, 0);
-    context->VSSetConstantBuffers(0, 1, &buffer);
+    context->UpdateSubresource(m_shadowConstantBuffer, 0, nullptr, &view, 0, 0);
+    context->VSSetConstantBuffers(0, 1, &m_shadowConstantBuffer);
 
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
@@ -202,12 +188,6 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
                     material->setColor(newColor);
                 }
             }
-
-            ImGui::Dummy(ImVec2(0.0f, 2.0f));
-            ImGui::Text("Alpha:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SliderFloat("##Alpha", &m_additionalColor.alpha, 0.0f, 1.0f, "%.3f");
         }
         ImGui::EndChild();
     
@@ -244,18 +224,16 @@ HRESULT MeshComponent::Init(ID3D11Device* device) {
         DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
         return hr;
     }
-    D3D11_BUFFER_DESC bufferDescSelectable;
-    ZeroMemory(&bufferDescSelectable, sizeof(D3D11_BUFFER_DESC));
-    bufferDescSelectable.Usage = D3D11_USAGE_DEFAULT;
-    bufferDescSelectable.ByteWidth = sizeof(AdditionalColored);
-    bufferDescSelectable.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDescSelectable.CPUAccessFlags = 0;
-    bufferDescSelectable.MiscFlags = 0;
-    hr = device->CreateBuffer(&bufferDescSelectable, NULL, &m_preObjectSelect);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to create buffer.", hr);
-        return hr;
-    }
+    D3D11_BUFFER_DESC bufferShadowConstant;
+    ZeroMemory(&bufferShadowConstant, sizeof(D3D11_BUFFER_DESC));
+    bufferShadowConstant.Usage = D3D11_USAGE_DEFAULT;
+    bufferShadowConstant.ByteWidth = sizeof(BufferDirectionLight);
+    bufferShadowConstant.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferShadowConstant.CPUAccessFlags = 0;
+    bufferShadowConstant.MiscFlags = 0;
+    hr = device->CreateBuffer(&bufferShadowConstant, NULL, &m_shadowConstantBuffer);
+    if (FAILED(hr))
+        DXUT_ERR_MSGBOX("Failed to create matrix buffer.", hr);
     if (!m_material) {
         m_material = new MeshMaterial();
         m_material->diffuseTex = new Material::TextureMapInfo();
@@ -304,5 +282,5 @@ void MeshComponent::Release() {
         delete m_material;
     }
     if (m_preObjectBuffer) m_preObjectBuffer->Release();
-    if (m_preObjectSelect) m_preObjectSelect->Release();
+    if (m_shadowConstantBuffer) m_shadowConstantBuffer->Release();
 }

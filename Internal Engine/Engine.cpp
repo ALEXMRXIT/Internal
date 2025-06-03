@@ -472,7 +472,6 @@ void Engine::Update(float deltaTime) {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
         m_meshes[iterator]->Update(deltaTime);
     m_location->m_skybox->Update(deltaTime);
-    m_location->m_directionLight->Update(deltaTime);
 }
 
 void Engine::Render() {
@@ -481,7 +480,7 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && !obj->isTransparent())
-                m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight->viewProjection());
+                m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight);
         }
     }
 
@@ -499,7 +498,6 @@ void Engine::Render() {
 
     m_location->m_skybox->Render(m_deviceContext);
     m_deviceContext->OMSetDepthStencilState(nullptr, 0);
-    m_location->m_directionLight->Render(m_deviceContext);
 
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
@@ -510,7 +508,7 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && !obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData);
+                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
         }
     }
 
@@ -519,7 +517,7 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         if (GameObject* obj = m_meshes[iterator]->gameObject()) {
             if (obj->isEnabled() && obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData);
+                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
         }
     }
 

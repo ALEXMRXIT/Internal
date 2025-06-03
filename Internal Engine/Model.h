@@ -5,6 +5,7 @@
 
 class GameObject;
 class ViewProjectonData;
+class DirectionLight;
 
 class Model : public SharedObject, public Physics {
 private:
@@ -18,8 +19,8 @@ public:
 	Model& operator=(const Model&) = delete;
 
 	void Update(float deltaTime);
-	void Render(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection);
-	void RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection);
+	void Render(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight);
+	void RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight);
 	void Release();
 
 	HRESULT Init(ID3D11Device* device) override;
@@ -32,7 +33,4 @@ public:
 	GameObject* gameObject() const { return m_obj; }
 	void setGameObject(GameObject* obj) { m_obj = obj; }
 	MeshComponent& mesh() const { return m_component; }
-	float alpha() const { return m_component.alpha(); }
-	void setlAlpha(float value) { m_component.setlAlpha(value); }
-	void clearAlpha() { m_component.clearAlpha(); }
 };

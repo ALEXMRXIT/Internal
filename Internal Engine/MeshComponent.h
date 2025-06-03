@@ -6,6 +6,7 @@
 
 class MeshMaterial;
 class ViewProjectonData;
+class DirectionLight;
 
 struct Vertex {
 	XMFLOAT3 position;
@@ -54,14 +55,9 @@ __declspec(align(16))
 struct WorldViewProjection {
 	XMMATRIX WVP;
 	XMMATRIX World;
+	XMMATRIX LightPos;
 	XMFLOAT2 texture_scale;
 	XMFLOAT2 texture_offset;
-};
-
-__declspec(align(16))
-struct AdditionalColored {
-	XMFLOAT4 texture_color;
-	float alpha;
 };
 
 class MeshComponent : public AbstractBaseComponent, public LoaderNotificationDevice {
@@ -71,8 +67,7 @@ private:
 	MeshMaterial* m_material;
 	WorldViewProjection m_bufferWVP;
 	ID3D11Buffer* m_preObjectBuffer;
-	AdditionalColored m_additionalColor;
-	ID3D11Buffer* m_preObjectSelect;
+	ID3D11Buffer* m_shadowConstantBuffer;
 	XMMATRIX* m_position;
 	uint32_t m_indices;
 
@@ -90,9 +85,9 @@ public:
 	MeshComponent& operator=(const MeshComponent&) = delete;
 
 	void Update(float deltaTime);
-	void UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection);
+	void UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight);
 	void Render(ID3D11DeviceContext* context);
-	void RenderShadow(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection);
+	void RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight);
 
 	void setMatrix(XMMATRIX& position) override;
 	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);
@@ -108,9 +103,6 @@ public:
 
 	MeshMaterial* material() const { return m_material; }
 	XMMATRIX& position() const { return *m_position; }
-	float alpha() const { return m_additionalColor.alpha; }
-	void setlAlpha(float value) { m_additionalColor.alpha = value; }
-	void clearAlpha() { m_additionalColor.alpha = 0.0f; }
 
 	void Release();
 };
