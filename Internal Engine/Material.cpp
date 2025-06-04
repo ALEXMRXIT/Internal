@@ -79,6 +79,8 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
 	shadowSampDesc.BorderColor[1] = 1.0f;
 	shadowSampDesc.BorderColor[2] = 1.0f;
 	shadowSampDesc.BorderColor[3] = 1.0f;
+	shadowSampDesc.MinLOD = 0;
+	shadowSampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	hr = device->CreateSamplerState(&shadowSampDesc, &m_shadowSamplerState);
 	if (FAILED(hr))
 		DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);

@@ -5,6 +5,7 @@ public:
 
 public:
 	LoaderNotificationDevice();
+	virtual ~LoaderNotificationDevice() = default;
 
 	void Reset();
 };

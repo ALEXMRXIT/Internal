@@ -67,25 +67,34 @@ float PCF(float2 uv, float depth, float2 texelSize)
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
-    float diffuseFactor = dot(normalize(input.Normal), normalize(-direction.xyz));
-    float4 lightIntensity = lerp(0.2f, 1.0f, saturate(diffuseFactor));
+    float3 lightDir = normalize(-direction.xyz);
+    float3 normal = normalize(input.Normal);
     
-    float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
-    shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
-    shadowPos.y = 1.0f - shadowPos.y;
+    float diff = saturate(dot(normal, lightDir));
+    diff = max(diff, 0.2f); // Минимальное освещение
     
-    float2 texelSize = 1.0 / float2(4192, 4192);
-    float shadowBias = max(0.005 * (1.0 - diffuseFactor), 0.001);
-    float shadow = 1.0f;
-    float shadowDarkness = 1.0;
-    if (all(shadowPos.xy >= 0) && all(shadowPos.xy <= 1))
-    {
-        float pcf = PCF(shadowPos.xy, shadowPos.z - shadowBias, texelSize);
-        shadow = lerp(1.0, pcf, shadowDarkness);
-    }
+    return color * diff * 5.0f;
     
-    float ambient = 0.25f;
-    float4 finalColor = color * (ambient + lightIntensity * shadow) * 2.0f;
-    finalColor.a = color.a;
-    return finalColor;
+    //float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    //float diffuseFactor = dot(normalize(input.Normal), normalize(-direction.xyz));
+    //float4 lightIntensity = lerp(0.2f, 1.0f, saturate(diffuseFactor));
+    
+    //float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
+    //shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
+    //shadowPos.y = 1.0f - shadowPos.y;
+    
+    //float2 texelSize = 1.0 / float2(4192, 4192);
+    //float shadowBias = max(0.005 * (1.0 - diffuseFactor), 0.001);
+    //float shadow = 1.0f;
+    //float shadowDarkness = 1.0;
+    //if (all(shadowPos.xy >= 0) && all(shadowPos.xy <= 1))
+    //{
+    //    float pcf = PCF(shadowPos.xy, shadowPos.z - shadowBias, texelSize);
+    //    shadow = lerp(1.0, pcf, shadowDarkness);
+    //}
+    
+    //float ambient = 0.25f;
+    //float4 finalColor = color * (ambient + lightIntensity * shadow) * 2.0f;
+    //finalColor.a = color.a;
+    //return finalColor;
 }
