@@ -68,7 +68,6 @@ private:
 	WorldViewProjection m_bufferWVP;
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11Buffer* m_shadowConstantBuffer;
-	XMMATRIX* m_position;
 	uint32_t m_indices;
 
 	bool m_spawned;
@@ -89,7 +88,7 @@ public:
 	void Render(ID3D11DeviceContext* context);
 	void RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight);
 
-	void setMatrix(XMMATRIX& position) override;
+	void setMatrix(XMMATRIX position) override {};
 	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
@@ -102,7 +101,6 @@ public:
 	bool CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size);
 
 	MeshMaterial* material() const { return m_material; }
-	XMMATRIX& position() const { return *m_position; }
 
 	void Release();
 };

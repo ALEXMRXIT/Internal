@@ -6,7 +6,7 @@ public:
 		multiply = 0;
 		qualityTexture = 10;
 		fullscreen = true;
-		vSync = 1;
+		vSync = 0;
 		showCursor = true;
 		cameraSpeed = 50.0f;
 		mouseIntensive = 25.0f;

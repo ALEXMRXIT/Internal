@@ -29,4 +29,4 @@ public:
 	std::list<GameObject*>& staticObjects() { return m_objects; }
 };
 
-static GameObject* Instantiate(const XMFLOAT3& pos, const XMFLOAT3& rot, const XMFLOAT3& scale);
+static GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion);

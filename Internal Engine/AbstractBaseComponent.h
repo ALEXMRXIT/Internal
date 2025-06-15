@@ -4,8 +4,15 @@
 class GameObject;
 
 class AbstractBaseComponent {
+private:
+	GameObject* m_object;
+
 public:
-	virtual void setMatrix(XMMATRIX& position) = 0;
+	virtual void setMatrix(XMMATRIX position) = 0;
+
+	void gameObject(GameObject* obj);
+	const GameObject& gameObject() const;
+	GameObject& gameObject();
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	virtual void UpdateInterfaceInInspector(GameObject* gameObject) = 0;

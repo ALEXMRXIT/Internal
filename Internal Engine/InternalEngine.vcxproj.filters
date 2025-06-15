@@ -96,6 +96,12 @@
     <ClCompile Include="ShadowMap.cpp">
       <Filter>Исходные файлы\Light</Filter>
     </ClCompile>
+    <ClCompile Include="AbstractBaseComponent.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Quaternion.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -186,6 +192,9 @@
       <Filter>Файлы заголовков\Light</Filter>
     </ClInclude>
     <ClInclude Include="ViewProjectonData.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Quaternion.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

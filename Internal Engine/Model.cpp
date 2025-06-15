@@ -5,7 +5,6 @@
 
 Model::Model(MeshComponent& component) : m_component(component) {
 	m_component.model = this;
-	m_obj = nullptr;
 }
 
 void Model::Update(float deltaTime) {
@@ -23,8 +22,6 @@ void Model::RenderShadow(ID3D11DeviceContext* context, DirectionLight* direction
 }
 
 void Model::Release() {
-	if (m_obj) delete m_obj;
-
 	m_component.Release();
 }
 

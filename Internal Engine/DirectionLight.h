@@ -31,5 +31,5 @@ public:
 	void UpdateInterfaceInInspector(GameObject* gameObject) override;
 #endif
 
-	void setMatrix(XMMATRIX& position) override;
+	void setMatrix(XMMATRIX position) override {};
 };

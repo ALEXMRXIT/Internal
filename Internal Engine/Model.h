@@ -9,7 +9,6 @@ class DirectionLight;
 
 class Model : public SharedObject, public Physics {
 private:
-	GameObject* m_obj;
 	MeshComponent& m_component;
 
 public:
@@ -30,7 +29,5 @@ public:
 
 	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset) override;
 
-	GameObject* gameObject() const { return m_obj; }
-	void setGameObject(GameObject* obj) { m_obj = obj; }
 	MeshComponent& mesh() const { return m_component; }
 };

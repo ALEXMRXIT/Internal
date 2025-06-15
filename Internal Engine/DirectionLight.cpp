@@ -25,29 +25,37 @@ void DirectionLight::Release() {
 }
 
 BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX worldPos) {
-    XMFLOAT3 rotation = m_transform->rotation();
-    XMVECTOR direction = XMLoadFloat3(&rotation);
-    direction = XMVector3Equal(direction, XMVectorZero())
-        ? XMVectorSet(0, 0, 1, 0)
-        : XMVector3Normalize(direction);
+    Quaternion rotation = m_transform->rotation();
+    XMVECTOR direction = XMVector3Rotate(
+        XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
+        rotation.quat
+    );
+
+    if (XMVector3Equal(direction, XMVectorZero()))
+        direction = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+    else
+        direction = XMVector3Normalize(direction);
 
     XMVECTOR lightPos = direction * 50.0f;
     XMMATRIX view = XMMatrixLookAtLH(lightPos, XMVectorZero(), XMVectorSet(0, 1, 0, 0));
 
     BufferDirectionLight buffer;
-    buffer.direction = XMFLOAT4(XMVectorGetX(direction), XMVectorGetY(direction),
-        XMVectorGetZ(direction), 1.0f);
+    XMStoreFloat4(&buffer.direction, direction);
     buffer.lightViewProj = XMMatrixTranspose(worldPos * view * m_lightProjectionMatrix);
-
     return buffer;
 }
 
 XMMATRIX DirectionLight::GetViewProjectionMatrix() {
-    XMFLOAT3 rotation = m_transform->rotation();
-    XMVECTOR direction = XMLoadFloat3(&rotation);
-    direction = XMVector3Equal(direction, XMVectorZero())
-        ? XMVectorSet(0, 0, 1, 0)
-        : XMVector3Normalize(direction);
+    Quaternion rotation = m_transform->rotation();
+    XMVECTOR direction = XMVector3Rotate(
+        XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
+        rotation.quat
+    );
+
+    if (XMVector3Equal(direction, XMVectorZero()))
+        direction = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+    else
+        direction = XMVector3Normalize(direction);
 
     XMVECTOR lightPos = direction * 50.0f;
     XMMATRIX view = XMMatrixLookAtLH(lightPos, XMVectorZero(), XMVectorSet(0, 1, 0, 0));
@@ -60,5 +68,3 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
 
 }
 #endif
-
-void DirectionLight::setMatrix(XMMATRIX& position) { }

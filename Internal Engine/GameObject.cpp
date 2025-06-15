@@ -3,7 +3,6 @@
 
 GameObject::GameObject() {
 	m_components = new Component();
-    m_components->transform().setGameObject(this);
 	m_enable = true;
 	serialize = true;
 	selectable = false;
@@ -22,8 +21,6 @@ void GameObject::SetParent(GameObject* parent) {
     m_parent = parent;
     if (m_parent)
         m_parent->AddChild(this);
-
-    transform().UpdateWorldCoord();
 }
 
 void GameObject::AddChild(GameObject* child) {

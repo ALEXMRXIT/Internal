@@ -365,8 +365,8 @@ bool Engine::InitScene() {
 
     m_viewProjectionData = new ViewProjectonData(camera.getView(), camera.getProjection());
 
-    //m_font = new Font();
-    //m_font->Init(m_device);
+    m_font = new Font();
+    m_font->Init(m_device);
 
     m_location = new Location(m_device);
 
@@ -478,10 +478,9 @@ void Engine::Render() {
     shadowMap.Render(m_deviceContext, m_location->m_directionLight);
 
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
-        if (GameObject* obj = m_meshes[iterator]->gameObject()) {
-            if (obj->isEnabled() && !obj->isTransparent())
-                m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight);
-        }
+        const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
+        if (obj.isEnabled() && !obj.isTransparent())
+            m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight);
     }
 
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
@@ -506,26 +505,24 @@ void Engine::Render() {
     m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
     // рендерим все непрозрачные объекты
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
-        if (GameObject* obj = m_meshes[iterator]->gameObject()) {
-            if (obj->isEnabled() && !obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
-        }
+        const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
+        if (obj.isEnabled() && !obj.isTransparent())
+            m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
     }
 
     // рендерим все прозрачные объекты (включая directionLight, skybox...)
     m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xFFFFFFFF);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
-        if (GameObject* obj = m_meshes[iterator]->gameObject()) {
-            if (obj->isEnabled() && obj->isTransparent())
-                m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
-        }
+        const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
+        if (obj.isEnabled() && obj.isTransparent())
+            m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
     }
 
     gizmozRect.Render();
 
-    //static wchar_t buffer[128];
-    //swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
-    //m_font->Render(m_deviceContext, buffer);
+    static wchar_t buffer[128];
+    swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
+    m_font->Render(m_deviceContext, buffer);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
@@ -667,11 +664,11 @@ void Engine::Raycast(int mouseX, int mouseY) {
     }
 
     if (closestMesh != nullptr) {
-        GameObject* obj = closestMesh->gameObject();
+        GameObject& obj = closestMesh->mesh().gameObject();
         if (lastSelected)
             lastSelected->selectable = false;
-        obj->selectable = true;
-        lastSelected = obj;
+        obj.selectable = true;
+        lastSelected = &obj;
     }
 }
 

@@ -73,7 +73,6 @@ MeshComponent::MeshComponent() {
     m_material = nullptr;
     m_preObjectBuffer = nullptr;
     m_indices = 0;
-    m_position = nullptr;
     model = nullptr;
     m_spawned = false;
     m_shadowConstantBuffer = nullptr;
@@ -85,8 +84,9 @@ void MeshComponent::Update(float deltaTime) {
 
 void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight) {
     if (!m_device_loader) return;
-    m_bufferWVP.WVP = XMMatrixTranspose(*m_position * viewProjection.m_view * viewProjection.m_projection);
-    m_bufferWVP.World = XMMatrixTranspose(*m_position);
+    XMMATRIX worldPosition = gameObject().transform().GetWorldMatrix();
+    m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * viewProjection.m_view * viewProjection.m_projection);
+    m_bufferWVP.World = XMMatrixTranspose(worldPosition);
     m_bufferWVP.LightPos = XMMatrixTranspose(directionLight->GetViewProjectionMatrix());
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
@@ -104,7 +104,8 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 }
 
 void MeshComponent::RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight) {
-    BufferDirectionLight view = directionLight->UpdateMatrixByDirectionLight(*m_position);
+    XMMATRIX worldPosition = gameObject().transform().GetWorldMatrix();
+    BufferDirectionLight view = directionLight->UpdateMatrixByDirectionLight(worldPosition);
 
     context->UpdateSubresource(m_shadowConstantBuffer, 0, nullptr, &view, 0, 0);
     context->VSSetConstantBuffers(0, 1, &m_shadowConstantBuffer);
@@ -196,10 +197,6 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
     }
 }
 #endif
-
-void MeshComponent::setMatrix(XMMATRIX& position) {
-    m_position = &position;
-}
 
 void MeshComponent::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset){
     m_material = new MeshMaterial();

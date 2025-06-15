@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractBaseComponent.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="DirectionLight.cpp" />
@@ -156,6 +157,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="PrimitiveDrawable.cpp" />
+    <ClCompile Include="Quaternion.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="Skybox.cpp" />
@@ -186,6 +188,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="PrimitiveDrawable.h" />
+    <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="SharedObject.h" />

@@ -49,11 +49,4 @@ public:
 	bool isTransparent() const;
 
 	Transform& transform() const { return m_components->transform(); }
-
-	inline void setPosition(const XMFLOAT3& vector) const { transform().setPosition(vector); }
-	XMFLOAT3& position() const { return transform().position(); }
-	inline void setRotation(const XMFLOAT3& vector) const { transform().setRotation(vector); }
-	XMFLOAT3& rotation() const { return transform().rotation(); }
-	inline void setScale(const XMFLOAT3& vector) const { transform().setScale(vector); }
-	XMFLOAT3& scale() const { return transform().scale(); }
 };
