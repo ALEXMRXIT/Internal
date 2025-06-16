@@ -12,7 +12,7 @@ public:
 
     static Quaternion Identity();
     static Quaternion EulerAngles(float pitch, float yaw, float roll);
-    static Quaternion AngleAxis(float angleDegrees, const DirectX::XMFLOAT3& axis);
+    static Quaternion AngleAxis(float angleDegrees, const DirectX::XMFLOAT3 axis);
     static float Angle(const Quaternion& a, const Quaternion& b);
     static float Dot(const Quaternion& a, const Quaternion& b);
     static Quaternion Lerp(const Quaternion& a, const Quaternion& b, float t);

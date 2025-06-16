@@ -14,7 +14,7 @@ Quaternion Quaternion::EulerAngles(float pitch, float yaw, float roll) {
     ));
 }
 
-Quaternion Quaternion::AngleAxis(float angleDegrees, const DirectX::XMFLOAT3& axis) {
+Quaternion Quaternion::AngleAxis(float angleDegrees, const DirectX::XMFLOAT3 axis) {
     return Quaternion(DirectX::XMQuaternionRotationAxis(
         DirectX::XMLoadFloat3(&axis),
         DirectX::XMConvertToRadians(angleDegrees)
@@ -50,25 +50,32 @@ Quaternion Quaternion::LookRotation(const DirectX::XMFLOAT3& forward, const Dire
 }
 
 XMFLOAT3 Quaternion::ToEulerAngles() const {
-    XMFLOAT3 euler;
-    XMFLOAT4 com;
-    XMStoreFloat4(&com, quat);
+    XMFLOAT4 q;
+    XMStoreFloat4(&q, quat);
 
-    float sinr_cosp = 2.0f * (com.w * com.x + com.y * com.z);
-    float cosr_cosp = 1.0f - 2.0f * (com.x * com.x + com.y * com.y);
-    euler.x = std::atan2(sinr_cosp, cosr_cosp);
+    float sinp = 2.0f * (q.w * q.y - q.z * q.x);
+    float pitch;
 
-    float sinp = 2.0f * (com.w * com.y - com.z * com.x);
-    if (std::abs(sinp) >= 1.0f)
-        euler.y = std::copysign(XM_PI / 2.0f, sinp);
+    if (std::fabs(sinp) >= 1.0f)
+        pitch = std::copysignf(XM_PIDIV2, sinp);
     else
-        euler.y = std::asin(sinp);
+        pitch = std::asinf(sinp);
 
-    float siny_cosp = 2.0f * (com.w * com.z + com.x * com.y);
-    float cosy_cosp = 1.0f - 2.0f * (com.y * com.y + com.z * com.z);
-    euler.z = std::atan2(siny_cosp, cosy_cosp);
+    float yaw, roll;
 
-    return euler;
+    if (std::fabs(sinp) > 0.9999f) {
+        roll = 0.0f;
+        yaw = std::atan2f(2.0f * (q.x * q.y - q.w * q.z),
+            1.0f - 2.0f * (q.y * q.y + q.z * q.z));
+    }
+    else {
+        roll = std::atan2f(2.0f * (q.w * q.x + q.y * q.z),
+            1.0f - 2.0f * (q.x * q.x + q.y * q.y));
+        yaw = std::atan2f(2.0f * (q.w * q.z + q.x * q.y),
+            1.0f - 2.0f * (q.y * q.y + q.z * q.z));
+    }
+
+    return XMFLOAT3(roll, pitch, yaw);
 }
 
 Quaternion Quaternion::Normalized() const {

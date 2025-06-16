@@ -77,8 +77,13 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                 }
 
                 {
-                    XMFLOAT3 rot = gameObject->transform().rotation().ToEulerAngles();
-                    float rotation[3] = { XMConvertToDegrees(rot.x), XMConvertToDegrees(rot.y), XMConvertToDegrees(rot.z) };
+                    Quaternion currentRot = gameObject->transform().rotation();
+                    XMFLOAT3 euler = currentRot.ToEulerAngles();
+                    float rotation[3] = {
+                        XMConvertToDegrees(euler.x),
+                        XMConvertToDegrees(euler.y),
+                        XMConvertToDegrees(euler.z)
+                    };
 
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 5.0f));
                     const char* rotText = "Rotation:";
@@ -92,26 +97,35 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                     ImGui::Text("X:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotX", &newRotation[0], 0.25f, -90.0f, 90.0f, "%.2f");
+                    rotationChanged |= ImGui::DragFloat("##RotX", &newRotation[0], 0.25f, 0.0f, 0.0f, "%.2f");
                     ImGui::SameLine();
 
                     ImGui::Text("Y:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotY", &newRotation[1], 0.25f, -90.0f, 90.0f, "%.2f");
+                    rotationChanged |= ImGui::DragFloat("##RotY", &newRotation[1], 0.25f, 0.0f, 0.0f, "%.2f");
                     ImGui::SameLine();
 
                     ImGui::Text("Z:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotZ", &newRotation[2], 0.25f, -90.0f, 90.0f, "%.2f");
+                    rotationChanged |= ImGui::DragFloat("##RotZ", &newRotation[2], 0.25f, 0.0f, 0.0f, "%.2f");
 
                     if (rotationChanged) {
-                        gameObject->transform().rotation(Quaternion::EulerAngles(
-                            newRotation[0],
-                            newRotation[1],
-                            newRotation[2]
-                        ));
+                        float deltaX = newRotation[0] - rotation[0];
+                        float deltaY = newRotation[1] - rotation[1];
+                        float deltaZ = newRotation[2] - rotation[2];
+
+                        Quaternion finalRot = currentRot;
+
+                        if (fabsf(deltaX) > 0.001f)
+                            finalRot = Quaternion::AngleAxis(XMConvertToRadians(deltaX), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f)) * finalRot;
+                        if (fabsf(deltaY) > 0.001f)
+                            finalRot = Quaternion::AngleAxis(XMConvertToRadians(deltaY), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)) * finalRot;
+                        if (fabsf(deltaZ) > 0.001f)
+                            finalRot = Quaternion::AngleAxis(XMConvertToRadians(deltaZ), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f)) * finalRot;
+
+                        gameObject->transform().rotation(finalRot);
                     }
                     ImGui::PopStyleVar();
                 }
