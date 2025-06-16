@@ -51,25 +51,22 @@ Quaternion Quaternion::LookRotation(const DirectX::XMFLOAT3& forward, const Dire
 
 XMFLOAT3 Quaternion::ToEulerAngles() const {
     XMFLOAT3 euler;
-    XMVECTOR q = quat;
+    XMFLOAT4 com;
+    XMStoreFloat4(&com, quat);
 
-    float sinp = 2.0f * (XMVectorGetW(q) * XMVectorGetY(q) - XMVectorGetZ(q) * XMVectorGetX(q));
-    if (fabs(sinp) >= 0.9999f) {
-        euler.x = XMConvertToDegrees(XM_PIDIV2 * sinp);
-        euler.y = XMConvertToDegrees(atan2f(
-            2.0f * (XMVectorGetX(q) * XMVectorGetY(q) + XMVectorGetW(q) * XMVectorGetZ(q)),
-            XMVectorGetW(q) * XMVectorGetW(q) + XMVectorGetX(q) * XMVectorGetX(q) - XMVectorGetY(q) * XMVectorGetY(q) - XMVectorGetZ(q) * XMVectorGetZ(q)));
-        euler.z = 0.0f;
-    }
-    else {
-        euler.x = XMConvertToDegrees(asinf(sinp));
-        euler.y = XMConvertToDegrees(atan2f(
-            2.0f * (XMVectorGetW(q) * XMVectorGetZ(q) + XMVectorGetX(q) * XMVectorGetY(q)),
-            1.0f - 2.0f * (XMVectorGetY(q) * XMVectorGetY(q) + XMVectorGetZ(q) * XMVectorGetZ(q))));
-        euler.z = XMConvertToDegrees(atan2f(
-            2.0f * (XMVectorGetW(q) * XMVectorGetX(q) + XMVectorGetY(q) * XMVectorGetZ(q)),
-            1.0f - 2.0f * (XMVectorGetX(q) * XMVectorGetX(q) + XMVectorGetY(q) * XMVectorGetY(q))));
-    }
+    float sinr_cosp = 2.0f * (com.w * com.x + com.y * com.z);
+    float cosr_cosp = 1.0f - 2.0f * (com.x * com.x + com.y * com.y);
+    euler.x = std::atan2(sinr_cosp, cosr_cosp);
+
+    float sinp = 2.0f * (com.w * com.y - com.z * com.x);
+    if (std::abs(sinp) >= 1.0f)
+        euler.y = std::copysign(XM_PI / 2.0f, sinp);
+    else
+        euler.y = std::asin(sinp);
+
+    float siny_cosp = 2.0f * (com.w * com.z + com.x * com.y);
+    float cosy_cosp = 1.0f - 2.0f * (com.y * com.y + com.z * com.z);
+    euler.z = std::atan2(siny_cosp, cosy_cosp);
 
     return euler;
 }
