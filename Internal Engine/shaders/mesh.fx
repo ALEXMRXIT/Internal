@@ -70,24 +70,23 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
     float diffuseFactor = dot(input.Normal, input.LightDirection);
     float4 lightIntensity = lerp(0.2f, 1.0f, saturate(diffuseFactor));
-    return lightIntensity;
     
-    //float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
-    //shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
-    //shadowPos.y = 1.0f - shadowPos.y;
+    float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
+    shadowPos.xy = shadowPos.xy * 0.5f + 0.5f;
+    shadowPos.y = 1.0f - shadowPos.y;
     
-    //float2 texelSize = 1.0 / float2(4192, 4192);
-    //float shadowBias = max(0.005 * (1.0 - diffuseFactor), 0.001);
-    //float shadow = 1.0f;
-    //float shadowDarkness = 2.25f;
-    //if (all(shadowPos.xy >= 0) && all(shadowPos.xy <= 1))
-    //{
-        //float pcf = PCF(shadowPos.xy, shadowPos.z - shadowBias, texelSize);
-        //shadow = lerp(1.0, pcf, shadowDarkness);
-    //}
+    float2 texelSize = 1.0 / float2(4192, 4192);
+    float shadowBias = max(0.005 * (1.0 - diffuseFactor), 0.001);
+    float shadow = 1.0f;
+    float shadowDarkness = 2.25f;
+    if (all(shadowPos.xy >= 0) && all(shadowPos.xy <= 1))
+    {
+        float pcf = PCF(shadowPos.xy, shadowPos.z - shadowBias, texelSize);
+        shadow = lerp(1.0, pcf, shadowDarkness);
+    }
     
-    //float ambient = 1.0f;
-    //float4 finalColor = color * (ambient + lightIntensity * shadow);
-    //finalColor.a = color.a;
-    //return finalColor;
+    float ambient = 1.0f;
+    float4 finalColor = color * (ambient + lightIntensity * shadow);
+    finalColor.a = color.a;
+    return finalColor;
 }
