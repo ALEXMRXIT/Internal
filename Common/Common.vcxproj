@@ -25,11 +25,13 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="LoaderNotificationDevice.h" />
     <ClInclude Include="Serialize.h" />
+    <ClInclude Include="servlib.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="LoaderNotificationDevice.cpp" />
     <ClCompile Include="Serialize.cpp" />
+    <ClCompile Include="servlib.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

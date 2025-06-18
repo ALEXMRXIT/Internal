@@ -28,7 +28,7 @@ BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX world
     Quaternion rotation = m_transform->rotation();
     XMVECTOR direction = XMVector3Rotate(
         XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
-        rotation.quat
+        rotation.m_quat
     );
 
     if (XMVector3Equal(direction, XMVectorZero()))
@@ -49,7 +49,7 @@ XMMATRIX DirectionLight::GetViewProjectionMatrix() {
     Quaternion rotation = m_transform->rotation();
     XMVECTOR direction = XMVector3Rotate(
         XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
-        rotation.quat
+        rotation.m_quat
     );
 
     if (XMVector3Equal(direction, XMVectorZero()))
