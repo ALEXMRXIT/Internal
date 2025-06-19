@@ -30,7 +30,7 @@ public:
 	GameObject& operator=(const GameObject&) = delete;
 
 	template<class TComponent>
-	TComponent* AddComponent() { return m_components->AddComponent<TComponent>(); }
+	TComponent* AddComponent(GameObject* obj) { return m_components->AddComponent<TComponent>(obj); }
 
 	template<class TComponent>
 	TComponent* GetComponentByType() const { return m_components->GetComponentByType<TComponent>(); }
@@ -47,6 +47,4 @@ public:
 	void Enable(bool enable);
 	bool isEnabled() const { return m_enable; }
 	bool isTransparent() const;
-
-	Transform& transform() const { return m_components->transform(); }
 };

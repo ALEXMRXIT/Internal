@@ -67,7 +67,7 @@ void IndexBuffer::Release() {
 	if (m_indexBuffer) m_indexBuffer->Release();
 }
 
-MeshComponent::MeshComponent() {
+MeshComponent::MeshComponent(GameObject* obj) : AbstractBaseComponent(obj) {
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
     m_material = nullptr;
@@ -84,7 +84,7 @@ void MeshComponent::Update(float deltaTime) {
 
 void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight) {
     if (!m_device_loader) return;
-    XMMATRIX worldPosition = gameObject().transform().GetWorldMatrix();
+    XMMATRIX worldPosition = gameObject().GetComponentByType<Transform>()->GetWorldMatrix();
     m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * viewProjection.m_view * viewProjection.m_projection);
     m_bufferWVP.World = XMMatrixTranspose(worldPosition);
     m_bufferWVP.LightPos = XMMatrixTranspose(directionLight->GetViewProjectionMatrix());
@@ -104,7 +104,7 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 }
 
 void MeshComponent::RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight) {
-    XMMATRIX worldPosition = gameObject().transform().GetWorldMatrix();
+    XMMATRIX worldPosition = gameObject().GetComponentByType<Transform>()->GetWorldMatrix();
     BufferDirectionLight view = directionLight->UpdateMatrixByDirectionLight(worldPosition);
 
     context->UpdateSubresource(m_shadowConstantBuffer, 0, nullptr, &view, 0, 0);

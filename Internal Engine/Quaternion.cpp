@@ -1,7 +1,12 @@
 #include "Quaternion.h"
 
 Quaternion::Quaternion() : m_quat(DirectX::XMQuaternionIdentity()) {}
-Quaternion::Quaternion(float x, float y, float z, float w) : m_quat(DirectX::XMVectorSet(x, y, z, w)) {}
+Quaternion::Quaternion(float x, float y, float z, float w) : m_quat(DirectX::XMVectorSet(
+    XMConvertToRadians(x), 
+    XMConvertToRadians(y),
+    XMConvertToRadians(z),
+    XMConvertToRadians(w)
+)) {  }
 Quaternion::Quaternion(const DirectX::XMVECTOR& q) : m_quat(XMQuaternionNormalize(q)) {}
 
 Quaternion Quaternion::Identity() { return Quaternion(); }

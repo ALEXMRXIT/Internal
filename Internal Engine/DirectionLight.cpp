@@ -2,9 +2,9 @@
 #include "debug.h"
 #include "ImGUI/imgui_internal.h"
 #include "ViewProjectonData.h"
+#include "GameObject.h"
 
-DirectionLight::DirectionLight() {
-    m_transform = nullptr;
+DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
@@ -13,7 +13,7 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
     m_lightProjectionMatrix = XMMatrixOrthographicOffCenterLH(
         -dst, dst,
         -dst, dst,
-        0.1f, 400.0f
+        0.1f, 600.0f
     );
 
     m_device_loader = true;
@@ -25,7 +25,7 @@ void DirectionLight::Release() {
 }
 
 BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX worldPos) {
-    Quaternion rotation = m_transform->rotation();
+    Quaternion rotation = gameObject().GetComponentByType<Transform>()->rotation();
     XMVECTOR direction = XMVector3Rotate(
         XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
         rotation.m_quat
@@ -46,7 +46,7 @@ BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX world
 }
 
 XMMATRIX DirectionLight::GetViewProjectionMatrix() {
-    Quaternion rotation = m_transform->rotation();
+    Quaternion rotation = gameObject().GetComponentByType<Transform>()->rotation();
     XMVECTOR direction = XMVector3Rotate(
         XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f),
         rotation.m_quat

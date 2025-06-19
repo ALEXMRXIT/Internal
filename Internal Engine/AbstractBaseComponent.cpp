@@ -1,7 +1,7 @@
 #include "AbstractBaseComponent.h"
 #include "GameObject.h"
 
-void AbstractBaseComponent::gameObject(GameObject* obj) {
+AbstractBaseComponent::AbstractBaseComponent(GameObject* obj) {
 	m_object = obj;
 }
 

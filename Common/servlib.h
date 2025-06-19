@@ -6,6 +6,8 @@
 #define SERVLIBCALL __fastcall
 #endif
 
+#define SERVLIBFINLINE __forceinline
+
 class servlib {
 
 };

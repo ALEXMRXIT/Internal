@@ -17,10 +17,7 @@ private:
 	XMMATRIX m_lightProjectionMatrix;
 
 public:
-	Transform* m_transform;
-
-public:
-	DirectionLight();
+	DirectionLight(GameObject* obj);
 
 	HRESULT Init(ID3D11Device* device);
 	void Release();
@@ -30,6 +27,4 @@ public:
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	void UpdateInterfaceInInspector(GameObject* gameObject) override;
 #endif
-
-	void setMatrix(XMMATRIX position) override {};
 };

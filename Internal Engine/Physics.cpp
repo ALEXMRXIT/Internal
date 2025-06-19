@@ -40,7 +40,7 @@ float Physics::IntersectRayWithMesh(const XMVECTOR& rayOrigin, const XMVECTOR& r
         tri1V2 = XMVectorSet(tV2.position.x, tV2.position.y, tV2.position.z, 0.0f);
         tri1V3 = XMVectorSet(tV3.position.x, tV3.position.y, tV3.position.z, 0.0f);
 
-        const XMMATRIX meshWorldPosition = mesh.gameObject().transform().GetWorldMatrix();
+        const XMMATRIX meshWorldPosition = mesh.gameObject().GetComponentByType<Transform>()->GetWorldMatrix();
         tri1V1 = XMVector3TransformCoord(tri1V1, meshWorldPosition);
         tri1V2 = XMVector3TransformCoord(tri1V2, meshWorldPosition);
         tri1V3 = XMVector3TransformCoord(tri1V3, meshWorldPosition);

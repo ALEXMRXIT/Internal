@@ -8,9 +8,8 @@ private:
 	GameObject* m_object;
 
 public:
-	virtual void setMatrix(XMMATRIX position) = 0;
+	AbstractBaseComponent(GameObject* obj);
 
-	void gameObject(GameObject* obj);
 	const GameObject& gameObject() const;
 	GameObject& gameObject();
 

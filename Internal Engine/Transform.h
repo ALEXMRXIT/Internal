@@ -16,9 +16,7 @@ private:
     XMFLOAT3 m_scale;
 
 public:
-    Transform();
-
-    void setMatrix(XMMATRIX position) override {};
+    Transform(GameObject* obj);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     void UpdateInterfaceInInspector(GameObject* gameObject) override;

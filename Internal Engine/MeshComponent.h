@@ -79,7 +79,7 @@ public:
 	Model* model;
 
 public:
-	MeshComponent();
+	MeshComponent(GameObject* obj);
 	MeshComponent(const MeshComponent&) = delete;
 	MeshComponent& operator=(const MeshComponent&) = delete;
 
@@ -88,7 +88,6 @@ public:
 	void Render(ID3D11DeviceContext* context);
 	void RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight);
 
-	void setMatrix(XMMATRIX position) override {};
 	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE

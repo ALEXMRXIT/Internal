@@ -4,6 +4,7 @@
 #include "ResourceLoader.h"
 #include "FileSharedBuffer.h"
 #include "DirectionLight.h"
+#include "servlib.h"
 
 class GameObject;
 
@@ -29,4 +30,6 @@ public:
 	std::list<GameObject*>& staticObjects() { return m_objects; }
 };
 
-static GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion);
+SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos);
+SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion);
+SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion, const XMFLOAT3 scale);

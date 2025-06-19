@@ -5,20 +5,19 @@
 class Component {
 private:
 	std::list<AbstractBaseComponent*> m_components;
-	Transform* m_transform;
 
 public:
-	Component();
+	Component() {  }
 
 	Component(const Component&) = delete;
 	Component& operator=(const Component&) = delete;
 
 	template<class TComponent>
-	TComponent* AddComponent() {
+	TComponent* AddComponent(GameObject* obj) {
 		if (GetComponentByType<TComponent>())
 			return nullptr;
 
-		TComponent* component = new TComponent();
+		TComponent* component = new TComponent(obj);
 		m_components.emplace_back(component);
 		return component;
 	}
@@ -34,6 +33,4 @@ public:
 
 	uint32_t size() const { return (uint32_t)m_components.size(); }
 	std::list<AbstractBaseComponent*> components() const { return m_components; }
-
-	__forceinline Transform& transform() const { return *m_transform; }
 };

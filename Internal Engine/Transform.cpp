@@ -8,7 +8,7 @@ XMMATRIX Transform::GetWorldMatrix() const {
     return scaling * rot * translation;
 }
 
-Transform::Transform() {
+Transform::Transform(GameObject* obj) : AbstractBaseComponent(obj) {
     m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
     m_rotation = Quaternion::Identity();
     m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -46,8 +46,9 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                 const float axisLabelWidth = 20.0f;
                 float dragFloatWidth = (availableWidth - labelWidth - axisLabelWidth * 3 - ImGui::GetStyle().ItemSpacing.x * 5) / 3;
 
+                Transform* transform = gameObject->GetComponentByType<Transform>();
                 {
-                    XMFLOAT3 pos = gameObject->transform().position();
+                    XMFLOAT3 pos = transform->position();
 
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 5.0f));
                     const char* posText = "Position:";
@@ -75,13 +76,13 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                     positionChange |= ImGui::DragFloat("##PosZ", &pos.z, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
                     if (positionChange)
-                        gameObject->transform().position(pos);
+                        transform->position(pos);
 
                     ImGui::PopStyleVar();
                 }
 
                 {
-                    Quaternion quaternion = gameObject->transform().rotation();
+                    Quaternion quaternion = transform->rotation();
                     float angleX = XMConvertToDegrees(quaternion.X());
                     float angleY = XMConvertToDegrees(quaternion.Y());
                     float angleZ = XMConvertToDegrees(quaternion.Z());
@@ -112,13 +113,13 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                     rotationChanged |= ImGui::DragFloat("##RotZ", &angleZ, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
                     if (rotationChanged)
-                        gameObject->transform().rotation(Quaternion(XMConvertToRadians(angleX), XMConvertToRadians(angleY), XMConvertToRadians(angleZ), 0.0f));
+                        transform->rotation(Quaternion(angleX, angleY, angleZ, 0.0f));
                     
                     ImGui::PopStyleVar();
                 }
 
                 {
-                    XMFLOAT3 scale = gameObject->transform().scale();
+                    XMFLOAT3 scale = transform->scale();
 
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 5.0f));
                     const char* scaleText = "Scale:";
@@ -146,7 +147,7 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                     scaleChange |= ImGui::DragFloat("##ScaleZ", &scale.z, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
                     if (scaleChange)
-                        gameObject->transform().scale(scale);
+                        transform->scale(scale);
 
                     ImGui::PopStyleVar();
                 }
