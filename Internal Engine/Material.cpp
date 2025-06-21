@@ -31,59 +31,71 @@ void MeshMaterial::Release() {
 }
 
 inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
-	D3DX11_IMAGE_LOAD_INFO loadInfo;
-	ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
-	loadInfo.Width = D3DX11_DEFAULT;
-	loadInfo.Height = D3DX11_DEFAULT;
-	loadInfo.Depth = D3DX11_DEFAULT;
-	loadInfo.FirstMipLevel = 0;
-	loadInfo.MipLevels = D3DX11_DEFAULT;
-	loadInfo.Usage = D3D11_USAGE_DEFAULT;
-	loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	loadInfo.CpuAccessFlags = 0;
-	loadInfo.MiscFlags = 0;
-	loadInfo.Format = DXGI_FORMAT_FROM_FILE;
-	loadInfo.Filter = D3DX11_FILTER_LINEAR;
-	loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
-	loadInfo.pSrcInfo = nullptr;
-	HRESULT hr = D3DX11CreateShaderResourceViewFromFile(device, name, &loadInfo, NULL, &m_shaderView, NULL);
-	if (FAILED(hr))
-		DXUT_ERR_MSGBOX("Failed to load texture.", hr);
+    D3DX11_IMAGE_LOAD_INFO loadInfo;
+    ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
+    loadInfo.Width = D3DX11_DEFAULT;
+    loadInfo.Height = D3DX11_DEFAULT;
+    loadInfo.Depth = D3DX11_DEFAULT;
+    loadInfo.FirstMipLevel = 0;
+    loadInfo.MipLevels = D3DX11_DEFAULT;
+    loadInfo.Usage = D3D11_USAGE_DEFAULT;
+    loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    loadInfo.CpuAccessFlags = 0;
+    loadInfo.MiscFlags = 0;
+    loadInfo.Format = DXGI_FORMAT_FROM_FILE;
+    loadInfo.Filter = D3DX11_FILTER_LINEAR;
+    loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
+    loadInfo.pSrcInfo = nullptr;
 
-	D3D11_SAMPLER_DESC sampDesc;
-	ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
-	if (config.qualityTexture == 0) sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	else if (config.qualityTexture == 10) sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	else sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	const int anisotropy = 1 + (config.qualityTexture * 2);
-	sampDesc.MaxAnisotropy = min(anisotropy, 16);
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	sampDesc.MinLOD = 0;
-	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	hr = device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
-	if (FAILED(hr))
-		DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
+    HRESULT hr = D3DX11CreateShaderResourceViewFromFile(device, name, &loadInfo, NULL, &m_shaderView, NULL);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to load texture.", hr);
+        return;
+    }
 
-	D3D11_SAMPLER_DESC shadowSampDesc;
-	ZeroMemory(&shadowSampDesc, sizeof(D3D11_SAMPLER_DESC));
-	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_ANISOTROPIC;
-	shadowSampDesc.MaxAnisotropy = min(anisotropy, 16);
-	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
-	shadowSampDesc.BorderColor[0] = 1.0f;
-	shadowSampDesc.BorderColor[1] = 1.0f;
-	shadowSampDesc.BorderColor[2] = 1.0f;
-	shadowSampDesc.BorderColor[3] = 1.0f;
-	shadowSampDesc.MinLOD = 0;
-	shadowSampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	hr = device->CreateSamplerState(&shadowSampDesc, &m_shadowSamplerState);
-	if (FAILED(hr))
-		DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
+    D3D11_SAMPLER_DESC sampDesc;
+    ZeroMemory(&sampDesc, sizeof(D3D11_SAMPLER_DESC));
+
+    if (config.qualityTexture == 0)
+        sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    else if (config.qualityTexture == 10)
+        sampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+    else
+        sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+
+    const int anisotropy = 1 + (config.qualityTexture * 2);
+    sampDesc.MaxAnisotropy = min(anisotropy, 16);
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    hr = device->CreateSamplerState(&sampDesc, &m_textureSamplerState);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create Sampler state.", hr);
+    }
+
+    D3D11_SAMPLER_DESC shadowSampDesc;
+    ZeroMemory(&shadowSampDesc, sizeof(D3D11_SAMPLER_DESC));
+    shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+    shadowSampDesc.MaxAnisotropy = 1;
+    shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+    shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+    shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+    shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+    shadowSampDesc.BorderColor[0] = 1.0f;
+    shadowSampDesc.BorderColor[1] = 1.0f;
+    shadowSampDesc.BorderColor[2] = 1.0f;
+    shadowSampDesc.BorderColor[3] = 1.0f;
+    shadowSampDesc.MinLOD = 0;
+    shadowSampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+    hr = device->CreateSamplerState(&shadowSampDesc, &m_shadowSamplerState);
+    if (FAILED(hr)) {
+        DXUT_ERR_MSGBOX("Failed to create shadow Sampler state.", hr);
+    }
 }
 
 inline void Material::TextureMapInfo::Release() {
