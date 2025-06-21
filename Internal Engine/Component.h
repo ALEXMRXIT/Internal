@@ -4,33 +4,50 @@
 
 class Component {
 private:
-	std::list<AbstractBaseComponent*> m_components;
+    typedef std::unordered_map<size_t, AbstractBaseComponent*> ComponentMap;
+    ComponentMap m_components;
+    mutable std::vector<AbstractBaseComponent*> m_componentsCache;
+    mutable bool m_cacheDirty;
 
 public:
-	Component() {  }
+    ALWAYS_INLINE Component() : m_cacheDirty(true) {}
 
-	Component(const Component&) = delete;
-	Component& operator=(const Component&) = delete;
+    Component(const Component&) = delete;
+    Component& operator=(const Component&) = delete;
 
-	template<class TComponent>
-	TComponent* AddComponent(GameObject* obj) {
-		if (GetComponentByType<TComponent>())
-			return nullptr;
+    ~Component() {
+        for (ComponentMap::iterator it = m_components.begin(); it != m_components.end(); ++it)
+            delete it->second;
+    }
 
-		TComponent* component = new TComponent(obj);
-		m_components.emplace_back(component);
-		return component;
-	}
+    template<class TComponent>
+    ALWAYS_INLINE TComponent* AddComponent(GameObject* obj) {
+        const size_t typeHash = typeid(TComponent).hash_code();
+        if (m_components.find(typeHash) != m_components.end())
+            return nullptr;
 
-	template<class TComponent>
-	TComponent* GetComponentByType() const {
-		for (AbstractBaseComponent* component : m_components) {
-			if (dynamic_cast<TComponent*>(component))
-				return static_cast<TComponent*>(component);
-		}
-		return nullptr;
-	}
+        TComponent* component = new TComponent(obj);
+        m_components[typeHash] = component;
+        m_cacheDirty = true;
+        return component;
+    }
 
-	uint32_t size() const { return (uint32_t)m_components.size(); }
-	std::list<AbstractBaseComponent*> components() const { return m_components; }
+    template<class TComponent>
+    ALWAYS_INLINE TComponent* GetComponentByType() const {
+        const size_t typeHash = typeid(TComponent).hash_code();
+        ComponentMap::const_iterator it = m_components.find(typeHash);
+        return (it != m_components.end()) ? static_cast<TComponent*>(it->second) : nullptr;
+    }
+
+    ALWAYS_INLINE size_t size() const { return m_components.size(); }
+
+    ALWAYS_INLINE const std::vector<AbstractBaseComponent*>& components() const {
+        if (m_cacheDirty) {
+            m_componentsCache.clear();
+            for (ComponentMap::const_iterator it = m_components.begin(); it != m_components.end(); ++it)
+                m_componentsCache.push_back(it->second);
+            m_cacheDirty = false;
+        }
+        return m_componentsCache;
+    }
 };

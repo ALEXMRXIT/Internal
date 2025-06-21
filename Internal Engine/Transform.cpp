@@ -34,7 +34,7 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-        ImGui::BeginChild("ButtonBlock", ImVec2(0, 115), true);
+        ImGui::BeginChild("ButtonBlock", ImVec2(0, 95), true);
         {
             float availableWidth = ImGui::GetContentRegionAvail().x;
             float buttonWidth = (availableWidth - ImGui::GetStyle().ItemSpacing.x) / 2;
@@ -47,10 +47,12 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                 float dragFloatWidth = (availableWidth - labelWidth - axisLabelWidth * 3 - ImGui::GetStyle().ItemSpacing.x * 5) / 3;
 
                 Transform* transform = gameObject->GetComponentByType<Transform>();
+                bool gameObjectStatic = gameObject->IsStatic();
+                ImGuiSliderFlags flags = ImGuiSliderFlags_AlwaysClamp;
+
                 {
                     XMFLOAT3 pos = transform->position();
 
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 5.0f));
                     const char* posText = "Position:";
                     ImGui::Text("%s", posText);
                     ImGui::SameLine();
@@ -58,27 +60,29 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
 
                     bool positionChange = false;
 
+                    if (gameObjectStatic)
+                        ImGui::BeginDisabled();
                     ImGui::Text("X:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    positionChange |= ImGui::DragFloat("##PosX", &pos.x, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    positionChange |= ImGui::DragFloat("##PosX", &pos.x, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     ImGui::SameLine();
 
                     ImGui::Text("Y:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    positionChange |= ImGui::DragFloat("##PosY", &pos.y, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    positionChange |= ImGui::DragFloat("##PosY", &pos.y, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     ImGui::SameLine();
 
                     ImGui::Text("Z:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    positionChange |= ImGui::DragFloat("##PosZ", &pos.z, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    positionChange |= ImGui::DragFloat("##PosZ", &pos.z, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
+                    if (gameObjectStatic)
+                        ImGui::EndDisabled();
 
                     if (positionChange)
                         transform->position(pos);
-
-                    ImGui::PopStyleVar();
                 }
 
                 {
@@ -87,7 +91,6 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                     float angleY = XMConvertToDegrees(quaternion.Y());
                     float angleZ = XMConvertToDegrees(quaternion.Z());
 
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 5.0f));
                     const char* rotText = "Rotation:";
                     ImGui::Text("%s", rotText);
                     ImGui::SameLine();
@@ -95,33 +98,34 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
 
                     bool rotationChanged = false;
 
+                    if (gameObjectStatic)
+                        ImGui::BeginDisabled();
                     ImGui::Text("X:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotX", &angleX, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    rotationChanged |= ImGui::DragFloat("##RotX", &angleX, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     ImGui::SameLine();
 
                     ImGui::Text("Y:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotY", &angleY, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    rotationChanged |= ImGui::DragFloat("##RotY", &angleY, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     ImGui::SameLine();
 
                     ImGui::Text("Z:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotZ", &angleZ, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    rotationChanged |= ImGui::DragFloat("##RotZ", &angleZ, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
+                    if (gameObjectStatic)
+                        ImGui::EndDisabled();
 
                     if (rotationChanged)
                         transform->rotation(Quaternion(angleX, angleY, angleZ, 0.0f));
-                    
-                    ImGui::PopStyleVar();
                 }
 
                 {
                     XMFLOAT3 scale = transform->scale();
 
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 5.0f));
                     const char* scaleText = "Scale:";
                     ImGui::Text("%s", scaleText);
                     ImGui::SameLine();
@@ -129,27 +133,29 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
 
                     bool scaleChange = false;
 
+                    if (gameObjectStatic)
+                        ImGui::BeginDisabled();
                     ImGui::Text("X:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    scaleChange |= ImGui::DragFloat("##ScaleX", &scale.x, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    scaleChange |= ImGui::DragFloat("##ScaleX", &scale.x, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     ImGui::SameLine();
 
                     ImGui::Text("Y:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    scaleChange |= ImGui::DragFloat("##ScaleY", &scale.y, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    scaleChange |= ImGui::DragFloat("##ScaleY", &scale.y, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     ImGui::SameLine();
 
                     ImGui::Text("Z:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    scaleChange |= ImGui::DragFloat("##ScaleZ", &scale.z, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+                    scaleChange |= ImGui::DragFloat("##ScaleZ", &scale.z, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
+                    if (gameObjectStatic)
+                        ImGui::EndDisabled();
 
                     if (scaleChange)
                         transform->scale(scale);
-
-                    ImGui::PopStyleVar();
                 }
             }
             ImGui::EndGroup();

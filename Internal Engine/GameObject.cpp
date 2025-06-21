@@ -13,6 +13,7 @@ GameObject::GameObject() {
 	model = nullptr;
 	selectedLayer = 0;
 	selectedTag = 0;
+    m_static = false;
 }
 
 void GameObject::SetParent(GameObject* parent) {
@@ -47,9 +48,3 @@ void GameObject::RemoveChild(GameObject* child) {
     child->m_prev = nullptr;
     child->m_next = nullptr;
 }
-
-void GameObject::Enable(bool enable) {
-	m_enable = enable;
-}
-
-bool GameObject::isTransparent() const { return false; }

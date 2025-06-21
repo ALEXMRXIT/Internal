@@ -3,15 +3,15 @@
 #include "MeshComponent.h"
 #include "Model.h"
 
-SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos) {
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos) {
     return Instantiate(pos, Quaternion::Identity(), XMFLOAT3(1.0f, 1.0f, 1.0f));
 }
 
-SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion) {
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion) {
     return Instantiate(pos, quaternion, XMFLOAT3(1.0f, 1.0f, 1.0f));
 }
 
-SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion, const XMFLOAT3 scale) {
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion, const XMFLOAT3 scale) {
     GameObject* obj = new GameObject();
     Transform& transform = *obj->AddComponent<Transform>(obj);
     transform.position(pos);
@@ -24,7 +24,7 @@ Location::Location(ID3D11Device* device) {
     m_meshLoader = new MeshLoader();
     m_loader = new ResourceLoader(engine, m_meshLoader);
 
-    GameObject* light = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f), Quaternion(20.0f, -22.5f, -90.0f, 0.0f));
+    GameObject* light = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f), Quaternion(21.0f, -17.5f, -25.0f, 0.0f));
     light->name = "Direction Light";
     m_directionLight = light->AddComponent<DirectionLight>(light);
     m_directionLight->Init(device);

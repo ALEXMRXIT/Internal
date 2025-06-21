@@ -1,6 +1,7 @@
 #pragma once
 #include "framework.h"
 #include "Component.h"
+#include "servlib.h"
 
 class Model;
 class Transform;
@@ -11,6 +12,7 @@ private:
 	GameObject* m_parent;
 	GameObject* m_firstChild;
 	bool m_enable;
+	bool m_static;
 
 public:
 	std::string name;
@@ -30,13 +32,13 @@ public:
 	GameObject& operator=(const GameObject&) = delete;
 
 	template<class TComponent>
-	TComponent* AddComponent(GameObject* obj) { return m_components->AddComponent<TComponent>(obj); }
+	ALWAYS_INLINE TComponent* AddComponent(GameObject* obj) { return m_components->AddComponent<TComponent>(obj); }
 
 	template<class TComponent>
-	TComponent* GetComponentByType() const { return m_components->GetComponentByType<TComponent>(); }
+	ALWAYS_INLINE TComponent* GetComponentByType() const { return m_components->GetComponentByType<TComponent>(); }
 
 	uint32_t sizeComponents() const { return m_components->size(); }
-	std::list<AbstractBaseComponent*> getComponents() const { return m_components->components(); }
+	ALWAYS_INLINE const std::vector<AbstractBaseComponent*> getComponents() const { return m_components->components(); }
 
 	void SetParent(GameObject* parent);
 	void AddChild(GameObject* child);
@@ -44,7 +46,9 @@ public:
 	GameObject* Parent() const { return m_parent; }
 	GameObject* FirstChild() const { return m_firstChild; }
 
-	void Enable(bool enable);
-	bool isEnabled() const { return m_enable; }
-	bool isTransparent() const;
+	ALWAYS_INLINE void Enable(bool enable) { m_enable = enable; }
+	ALWAYS_INLINE bool IsEnabled() const { return m_enable; }
+	ALWAYS_INLINE void Static(bool st) { m_static = st; }
+	ALWAYS_INLINE bool IsStatic() const { return m_static; }
+	ALWAYS_INLINE bool IsTransparent() const { return false; }
 };

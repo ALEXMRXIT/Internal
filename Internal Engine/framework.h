@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <windowsx.h>
 #include <ShellScalingAPI.h>
+#include <typeindex>
 
 #pragma comment(lib, "d3d11.lib")
 #ifdef _DEBUG

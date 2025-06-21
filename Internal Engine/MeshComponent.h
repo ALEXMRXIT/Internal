@@ -3,6 +3,7 @@
 #include "AbstractBaseComponent.h"
 #include "GameObject.h"
 #include "LoaderNotificationDevice.h"
+#include "DirectionLight.h"
 
 class MeshMaterial;
 class ViewProjectonData;
@@ -66,6 +67,7 @@ private:
 	IndexBuffer* m_indexBuffer;
 	MeshMaterial* m_material;
 	WorldViewProjection m_bufferWVP;
+	BufferDirectionLight m_shadowCache;
 	ID3D11Buffer* m_preObjectBuffer;
 	ID3D11Buffer* m_shadowConstantBuffer;
 	uint32_t m_indices;

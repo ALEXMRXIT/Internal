@@ -5,7 +5,6 @@
 #include "Shader.h"
 #include "ViewProjectonData.h"
 #include "ShadowMap.h"
-#include "DirectionLight.h"
 
 VertexBuffer::VertexBuffer() {
 	m_vertexBuffer = nullptr;
@@ -15,7 +14,7 @@ bool VertexBuffer::Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType
     HRESULT handleResult{};
     D3D11_BUFFER_DESC vertexBufferDesc;
     ZeroMemory(&vertexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-    vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
     vertexBufferDesc.ByteWidth = sizeType * size;
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vertexBufferDesc.CPUAccessFlags = 0;
@@ -28,7 +27,6 @@ bool VertexBuffer::Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType
         DXUT_ERR_MSGBOX("Failed to create vertex buffer.", handleResult);
         return false;
     }
-	
 	return true;
 }
 
@@ -44,7 +42,7 @@ bool IndexBuffer::Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType,
     HRESULT handleResult{};
     D3D11_BUFFER_DESC indexBufferDesc;
     ZeroMemory(&indexBufferDesc, sizeof(D3D11_BUFFER_DESC));
-    indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
     indexBufferDesc.ByteWidth = sizeType * size;
     indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
     indexBufferDesc.CPUAccessFlags = 0;
@@ -52,14 +50,11 @@ bool IndexBuffer::Create(ID3D11Device* device, void* pBuffer, uint32_t sizeType,
     D3D11_SUBRESOURCE_DATA indexBufferData;
     ZeroMemory(&indexBufferData, sizeof(D3D11_SUBRESOURCE_DATA));
     indexBufferData.pSysMem = pBuffer;
-    indexBufferData.SysMemPitch = 0;
-    indexBufferData.SysMemSlicePitch = 0;
     handleResult = device->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer);
     if (FAILED(handleResult)) {
         DXUT_ERR_MSGBOX("Failed to create index buffer.", handleResult);
         return false;
     }
-    
     return true;
 }
 
@@ -92,7 +87,7 @@ void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProj
     m_bufferWVP.texture_offset = m_material->offset();
 
     context->UpdateSubresource(m_preObjectBuffer, 0, nullptr, &m_bufferWVP, 0, 0);
-    context->VSSetConstantBuffers(1, 1, &m_preObjectBuffer);
+    context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
 }
 
 void MeshComponent::Render(ID3D11DeviceContext* context) {
@@ -105,9 +100,10 @@ void MeshComponent::Render(ID3D11DeviceContext* context) {
 
 void MeshComponent::RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight) {
     XMMATRIX worldPosition = gameObject().GetComponentByType<Transform>()->GetWorldMatrix();
-    BufferDirectionLight view = directionLight->UpdateMatrixByDirectionLight(worldPosition);
+    if (!directionLight->gameObject().IsStatic())
+        m_shadowCache = directionLight->UpdateMatrixByDirectionLight(worldPosition);
 
-    context->UpdateSubresource(m_shadowConstantBuffer, 0, nullptr, &view, 0, 0);
+    context->UpdateSubresource(m_shadowConstantBuffer, 0, nullptr, &m_shadowCache, 0, 0);
     context->VSSetConstantBuffers(0, 1, &m_shadowConstantBuffer);
 
     UINT stride = sizeof(Vertex);
@@ -126,7 +122,7 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
     
-        ImGui::BeginChild("MeshRenderer", ImVec2(0, 185), true);
+        ImGui::BeginChild("MeshRenderer", ImVec2(0, 115), true);
         {
             MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
             if (material) {
@@ -179,14 +175,6 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
                             material->setOffset(XMFLOAT2(off[0], off[1]));
                     }
                     ImGui::EndGroup();
-                }
-    
-                XMFLOAT4 col = material->color();
-                float color[4] = { col.x, col.y, col.z, col.w };
-    
-                if (ImGui::ColorEdit4("Color", color)) {
-                    XMFLOAT4 newColor(color[0], color[1], color[2], color[3]);
-                    material->setColor(newColor);
                 }
             }
         }

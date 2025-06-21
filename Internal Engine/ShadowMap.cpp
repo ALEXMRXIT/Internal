@@ -5,14 +5,152 @@
 #include "Shader.h"
 #include "DirectionLight.h"
 
-void ShadowMap::Init(ID3D11Device* device) {
-    m_width = 4192;
-    m_height = 4192;
+HRESULT ShadowMap::SaveShadowMapToFile(ID3D11Device* device, const char* filename) {
+    HRESULT result{};
+    D3D11_TEXTURE2D_DESC desc;
+    m_depthTexture->GetDesc(&desc);
+
+    ID3D11DeviceContext* context = nullptr;
+    device->GetImmediateContext(&context);
+    context->Flush();
+
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+    ID3D11Texture2D* stagingTex = nullptr;
+    result = device->CreateTexture2D(&desc, nullptr, &stagingTex);
+    if (FAILED(result))
+        DXUT_ERR_MSGBOX("Failed to create ûåôïøòï texture.", result);
+    context->CopyResource(stagingTex, m_depthTexture);
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    result = context->Map(stagingTex, 0, D3D11_MAP_READ, 0, &mapped);
+    if (FAILED(result)) {
+        stagingTex->Release();
+        DXUT_ERR_MSGBOX("Failed to map texture.", result);
+        return result;
+    }
+
+    FILE* file = fopen(filename, "wb");
+    if (!file) {
+        context->Unmap(stagingTex, 0);
+        stagingTex->Release();
+        DXUT_ERR_MSGBOX("Failed to open file for writing.", E_FAIL);
+        return E_FAIL;
+    }
+
+    const size_t dataSize = (size_t)desc.Width * desc.Height * 4;
+    size_t bytesWritten = fwrite((const void*)mapped.pData, 1, dataSize, file);
+    if (bytesWritten != dataSize) {
+        result = E_FAIL;
+        DXUT_ERR_MSGBOX("Failed to write all texture data.", result);
+    }
+
+    fclose(file);
+    context->Unmap(stagingTex, 0);
+    stagingTex->Release();
+    return result;
+}
+
+HRESULT ShadowMap::LoadShadowMapFromFile(ID3D11Device* device, UINT width, UINT height, const char* filename) {
+    HRESULT result{};
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        DXUT_ERR_MSGBOX("Failed to open file for reading.", E_FAIL);
+        return E_FAIL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    const size_t expectedSize = width * height * 4;
+    if (fileSize != expectedSize) {
+        fclose(file);
+        DXUT_ERR_MSGBOX("File size doesn't match texture dimensions.", E_FAIL);
+        return E_FAIL;
+    }
+
+    BYTE* data = new BYTE[fileSize];
+    size_t bytesRead = fread((void*)data, 1, fileSize, file);
+    fclose(file);
+
+    if (bytesRead != fileSize) {
+        DXUT_ERR_MSGBOX("Failed to read all texture data.", E_FAIL);
+        return E_FAIL;
+    }
+
+    if (m_depthTexture) m_depthTexture->Release();
+    if (m_shadowMapDepthStencilView) m_shadowMapDepthStencilView->Release();
+    if (m_shadowMapSRV) m_shadowMapSRV->Release();
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags = 0;
+    desc.MiscFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = data;
+    initData.SysMemPitch = width * 4;
+
+    result = device->CreateTexture2D(&desc, &initData, &m_depthTexture);
+    if (FAILED(result))
+        DXUT_ERR_MSGBOX("Failed to create texture from file.", result);
+
+    result = CreateShadowMapViews(device);
+
+    return result;
+}
+
+HRESULT ShadowMap::CreateShadowMapViews(ID3D11Device* device) {
+    HRESULT result{};
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+    ZeroMemory(&dsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Texture2D.MipSlice = 0;
+    result = device->CreateDepthStencilView(m_depthTexture, &dsvDesc, &m_shadowMapDepthStencilView);
+    if (FAILED(result))
+        DXUT_ERR_MSGBOX("Failed to create depth stencil view.", result);
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    result = device->CreateShaderResourceView(m_depthTexture, &srvDesc, &m_shadowMapSRV);
+    if (FAILED(result))
+        DXUT_ERR_MSGBOX("Failed to create shared resource view.", result);
+
+    return result;
+}
+
+HRESULT ShadowMap::RecreateShadowMapResources(ID3D11Device* device, UINT width, UINT height) {
+    HRESULT result{};
+
+    ID3D11DeviceContext* context = nullptr;
+    device->GetImmediateContext(&context);
+    context->Flush();
+
+    if (m_depthTexture) m_depthTexture->Release();
+    if (m_shadowMapDepthStencilView) m_shadowMapDepthStencilView->Release();
+    if (m_shadowMapSRV) m_shadowMapSRV->Release();
 
     D3D11_TEXTURE2D_DESC depthBufferDesc;
     ZeroMemory(&depthBufferDesc, sizeof(D3D11_TEXTURE2D_DESC));
-    depthBufferDesc.Width = m_width;
-    depthBufferDesc.Height = m_height;
+    depthBufferDesc.Width = width;
+    depthBufferDesc.Height = height;
     depthBufferDesc.MipLevels = 1;
     depthBufferDesc.ArraySize = 1;
     depthBufferDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -22,28 +160,25 @@ void ShadowMap::Init(ID3D11Device* device) {
     depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
     depthBufferDesc.CPUAccessFlags = 0;
     depthBufferDesc.MiscFlags = 0;
-    HRESULT hr = device->CreateTexture2D(&depthBufferDesc, nullptr, &m_depthTexture);
-    if (FAILED(hr))
-        DXUT_ERR_MSGBOX("Failed to create texture.", hr);
+    result = device->CreateTexture2D(&depthBufferDesc, nullptr, &m_depthTexture);
+    if (FAILED(result))
+        DXUT_ERR_MSGBOX("Failed to create texture.", result);
 
-    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-    ZeroMemory(&dsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    dsvDesc.Texture2D.MipSlice = 0;
-    hr = device->CreateDepthStencilView(m_depthTexture, &dsvDesc, &m_shadowMapDepthStencilView);
-    if (FAILED(hr))
-        DXUT_ERR_MSGBOX("Failed to create depth stencil view.", hr);
+    result = CreateShadowMapViews(device);
 
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-    ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = depthBufferDesc.MipLevels;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    hr = device->CreateShaderResourceView(m_depthTexture, &srvDesc, &m_shadowMapSRV);
-    if (FAILED(hr))
-        DXUT_ERR_MSGBOX("Failed to create shared resource view.", hr);
+    ZeroMemory(&m_viewport, sizeof(D3D11_VIEWPORT));
+    m_viewport.TopLeftX = 0;
+    m_viewport.TopLeftY = 0;
+    m_viewport.Width = (FLOAT)width;
+    m_viewport.Height = (FLOAT)height;
+    m_viewport.MinDepth = 0.0f;
+    m_viewport.MaxDepth = 1.0f;
+
+    return result;
+}
+
+void ShadowMap::Init(ID3D11Device* device) {
+    HRESULT hr = RecreateShadowMapResources(device, 4192, 4192);
 
     D3D11_RASTERIZER_DESC rasterDesc;
     ZeroMemory(&rasterDesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -61,19 +196,9 @@ void ShadowMap::Init(ID3D11Device* device) {
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create rasterizer.", hr);
 
-    ZeroMemory(&m_viewport, sizeof(D3D11_VIEWPORT));
-    m_viewport.TopLeftX = 0;
-    m_viewport.TopLeftY = 0;
-    m_viewport.Width = (FLOAT)m_width;
-    m_viewport.Height = (FLOAT)m_height;
-    m_viewport.MinDepth = 0.0f;
-    m_viewport.MaxDepth = 1.0f;
-
     m_shadowShader = new Shader();
     hr = m_shadowShader->LoadVertexShader(device, "VS", "shaders\\shadowmap.fx");
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loading vertex shader.", hr);
-    hr = m_shadowShader->LoadPixelShader(device, "PS", "shaders\\shadowmap.fx");
-    if (FAILED(hr)) DXUT_ERR_MSGBOX("Error loading pixel shader.", hr);
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -105,4 +230,10 @@ void ShadowMap::Release() {
     if (m_shadowMapSRV) m_shadowMapSRV->Release();
     if (m_depthTexture) m_depthTexture->Release();
     if (m_shadowMapDepthStencilView) m_shadowMapDepthStencilView->Release();
+    if (m_pShadowRasterizerState) m_pShadowRasterizerState->Release();
+    if (m_shadowShader) {
+        m_shadowShader->Release();
+        delete m_shadowShader;
+    }
+    if (m_pShadowLayout) m_pShadowLayout->Release();
 }

@@ -138,7 +138,7 @@ void ImGUIDevice::WhiteStyle(void) {
 ImGUIDevice::ImGUIDevice() { 
     m_styleSelectedState = false;
     m_selectedStyle = 0;
-    m_fontSize = 16.0f;
+    m_fontSize = 14.0f;
 }
 
 void ImGUIDevice::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
@@ -280,19 +280,26 @@ void ImGUIDevice::Render() {
             float availableWidth = ImGui::GetContentRegionAvail().x;
             float width = availableWidth - ImGui::GetStyle().ItemSpacing.x;
 
-            if (ImGui::BeginChild("ObjectEditorFrame", ImVec2(width, 80.0f), true)) {
-                bool state = gameObject->isEnabled();
-                if (ImGui::Checkbox("##ToggleObject", &state)) {
+            if (ImGui::BeginChild("ObjectEditorFrame", ImVec2(width, 75.0f), true)) {
+                bool state = gameObject->IsEnabled();
+                if (ImGui::Checkbox("##ToggleObject", &state))
                     gameObject->Enable(state);
-                }
                 ImGui::SameLine();
     
                 static char buffer[128];
                 std::strncpy(buffer, gameObject->name.c_str(), sizeof(buffer));
                 ImGui::SameLine();
-                ImGui::SetNextItemWidth(width);
+                ImGui::SetNextItemWidth(width - ImGui::GetFrameHeight() * 6);
                 if (ImGui::InputText("##ObjectName", buffer, IM_ARRAYSIZE(buffer)))
                     gameObject->name = buffer;
+
+                ImGui::SameLine();
+                bool st = gameObject->IsStatic();
+                if (ImGui::Checkbox("##ToggleStatic", &st))
+                    gameObject->Static(st);
+                ImGui::SameLine();
+                ImGui::Text("Static");
+
                 const char* tags[] = { "Default Tag" };
                 const char* layers[] = { "Default Layer" };
     
@@ -357,9 +364,8 @@ void ImGUIDevice::Render() {
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit")) {
-            if (ImGui::MenuItem("Style Selector")) {
+            if (ImGui::MenuItem("Style Selector"))
                 m_styleSelectedState = true;
-            }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();

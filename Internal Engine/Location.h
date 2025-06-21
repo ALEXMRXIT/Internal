@@ -30,6 +30,6 @@ public:
 	std::list<GameObject*>& staticObjects() { return m_objects; }
 };
 
-SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos);
-SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion);
-SERVLIBFINLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion, const XMFLOAT3 scale);
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos);
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion);
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion, const XMFLOAT3 scale);

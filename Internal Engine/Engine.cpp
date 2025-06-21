@@ -475,12 +475,14 @@ void Engine::Update(float deltaTime) {
 }
 
 void Engine::Render() {
-    shadowMap.Render(m_deviceContext, m_location->m_directionLight);
-
-    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
-        const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
-        if (obj.isEnabled() && !obj.isTransparent())
-            m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight);
+    Location* loc = m_location;
+    if (!loc->m_directionLight->gameObject().IsStatic()) {
+        shadowMap.Render(m_deviceContext, m_location->m_directionLight);
+        for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+            const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
+            if (obj.IsEnabled() && !obj.IsTransparent())
+                m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight);
+        }
     }
 
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
@@ -498,6 +500,8 @@ void Engine::Render() {
     m_location->m_skybox->Render(m_deviceContext);
     m_deviceContext->OMSetDepthStencilState(nullptr, 0);
 
+    loc->m_directionLight->Render(m_deviceContext);
+
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
@@ -506,7 +510,7 @@ void Engine::Render() {
     // рендерим все непрозрачные объекты
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
-        if (obj.isEnabled() && !obj.isTransparent())
+        if (obj.IsEnabled() && !obj.IsTransparent())
             m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
     }
 
@@ -514,7 +518,7 @@ void Engine::Render() {
     m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xFFFFFFFF);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
-        if (obj.isEnabled() && obj.isTransparent())
+        if (obj.IsEnabled() && obj.IsTransparent())
             m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
     }
 
@@ -527,6 +531,16 @@ void Engine::Render() {
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
     m_gui->Render();
+
+    static bool bakedShadowTexture = false;
+    if (loc->m_directionLight->gameObject().IsStatic() && !bakedShadowTexture) {
+        bakedShadowTexture = true;
+        shadowMap.SaveShadowMapToFile(m_device, "temp\\shadowmap.dds");
+    }
+    else if (!loc->m_directionLight->gameObject().IsStatic() && bakedShadowTexture) {
+        bakedShadowTexture = false;
+        shadowMap.LoadShadowMapFromFile(m_device, 4192, 4192, "temp\\shadowmap.dds");
+    }
 #endif
 
     HRESULT hr = m_swapChain->Present(min(config.vSync, 2), 0);
