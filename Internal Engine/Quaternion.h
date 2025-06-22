@@ -18,6 +18,7 @@ public:
     static SERVLIBCALL Quaternion Lerp(const Quaternion& a, const Quaternion& b, float t);
     static SERVLIBCALL Quaternion Slerp(const Quaternion& a, const Quaternion& b, float t);
     static SERVLIBCALL Quaternion LookRotation(const DirectX::XMFLOAT3& forward, const DirectX::XMFLOAT3& up = { 0, 1, 0 });
+    static SERVLIBCALL XMFLOAT4 QuaternionToDirection(const Quaternion& quat);
 
     Quaternion Normalized() const;
     void Normalize();

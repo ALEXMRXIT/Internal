@@ -122,7 +122,7 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
     
-        ImGui::BeginChild("MeshRenderer", ImVec2(0, 115), true);
+        ImGui::BeginChild("MeshRenderer", ImVec2(0, 120), true);
         {
             MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
             if (material) {

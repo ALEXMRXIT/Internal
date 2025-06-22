@@ -31,8 +31,8 @@ VS_OUTPUT VS(VS_INPUT input)
     
     output.Pos = mul(input.Pos, WVP);
     output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
-    output.Normal = normalize(mul(input.Normal, (float3x3) World));
-    output.LightDirection = normalize(mul(input.Pos, LightPos));
+    output.Normal = normalize(mul(float4(input.Normal, 0.0), (float4x4) World)).xyz;
+    output.LightDirection = normalize(mul(float4(0, 0, -1, 0), LightPos).xyz);
     output.ShadowPos = mul(input.Pos, LightPos);
     
     return output;
@@ -40,8 +40,12 @@ VS_OUTPUT VS(VS_INPUT input)
 
 cbuffer directionOption : register(b0)
 {
+    float4 lightDirection;
     float4 ambiend_color;
-    float4 option; // register 1 - baked(1-0)
+    float baked;
+    float intensity;
+    float shadowStrength;
+    float1 bias;
 }
 
 Texture2D ObjTexture : register(t0);
@@ -67,28 +71,29 @@ float PCF(float2 uv, float depth, float2 texelSize)
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    float diffuseFactor = saturate(dot(input.Normal, input.LightDirection));
-    if (diffuseFactor > 0.99f && option.x == 0.0f)
-    {
-        return ObjTexture.Sample(ObjSamplerState, input.TexCoord);
-    }
-    
     float4 color = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    float diffuseFong = saturate(dot(input.Normal, normalize(lightDirection.xyz)));
+    float diffuseFactor = saturate(dot(input.Normal, input.LightDirection));
     
     float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
     shadowPos.xy = saturate(shadowPos.xy * 0.5f + 0.5f);
     shadowPos.y = 1.0f - shadowPos.y;
     
-    float shadowBias = lerp(0.001f, 0.005f * (1.0f - diffuseFactor), step(0.001f, 1.0f - diffuseFactor));
-    float shadow = 1.0f;
+    float shadowBias = diffuseFactor * bias;
     
+    float2 texelSize = 1.0 / float2(4192, 4192);
     float depthTest = shadowPos.z - shadowBias;
-    float shadowResult = (option.x == 1.0f) ?
-        step(ShadowMap.Sample(ObjSamplerState, shadowPos.xy).r, depthTest) * 0.7f + 0.3f :
-        ShadowMap.SampleCmpLevelZero(gSamShadow, shadowPos.xy, depthTest);
+    float shadowResult = (baked == 1.0f) ?
+        step(depthTest, ShadowMap.Sample(ObjSamplerState, shadowPos.xy).r) :
+        PCF(shadowPos.xy, depthTest, texelSize);
     
-    shadow = shadowResult;
-    float4 finalColor = color * (1.0f + lerp(0.2f, 1.0f, diffuseFactor) * shadow);
+    float shadowFactor = lerp(1.0f, shadowResult, shadowStrength);
+    diffuseFong = lerp(0.3f, diffuseFong, shadowStrength);
+    
+    float4 finalColor = color * ambiend_color;
+    finalColor.rgb *= diffuseFong * shadowFactor;
+    finalColor.rgb *= intensity * 2.0f;
     finalColor.a = color.a;
+    
     return finalColor;
 }

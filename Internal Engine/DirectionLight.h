@@ -14,8 +14,12 @@ struct BufferDirectionLight {
 
 __declspec(align(16))
 struct BufferDirectionOption {
+	XMFLOAT4 LightDirection;
 	XMFLOAT4 AmbiendColor;
-	XMFLOAT4 DirectionOption;
+	float baked;
+	float intensity;
+	float shadowStrength;
+	float bias;
 };
 
 class DirectionLight : public AbstractBaseComponent, public LoaderNotificationDevice {
@@ -27,6 +31,10 @@ private:
 	BufferDirectionOption m_directionOption;
 
 public:
+	int directionType;
+	int shadowType;
+
+public:
 	DirectionLight(GameObject* obj);
 
 	HRESULT Init(ID3D11Device* device);
@@ -35,7 +43,8 @@ public:
 	void Release();
 
 	BufferDirectionLight UpdateMatrixByDirectionLight(XMMATRIX worldPos);
-	ALWAYS_INLINE XMFLOAT4& GetDirectionLightOption() { return m_directionOption.DirectionOption; }
+	ALWAYS_INLINE XMFLOAT4& LightDirection() { return m_directionOption.LightDirection; }
+	ALWAYS_INLINE float& GetDirectionLightBaked() { return m_directionOption.baked; }
 	XMMATRIX GetViewProjectionMatrix();
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE

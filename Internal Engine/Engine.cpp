@@ -536,10 +536,12 @@ void Engine::Render() {
     if (loc->m_directionLight->gameObject().IsStatic() && !bakedShadowTexture) {
         bakedShadowTexture = true;
         shadowMap.SaveShadowMapToFile(m_device, "temp\\shadowmap.dds");
+        loc->m_directionLight->GetDirectionLightBaked() = 1.0f;
     }
     else if (!loc->m_directionLight->gameObject().IsStatic() && bakedShadowTexture) {
         bakedShadowTexture = false;
         shadowMap.LoadShadowMapFromFile(m_device, 4192, 4192, "temp\\shadowmap.dds");
+        loc->m_directionLight->GetDirectionLightBaked() = 0.0f;
     }
 #endif
 

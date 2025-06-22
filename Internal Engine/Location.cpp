@@ -27,6 +27,8 @@ Location::Location(ID3D11Device* device) {
     GameObject* light = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f), Quaternion(21.0f, -17.5f, -25.0f, 0.0f));
     light->name = "Direction Light";
     m_directionLight = light->AddComponent<DirectionLight>(light);
+    m_directionLight->LightDirection() = Quaternion::QuaternionToDirection(
+        light->GetComponentByType<Transform>()->rotation());
     m_directionLight->Init(device);
     Insert(light);
 
