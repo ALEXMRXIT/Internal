@@ -1,10 +1,10 @@
-<h1 align="center"> <img src="https://img.shields.io/badge/Version-1.0.5-blue" alt="Version"> <img src="https://img.shields.io/badge/License-MIT-green" alt="License"> <img src="https://img.shields.io/badge/Status-In_Development-orange" alt="Status"> </h1>
+<h1 align="center"> <img src="https://img.shields.io/badge/Version-1.0.6-blue" alt="Version"> <img src="https://img.shields.io/badge/License-MIT-green" alt="License"> <img src="https://img.shields.io/badge/Status-In_Development-orange" alt="Status"> </h1>
 Internal Game Engine — это современный игровой движок для разработки 3D-игр с упором на MMORPG.
 Он предоставляет мощный набор инструментов для рендеринга, физики, асинхронной загрузки ресурсов и гибкой системы компонентов, позволяя разработчикам сосредоточиться на создании игрового контента.
 
 ![photo_2025-06-23_00-25-37](https://github.com/user-attachments/assets/4897d8cb-6012-46ee-9355-dd02a92adee1)
 
-Версия 1.0.5 - Список изменений
+Список изменений
 Основные возможности<br>
 🖥️ Поддержка различных разрешений экрана<br>
 🎮 Фиксированный кадровый цикл (30 FPS)<br>
