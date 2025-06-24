@@ -83,6 +83,7 @@ void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProj
     m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * viewProjection.m_view * viewProjection.m_projection);
     m_bufferWVP.World = XMMatrixTranspose(worldPosition);
     m_bufferWVP.LightPos = XMMatrixTranspose(directionLight->GetViewProjectionMatrix());
+    m_bufferWVP.LightDirection = directionLight->LightDirection();
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
 

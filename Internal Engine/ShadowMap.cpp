@@ -90,7 +90,7 @@ HRESULT ShadowMap::LoadShadowMapFromFile(ID3D11Device* device, UINT width, UINT 
     desc.Height = height;
     desc.MipLevels = 1;
     desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    desc.Format = DXGI_FORMAT_R32_TYPELESS;
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
     desc.Usage = D3D11_USAGE_DEFAULT;
@@ -116,7 +116,7 @@ HRESULT ShadowMap::CreateShadowMapViews(ID3D11Device* device) {
 
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
     ZeroMemory(&dsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
     dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     dsvDesc.Texture2D.MipSlice = 0;
     result = device->CreateDepthStencilView(m_depthTexture, &dsvDesc, &m_shadowMapDepthStencilView);
@@ -125,7 +125,7 @@ HRESULT ShadowMap::CreateShadowMapViews(ID3D11Device* device) {
 
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
     ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-    srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+    srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Texture2D.MostDetailedMip = 0;
@@ -153,7 +153,7 @@ HRESULT ShadowMap::RecreateShadowMapResources(ID3D11Device* device, UINT width, 
     depthBufferDesc.Height = height;
     depthBufferDesc.MipLevels = 1;
     depthBufferDesc.ArraySize = 1;
-    depthBufferDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+    depthBufferDesc.Format = DXGI_FORMAT_R32_TYPELESS;
     depthBufferDesc.SampleDesc.Count = 1;
     depthBufferDesc.SampleDesc.Quality = 0;
     depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -178,7 +178,7 @@ HRESULT ShadowMap::RecreateShadowMapResources(ID3D11Device* device, UINT width, 
 }
 
 void ShadowMap::Init(ID3D11Device* device) {
-    HRESULT hr = RecreateShadowMapResources(device, 4192, 4192);
+    HRESULT hr = RecreateShadowMapResources(device, 2048, 2048);
 
     D3D11_RASTERIZER_DESC rasterDesc;
     ZeroMemory(&rasterDesc, sizeof(D3D11_RASTERIZER_DESC));

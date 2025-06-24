@@ -540,7 +540,7 @@ void Engine::Render() {
     }
     else if (!loc->m_directionLight->gameObject().IsStatic() && bakedShadowTexture) {
         bakedShadowTexture = false;
-        shadowMap.LoadShadowMapFromFile(m_device, 4192, 4192, "temp\\shadowmap.dds");
+        shadowMap.LoadShadowMapFromFile(m_device, 2048, 2048, "temp\\shadowmap.dds");
         loc->m_directionLight->GetDirectionLightBaked() = 0.0f;
     }
 #endif

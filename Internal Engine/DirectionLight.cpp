@@ -12,9 +12,9 @@ DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
 
     m_directionOption.AmbiendColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_directionOption.baked = 0;
-    m_directionOption.intensity = 1.0f;
-    m_directionOption.shadowStrength = 0.6f;
-    m_directionOption.bias = 0.005f;
+    m_directionOption.intensity = 1.5f;
+    m_directionOption.shadowStrength = 0.4f;
+    m_directionOption.bias = 0.001f;
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
