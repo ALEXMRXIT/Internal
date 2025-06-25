@@ -34,7 +34,7 @@ VS_OUTPUT VS(VS_INPUT input)
     output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
     float3 worldNormal = normalize(mul(float4(input.Normal, 0.0), World)).xyz;
     output.Normal = worldNormal;
-    output.ShadowPos = mul(worldPos, LightPos);
+    output.ShadowPos = mul(input.Pos, LightPos);
     
     return output;
 }
@@ -44,9 +44,12 @@ cbuffer directionOption : register(b0)
     float4 lightDirection;
     float4 ambiend_color;
     float baked;
-    float intensity;
-    float shadowStrength;
-    float1 bias;
+    float diffuseIntensity;
+    float shadowIntensity;
+    float bias;
+    float minShadowBrightness;
+    float shadowDiffuseMix;
+    float2 padding;
 }
 
 Texture2D ObjTexture : register(t0);
@@ -91,12 +94,12 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
         step(depthTest, ShadowMap.Sample(ObjSamplerState, shadowPos.xy).r) :
         PCF(shadowPos.xy, depthTest, texelSize);
     
-    float shadowFactor = lerp(1.0f, shadowResult, shadowStrength);
-    diffuseFong = lerp(0.3f, diffuseFong, shadowStrength);
+    float shadowFactor = lerp(1.0f, shadowResult, shadowIntensity);
+    diffuseFong = lerp(minShadowBrightness, diffuseFong, shadowDiffuseMix);
     
     float4 finalColor = color * ambiend_color;
     finalColor.rgb *= diffuseFong * shadowFactor;
-    finalColor.rgb *= intensity * 2.0f;
+    finalColor.rgb *= diffuseIntensity;
     finalColor.a = color.a;
     
     return finalColor;

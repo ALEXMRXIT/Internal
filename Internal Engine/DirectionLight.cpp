@@ -12,9 +12,11 @@ DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
 
     m_directionOption.AmbiendColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_directionOption.baked = 0;
-    m_directionOption.intensity = 1.5f;
-    m_directionOption.shadowStrength = 0.4f;
+    m_directionOption.diffuseIntensity = 1.5f;
+    m_directionOption.shadowIntensity = 0.4f;
     m_directionOption.bias = 0.001f;
+    m_directionOption.minShadowBrightness = 0.3f;
+    m_directionOption.shadowDiffuseMix = 0.5f;
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
@@ -92,7 +94,7 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 175.0f), true);
+        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 230.0f), true);
         {
             const char* types[] = { "Direction Light" };
             const char* shadows[] = { "Soft Shadow" };
@@ -100,7 +102,7 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             const float controlWidth = ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x;
 
             ImGui::Columns(2, "lightColumns", false);
-            ImGui::SetColumnWidth(0, 120.0f);
+            ImGui::SetColumnWidth(0, 150.0f);
             ImGui::SetColumnWidth(1, controlWidth);
 
             ImGui::Text("Type");
@@ -120,10 +122,22 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
                 m_directionOption.AmbiendColor = XMFLOAT4(color[0], color[1], color[2], 1.0f);
             ImGui::NextColumn();
 
-            ImGui::Text("Intensity");
+            ImGui::Text("Diffuse intensity");
             ImGui::NextColumn();
             ImGui::SetNextItemWidth(-1);
-            ImGui::SliderFloat("##Intensity", &m_directionOption.intensity, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("##Intensity", &m_directionOption.diffuseIntensity, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::NextColumn();
+
+            ImGui::Text("Diffuse shadow");
+            ImGui::NextColumn();
+            ImGui::SetNextItemWidth(-1);
+            ImGui::SliderFloat("##DiffuseShadow", &m_directionOption.shadowDiffuseMix, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::NextColumn();
+
+            ImGui::Text("Diffuse brightnes");
+            ImGui::NextColumn();
+            ImGui::SetNextItemWidth(-1);
+            ImGui::SliderFloat("##DiffuseBrightnes", &m_directionOption.minShadowBrightness, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::NextColumn();
 
             ImGui::Text("Shadow Type");
@@ -133,10 +147,10 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             ImGui::NextColumn();
 
             ImGui::SetCursorPosX(40.0f);
-            ImGui::Text("Strength");
+            ImGui::Text("Shadow Intensity");
             ImGui::NextColumn();
             ImGui::SetNextItemWidth(-1);
-            ImGui::SliderFloat("##Strength", &m_directionOption.shadowStrength, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderFloat("##ShadowIntensity", &m_directionOption.shadowIntensity, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::NextColumn();
 
             ImGui::SetCursorPosX(40.0f);
