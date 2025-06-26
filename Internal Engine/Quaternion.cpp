@@ -48,7 +48,7 @@ Quaternion SERVLIBCALL Quaternion::LookRotation(const DirectX::XMFLOAT3& forward
 
 SERVLIBCALL XMFLOAT4 Quaternion::QuaternionToDirection(const Quaternion& quat) {
     XMVECTOR quatNorm = XMQuaternionNormalize(quat.m_quat);
-    XMVECTOR up = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
     XMVECTOR direction = XMVector3Rotate(up, quatNorm);
 
     XMFLOAT4 lightDirection;

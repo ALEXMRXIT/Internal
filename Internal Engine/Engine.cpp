@@ -370,7 +370,7 @@ bool Engine::InitScene() {
 
     m_location = new Location(m_device);
 
-    shadowMap.Init(m_device);
+    shadowMap.Init(m_device, m_location->m_directionLight);
 
     gizmozRect.Init(m_device, m_deviceContext);
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
@@ -540,7 +540,8 @@ void Engine::Render() {
     }
     else if (!loc->m_directionLight->gameObject().IsStatic() && bakedShadowTexture) {
         bakedShadowTexture = false;
-        shadowMap.LoadShadowMapFromFile(m_device, 2048, 2048, "temp\\shadowmap.dds");
+        XMFLOAT2 shadowSize = loc->m_directionLight->GetShadowSize();
+        shadowMap.LoadShadowMapFromFile(m_device, shadowSize.x, shadowSize.y, "temp\\shadowmap.dds");
         loc->m_directionLight->GetDirectionLightBaked() = 0.0f;
     }
 #endif

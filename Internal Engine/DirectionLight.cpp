@@ -3,20 +3,28 @@
 #include "ImGUI/imgui_internal.h"
 #include "ViewProjectonData.h"
 #include "GameObject.h"
+#include "ShadowMap.h"
+
+const int DirectionLight::m_presetValues[5] = { 256, 512, 1024, 2048, 4096 };
 
 DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
     m_directionBuffer = nullptr;
+    m_device = nullptr;
 
     directionType = 0;
     shadowType = 0;
 
     m_directionOption.AmbiendColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_directionOption.baked = 0;
-    m_directionOption.diffuseIntensity = 1.5f;
+    m_directionOption.diffuseIntensity = 1.0f;
     m_directionOption.shadowIntensity = 0.4f;
     m_directionOption.bias = 0.001f;
-    m_directionOption.minShadowBrightness = 0.3f;
-    m_directionOption.shadowDiffuseMix = 0.5f;
+    shadowMapSize = 3;
+    m_directionOption.shadowSize = XMFLOAT2(
+        (float)m_presetValues[shadowMapSize],
+        (float)m_presetValues[shadowMapSize]
+    );
+    m_directionOption.pcfSize = 2;
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
@@ -43,6 +51,7 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
     );
 
     m_device_loader = true;
+    m_device = device;
     return hr;
 }
 
@@ -94,7 +103,7 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 230.0f), true);
+        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 205.0f), true);
         {
             const char* types[] = { "Direction Light" };
             const char* shadows[] = { "Soft Shadow" };
@@ -128,18 +137,6 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             ImGui::SliderFloat("##Intensity", &m_directionOption.diffuseIntensity, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
             ImGui::NextColumn();
 
-            ImGui::Text("Diffuse shadow");
-            ImGui::NextColumn();
-            ImGui::SetNextItemWidth(-1);
-            ImGui::SliderFloat("##DiffuseShadow", &m_directionOption.shadowDiffuseMix, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::NextColumn();
-
-            ImGui::Text("Diffuse brightnes");
-            ImGui::NextColumn();
-            ImGui::SetNextItemWidth(-1);
-            ImGui::SliderFloat("##DiffuseBrightnes", &m_directionOption.minShadowBrightness, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::NextColumn();
-
             ImGui::Text("Shadow Type");
             ImGui::NextColumn();
             ImGui::SetNextItemWidth(-1);
@@ -158,6 +155,32 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             ImGui::NextColumn();
             ImGui::SetNextItemWidth(-1);
             ImGui::SliderFloat("##Bias", &m_directionOption.bias, 0.0f, 0.1f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::NextColumn();
+
+            const char* presetSizes[] = { "256", "512", "1024", "2048", "4096" };
+            ImGui::SetCursorPosX(40.0f);
+            ImGui::Text("Shadow map size");
+            ImGui::NextColumn();
+            ImGui::SetNextItemWidth(-1);
+            if (ImGui::Combo("##ShadowMapPreset", &shadowMapSize, presetSizes, IM_ARRAYSIZE(presetSizes))) {
+                m_directionOption.shadowSize = XMFLOAT2(
+                    (float)m_presetValues[shadowMapSize],
+                    (float)m_presetValues[shadowMapSize]
+                );
+                shadowMap.RecreateShadowMapResources(m_device, 
+                    m_presetValues[shadowMapSize],
+                    m_presetValues[shadowMapSize]
+                );
+            }
+            ImGui::NextColumn();
+
+            ImGui::SetCursorPosX(40.0f);
+            ImGui::Text("Shadow PCF size");
+            ImGui::NextColumn();
+            ImGui::SetNextItemWidth(-1);
+            int pcf = static_cast<int>(m_directionOption.pcfSize);
+            if (ImGui::SliderInt("##ShadowPCFSize", &pcf, 1, 5, "%d", ImGuiSliderFlags_AlwaysClamp))
+                m_directionOption.pcfSize = static_cast<float>(pcf);
             ImGui::NextColumn();
 
             ImGui::Columns(1);

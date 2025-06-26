@@ -21,7 +21,7 @@ HRESULT ShadowMap::SaveShadowMapToFile(ID3D11Device* device, const char* filenam
     ID3D11Texture2D* stagingTex = nullptr;
     result = device->CreateTexture2D(&desc, nullptr, &stagingTex);
     if (FAILED(result))
-        DXUT_ERR_MSGBOX("Failed to create ûåôïøòï texture.", result);
+        DXUT_ERR_MSGBOX("Failed to create texture.", result);
     context->CopyResource(stagingTex, m_depthTexture);
 
     D3D11_MAPPED_SUBRESOURCE mapped;
@@ -177,8 +177,9 @@ HRESULT ShadowMap::RecreateShadowMapResources(ID3D11Device* device, UINT width, 
     return result;
 }
 
-void ShadowMap::Init(ID3D11Device* device) {
-    HRESULT hr = RecreateShadowMapResources(device, 2048, 2048);
+void ShadowMap::Init(ID3D11Device* device, DirectionLight* light) {
+    XMFLOAT2 shadowSize = light->GetShadowSize();
+    HRESULT hr = RecreateShadowMapResources(device, shadowSize.x, shadowSize.y);
 
     D3D11_RASTERIZER_DESC rasterDesc;
     ZeroMemory(&rasterDesc, sizeof(D3D11_RASTERIZER_DESC));

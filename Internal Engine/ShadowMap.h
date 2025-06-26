@@ -27,7 +27,7 @@ public:
 	HRESULT LoadShadowMapFromFile(ID3D11Device* device, UINT width, UINT height, const char* filename);
 	HRESULT RecreateShadowMapResources(ID3D11Device* device, UINT width, UINT height);
 
-	void Init(ID3D11Device* device);
+	void Init(ID3D11Device* device, DirectionLight* light);
 
 	void Render(ID3D11DeviceContext* context, DirectionLight* light);
 
