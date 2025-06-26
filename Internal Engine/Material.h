@@ -24,10 +24,22 @@ public:
 };
 
 class MeshMaterial : public Material {
+public:
+	__declspec(align(16))
+	struct MeshMaterialBuffer {
+		XMFLOAT4 SpecularColor;
+		float SpecularPower;
+		float SpecularIntensity;
+		float padding[2];
+	};
+
 private:
 	XMFLOAT2 m_scale;
 	XMFLOAT2 m_offset;
 	XMFLOAT4 m_color;
+
+	ID3D11Buffer* m_meshMaterialBuffer;
+	MeshMaterialBuffer m_buffer;
 
 public:
 	MeshMaterial();

@@ -77,13 +77,25 @@ void MeshComponent::Update(float deltaTime) {
 
 }
 
+static XMMATRIX GetInverseTransposeWorldMatrix(const XMMATRIX& worldMatrix) {
+    XMMATRIX world3x3 = worldMatrix;
+    world3x3.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+
+    XMMATRIX inverseWorld;
+    XMVECTOR det;
+    inverseWorld = XMMatrixInverse(&det, world3x3);
+    XMMATRIX inverseTranspose = XMMatrixTranspose(inverseWorld);
+    return inverseTranspose;
+}
+
 void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight) {
     if (!m_device_loader) return;
     XMMATRIX worldPosition = gameObject().GetComponentByType<Transform>()->GetWorldMatrix();
     m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * viewProjection.m_view * viewProjection.m_projection);
     m_bufferWVP.World = XMMatrixTranspose(worldPosition);
+    m_bufferWVP.ViewProjection = XMMatrixTranspose(viewProjection.m_view * viewProjection.m_projection);
+    m_bufferWVP.InverseWorld = GetInverseTransposeWorldMatrix(worldPosition);
     m_bufferWVP.LightPos = XMMatrixTranspose(directionLight->GetViewProjectionMatrix());
-    m_bufferWVP.LightDirection = directionLight->LightDirection();
     m_bufferWVP.texture_scale = m_material->scale();
     m_bufferWVP.texture_offset = m_material->offset();
 

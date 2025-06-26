@@ -56,8 +56,9 @@ __declspec(align(16))
 struct WorldViewProjection {
 	XMMATRIX WVP;
 	XMMATRIX World;
+	XMMATRIX ViewProjection;
+	XMMATRIX InverseWorld;
 	XMMATRIX LightPos;
-	XMFLOAT4 LightDirection;
 	XMFLOAT2 texture_scale;
 	XMFLOAT2 texture_offset;
 };

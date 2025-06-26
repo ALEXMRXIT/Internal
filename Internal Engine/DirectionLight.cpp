@@ -4,6 +4,7 @@
 #include "ViewProjectonData.h"
 #include "GameObject.h"
 #include "ShadowMap.h"
+#include "Camera.h"
 
 const int DirectionLight::m_presetValues[5] = { 256, 512, 1024, 2048, 4096 };
 
@@ -14,9 +15,10 @@ DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
     directionType = 0;
     shadowType = 0;
 
+    m_directionOption.LightColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_directionOption.AmbiendColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_directionOption.baked = 0;
-    m_directionOption.diffuseIntensity = 1.0f;
+    m_directionOption.diffuseIntensity = 0.333f;
     m_directionOption.shadowIntensity = 0.4f;
     m_directionOption.bias = 0.001f;
     shadowMapSize = 3;
@@ -61,6 +63,7 @@ void DirectionLight::Render(ID3D11DeviceContext* context) {
     XMFLOAT4 lightDir = Quaternion::QuaternionToDirection(quat);
 
     m_directionOption.LightDirection = lightDir;
+    XMStoreFloat3(&m_directionOption.cameraPos, camera.getPos());
 
     context->UpdateSubresource(m_directionBuffer, 0, nullptr, &m_directionOption, 0, 0);
     context->PSSetConstantBuffers(0, 1, &m_directionBuffer);
@@ -121,13 +124,22 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             ImGui::Combo("##Type", &directionLight->directionType, types, IM_ARRAYSIZE(types));
             ImGui::NextColumn();
 
-            ImGui::Text("Color");
+            ImGui::Text("Light Color");
             ImGui::NextColumn();
             ImGuiColorEditFlags flags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_InputRGB;
+            XMFLOAT4 lightCol = m_directionOption.LightColor;
+            float LightColor[3] = { lightCol.x, lightCol.y, lightCol.z };
+            ImGui::SetNextItemWidth(-1);
+            if (ImGui::ColorEdit3("##LightColor", LightColor, flags))
+                m_directionOption.LightColor = XMFLOAT4(LightColor[0], LightColor[1], LightColor[2], 1.0f);
+            ImGui::NextColumn();
+
+            ImGui::Text("Ambient Color");
+            ImGui::NextColumn();
             XMFLOAT4 col = m_directionOption.AmbiendColor;
             float color[3] = { col.x, col.y, col.z };
             ImGui::SetNextItemWidth(-1);
-            if (ImGui::ColorEdit3("##Color", color, flags))
+            if (ImGui::ColorEdit3("##AmbientColor", color, flags))
                 m_directionOption.AmbiendColor = XMFLOAT4(color[0], color[1], color[2], 1.0f);
             ImGui::NextColumn();
 

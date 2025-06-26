@@ -15,6 +15,7 @@ struct BufferDirectionLight {
 __declspec(align(16))
 struct BufferDirectionOption {
 	XMFLOAT4 LightDirection;
+	XMFLOAT4 LightColor;
 	XMFLOAT4 AmbiendColor;
 	float baked;
 	float diffuseIntensity;
@@ -22,7 +23,8 @@ struct BufferDirectionOption {
 	float bias;
 	XMFLOAT2 shadowSize;
 	float pcfSize;
-	float padding;
+	XMFLOAT3 cameraPos;
+	float padding[2];
 };
 
 class DirectionLight : public AbstractBaseComponent, public LoaderNotificationDevice {

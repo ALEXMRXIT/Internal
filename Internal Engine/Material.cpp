@@ -4,9 +4,17 @@
 
 MeshMaterial::MeshMaterial() {
 	diffuseTex = nullptr;
+    m_meshMaterialBuffer = nullptr;
+
+    m_buffer.SpecularColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_buffer.SpecularPower = 32.0f;
+    m_buffer.SpecularIntensity = .5f;
 }
 
 void MeshMaterial::Bind(ID3D11DeviceContext* context) {
+    context->UpdateSubresource(m_meshMaterialBuffer, 0, nullptr, &m_buffer, 0, 0);
+    context->PSSetConstantBuffers(1, 1, &m_meshMaterialBuffer);
+
 	context->PSSetShaderResources(0, 1, &diffuseTex->m_shaderView);
 	ID3D11ShaderResourceView* shadowResourceView = shadowMap.ShadowShaderResources();
 	context->PSSetShaderResources(1, 1, &shadowResourceView);
@@ -15,6 +23,15 @@ void MeshMaterial::Bind(ID3D11DeviceContext* context) {
 }
 
 void MeshMaterial::Load(ID3D11Device* device) {
+    D3D11_BUFFER_DESC bufferDesc;
+    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth = sizeof(MeshMaterialBuffer);
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags = 0;
+    device->CreateBuffer(&bufferDesc, NULL, &m_meshMaterialBuffer);
+
 	diffuseTex->Load(device);
 }
 
@@ -28,6 +45,7 @@ void MeshMaterial::Release() {
 		diffuseTex->Release();
 		delete diffuseTex;
 	}
+    if (m_meshMaterialBuffer) m_meshMaterialBuffer->Release();
 }
 
 inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
