@@ -3,7 +3,6 @@
 #include "Transform.h"
 #include "AbstractBaseComponent.h"
 #include "LoaderNotificationDevice.h"
-#include "ViewProjectonData.h"
 #include "servlib.h"
 
 __declspec(align(16))

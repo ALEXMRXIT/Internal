@@ -25,7 +25,7 @@ private:
 	static DWORD WINAPI WorkerFunction(LPVOID param);
 
 	DWORD ThreadLoop();
-	void LoadResource(const char* resourceName, SharedObject* mesh);
+	void LoadResource(MeshContainer& container);
 
 public:
 	ResourceLoader(Engine& engine, FileSharedBuffer* fileBuffer);

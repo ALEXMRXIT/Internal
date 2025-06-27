@@ -74,7 +74,7 @@ void Skybox::Update(float deltaTime) {
     m_pos = scale * translate;
 }
 
-void Skybox::Render(ID3D11DeviceContext* context) {
+void Skybox::Render(ID3D11DeviceContext* context, DirectionLight* directionLight) {
     if (!m_device_loader) return;
     m_wvp.WVP = m_pos * camera.getView() * camera.getProjection();
     m_wvp.WVP = XMMatrixTranspose(m_wvp.WVP);
@@ -85,7 +85,7 @@ void Skybox::Render(ID3D11DeviceContext* context) {
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     context->OMSetDepthStencilState(m_depthState, 0);
     context->RSSetState(m_cullMode);
-    m_component.Render(context);
+    m_component.Render(context, directionLight);
 }
 
 bool Skybox::CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size) {
@@ -94,10 +94,6 @@ bool Skybox::CreateVertex(ID3D11Device* device, const std::vector<Vertex>& verti
 
 bool Skybox::CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) {
     return m_component.CreateIndex(device, indices, sizeType, size);
-}
-
-void Skybox::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset) {
-    m_component.setMaterial(name, scale, offset);
 }
 
 void Skybox::Release() {

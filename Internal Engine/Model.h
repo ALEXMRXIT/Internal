@@ -18,7 +18,7 @@ public:
 	Model& operator=(const Model&) = delete;
 
 	void Update(float deltaTime);
-	void Render(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight);
+	void Render(ID3D11DeviceContext* context, DirectionLight* directionLight);
 	void RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight);
 	void Release();
 
@@ -26,8 +26,6 @@ public:
 
 	bool CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size) override;
 	bool CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) override;
-
-	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset) override;
 
 	MeshComponent& mesh() const { return m_component; }
 };

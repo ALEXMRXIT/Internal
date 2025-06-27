@@ -2,6 +2,7 @@
 #include "GameObject.h"
 #include "MeshComponent.h"
 #include "Model.h"
+#include "Material.h"
 
 ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos) {
     return Instantiate(pos, Quaternion::Identity(), XMFLOAT3(1.0f, 1.0f, 1.0f));
@@ -13,7 +14,7 @@ ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, con
 
 ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion, const XMFLOAT3 scale) {
     GameObject* obj = new GameObject();
-    Transform& transform = *obj->AddComponent<Transform>(obj);
+    Transform& transform = *obj->AddComponent<Transform>();
     transform.position(pos);
     transform.rotation(quaternion);
     transform.scale(scale);
@@ -26,7 +27,7 @@ Location::Location(ID3D11Device* device) {
 
     GameObject* light = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f), Quaternion(6.0f, -72.5f, -39.0f, 0.0f));
     light->name = "Direction Light";
-    m_directionLight = light->AddComponent<DirectionLight>(light);
+    m_directionLight = light->AddComponent<DirectionLight>();
     m_directionLight->LightDirection() = Quaternion::QuaternionToDirection(
         light->GetComponentByType<Transform>()->rotation());
     m_directionLight->Init(device);
@@ -38,22 +39,31 @@ Location::Location(ID3D11Device* device) {
     MeshComponent* meshSkybox = new MeshComponent(objectSkybox);
     m_skybox = new Skybox(*meshSkybox);
     m_loader->AddResourceToLoad("mesh\\skybox.obj", m_skybox);
+    MeshMaterial* skyboxMeshMaterial = objectSkybox->AddComponent<MeshMaterial>();
+    skyboxMeshMaterial->diffuseTex = new Material::TextureMapInfo();
+    skyboxMeshMaterial->Load(device);
     Insert(objectSkybox);
 
     GameObject* tarrain = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f));
     tarrain->name = "Tarrain";
-    MeshComponent* meshTarrain = tarrain->AddComponent<MeshComponent>(tarrain);
+    MeshComponent* meshTarrain = tarrain->AddComponent<MeshComponent>();
     Model* modelTarrain = new Model(*meshTarrain);
     tarrain->model = modelTarrain;
     m_loader->AddResourceToLoad("mesh\\terrain.obj", modelTarrain);
+    MeshMaterial* terrainMeshMaterial = tarrain->AddComponent<MeshMaterial>();
+    terrainMeshMaterial->diffuseTex = new Material::TextureMapInfo();
+    terrainMeshMaterial->Load(device);
     Insert(tarrain);
 
     GameObject* home = Instantiate(XMFLOAT3(130.1f, 2.4f, -131.600f), Quaternion::Identity(), XMFLOAT3(0.1f, 0.1f, 0.1f));
     home->name = "Bash";
-    MeshComponent* meshBash = home->AddComponent<MeshComponent>(home);
+    MeshComponent* meshBash = home->AddComponent<MeshComponent>();
     Model* modelBash = new Model(*meshBash);
     home->model = modelBash;
     m_loader->AddResourceToLoad("mesh\\m_had430000.obj", modelBash);
+    MeshMaterial* homeMeshMaterial = home->AddComponent<MeshMaterial>();
+    homeMeshMaterial->diffuseTex = new Material::TextureMapInfo();
+    homeMeshMaterial->Load(device);
     Insert(home);
 }
 

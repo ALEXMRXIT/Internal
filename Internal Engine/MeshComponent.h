@@ -67,7 +67,6 @@ class MeshComponent : public AbstractBaseComponent, public LoaderNotificationDev
 private:
 	VertexBuffer* m_vertexBuffer;
 	IndexBuffer* m_indexBuffer;
-	MeshMaterial* m_material;
 	WorldViewProjection m_bufferWVP;
 	BufferDirectionLight m_shadowCache;
 	ID3D11Buffer* m_preObjectBuffer;
@@ -88,11 +87,8 @@ public:
 	MeshComponent& operator=(const MeshComponent&) = delete;
 
 	void Update(float deltaTime);
-	void UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight);
-	void Render(ID3D11DeviceContext* context);
+	void Render(ID3D11DeviceContext* context, DirectionLight* directionLight);
 	void RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight);
-
-	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset);
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	void UpdateInterfaceInInspector(GameObject* gameObject) override;
@@ -102,8 +98,6 @@ public:
 
 	bool CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size);
 	bool CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size);
-
-	MeshMaterial* material() const { return m_material; }
 
 	void Release();
 };

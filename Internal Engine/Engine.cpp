@@ -12,7 +12,6 @@
 #include "PrimitiveDrawable.h"
 #include "MeshComponent.h"
 #include "ShadowMap.h"
-#include "ViewProjectonData.h"
 
 Engine engine;
 Camera camera;
@@ -363,8 +362,6 @@ bool Engine::InitScene() {
     m_debugRaycast = config.debugRaycast;
     camera.SetProjection();
 
-    m_viewProjectionData = new ViewProjectonData(camera.getView(), camera.getProjection());
-
     m_font = new Font();
     m_font->Init(m_device);
 
@@ -493,12 +490,13 @@ void Engine::Render() {
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
     m_deviceContext->OMSetRenderTargets(1, &m_renderTextureRTV, m_depthStencilView);
+    m_deviceContext->ClearRenderTargetView(m_renderTextureRTV, clearColor);
 #endif
 
     m_deviceContext->RSSetViewports(1, &m_viewport);
 
-    m_location->m_skybox->Render(m_deviceContext);
-    m_deviceContext->OMSetDepthStencilState(nullptr, 0);
+    //m_location->m_skybox->Render(m_deviceContext, loc->m_directionLight);
+    //m_deviceContext->OMSetDepthStencilState(nullptr, 0);
 
     loc->m_directionLight->Render(m_deviceContext);
 
@@ -511,7 +509,7 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
         if (obj.IsEnabled() && !obj.IsTransparent())
-            m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
+            m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight);
     }
 
     // рендерим все прозрачные объекты (включая directionLight, skybox...)
@@ -519,7 +517,7 @@ void Engine::Render() {
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
         const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
         if (obj.IsEnabled() && obj.IsTransparent())
-            m_meshes[iterator]->Render(m_deviceContext, *m_viewProjectionData, m_location->m_directionLight);
+            m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight);
     }
 
     gizmozRect.Render();
@@ -572,7 +570,6 @@ void Engine::Release() {
         delete m_meshShader;
     }
     if (m_layout) m_layout->Release();
-    if (m_viewProjectionData) delete m_viewProjectionData;
 }
 
 int Engine::messageWindow() {

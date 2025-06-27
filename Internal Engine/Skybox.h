@@ -7,6 +7,8 @@ typedef struct _viewProject {
 	XMMATRIX WVP;
 } ViewProject, *LPViewProject;
 
+class DirectionLight;
+
 class Skybox : public SharedObject, public LoaderNotificationDevice {
 private:
 	ID3D11DepthStencilState* m_depthState;
@@ -27,12 +29,10 @@ public:
 
 	HRESULT Init(ID3D11Device* device) override;
 	void Update(float deltaTime);
-	void Render(ID3D11DeviceContext* context);
+	void Render(ID3D11DeviceContext* context, DirectionLight* directionLight);
 
 	bool CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertices, uint32_t sizeType, uint32_t size) override;
 	bool CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) override;
-
-	void setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset) override;
 
 	void Release();
 };

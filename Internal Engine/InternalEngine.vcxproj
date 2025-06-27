@@ -199,7 +199,6 @@
     <ClInclude Include="SharedObject.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Transform.h" />
-    <ClInclude Include="ViewProjectonData.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">

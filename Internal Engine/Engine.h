@@ -16,7 +16,6 @@ class Skybox;
 class GameObject;
 class PrimitiveDrawable;
 class ShadowMap;
-class ViewProjectonData;
 
 typedef struct _windowDescription {
 	const char* title;
@@ -74,7 +73,6 @@ private:
 	XMFLOAT2 m_sceneSize;
 #endif
 
-	ViewProjectonData* m_viewProjectionData;
 	std::vector<Model*> m_meshes;
 	std::vector<MultisampleQualityLevel> m_qualityLevels;
 	std::vector<DXGI_MODE_DESC> m_supportedResolution;

@@ -1,10 +1,11 @@
 #pragma once
 #include "framework.h"
-#include "debug.h"
+#include "AbstractBaseComponent.h"
 
 class Material {
 public:
-	Material() {}
+	Material() = default;
+	~Material() = default;
 
 	Material(const Material&) = delete;
 	Material& operator=(const Material&) = delete;
@@ -17,13 +18,13 @@ public:
 		ID3D11ShaderResourceView* m_shaderView;
 		ID3D11SamplerState* m_textureSamplerState;
 		ID3D11SamplerState* m_shadowSamplerState;
-		const char* name;
+		char* name;
 		void Load(ID3D11Device* device);
 		void Release();
 	};
 };
 
-class MeshMaterial : public Material {
+class MeshMaterial : public Material, public AbstractBaseComponent {
 public:
 	__declspec(align(16))
 	struct MeshMaterialBuffer {
@@ -42,12 +43,16 @@ private:
 	MeshMaterialBuffer m_buffer;
 
 public:
-	MeshMaterial();
+	MeshMaterial(GameObject* obj);
 
 	MeshMaterial(const MeshMaterial&) = delete;
 	MeshMaterial& operator=(const MeshMaterial&) = delete;
 
 	TextureMapInfo* diffuseTex;
+
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+	void UpdateInterfaceInInspector(GameObject* gameObject) override;
+#endif
 
 	void Bind(ID3D11DeviceContext* context) override;
 	void Load(ID3D11Device* device) override;

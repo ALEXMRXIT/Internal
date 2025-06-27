@@ -1,8 +1,10 @@
 #include "Material.h"
 #include "Engine.h"
 #include "ShadowMap.h"
+#include "GameObject.h"
+#include "debug.h"
 
-MeshMaterial::MeshMaterial() {
+MeshMaterial::MeshMaterial(GameObject* obj) : AbstractBaseComponent(obj) {
 	diffuseTex = nullptr;
     m_meshMaterialBuffer = nullptr;
 
@@ -14,7 +16,6 @@ MeshMaterial::MeshMaterial() {
 void MeshMaterial::Bind(ID3D11DeviceContext* context) {
     context->UpdateSubresource(m_meshMaterialBuffer, 0, nullptr, &m_buffer, 0, 0);
     context->PSSetConstantBuffers(1, 1, &m_meshMaterialBuffer);
-
 	context->PSSetShaderResources(0, 1, &diffuseTex->m_shaderView);
 	ID3D11ShaderResourceView* shadowResourceView = shadowMap.ShadowShaderResources();
 	context->PSSetShaderResources(1, 1, &shadowResourceView);
@@ -35,6 +36,12 @@ void MeshMaterial::Load(ID3D11Device* device) {
 	diffuseTex->Load(device);
 }
 
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+void MeshMaterial::UpdateInterfaceInInspector(GameObject* gameObject) {
+
+}
+#endif
+
 void MeshMaterial::SetScale(XMFLOAT2 scale, XMFLOAT2 offset) {
 	m_scale = scale;
 	m_offset = offset;
@@ -49,26 +56,67 @@ void MeshMaterial::Release() {
 }
 
 inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
-    D3DX11_IMAGE_LOAD_INFO loadInfo;
-    ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
-    loadInfo.Width = D3DX11_DEFAULT;
-    loadInfo.Height = D3DX11_DEFAULT;
-    loadInfo.Depth = D3DX11_DEFAULT;
-    loadInfo.FirstMipLevel = 0;
-    loadInfo.MipLevels = D3DX11_DEFAULT;
-    loadInfo.Usage = D3D11_USAGE_DEFAULT;
-    loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    loadInfo.CpuAccessFlags = 0;
-    loadInfo.MiscFlags = 0;
-    loadInfo.Format = DXGI_FORMAT_FROM_FILE;
-    loadInfo.Filter = D3DX11_FILTER_LINEAR;
-    loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
-    loadInfo.pSrcInfo = nullptr;
+    HRESULT hr{};
+    if (!name) {
+        D3D11_TEXTURE2D_DESC texDesc;
+        ZeroMemory(&texDesc, sizeof(texDesc));
+        texDesc.Width = 1;
+        texDesc.Height = 1;
+        texDesc.MipLevels = 1;
+        texDesc.ArraySize = 1;
+        texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        texDesc.SampleDesc.Count = 1;
+        texDesc.Usage = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
-    HRESULT hr = D3DX11CreateShaderResourceViewFromFile(device, name, &loadInfo, NULL, &m_shaderView, NULL);
-    if (FAILED(hr)) {
-        DXUT_ERR_MSGBOX("Failed to load texture.", hr);
-        return;
+        uint32_t whitePixel = 0x00000000;
+        D3D11_SUBRESOURCE_DATA initData;
+        initData.pSysMem = &whitePixel;
+        initData.SysMemPitch = 4;
+        initData.SysMemSlicePitch = 4;
+
+        ID3D11Texture2D* pTexture = nullptr;
+        hr = device->CreateTexture2D(&texDesc, &initData, &pTexture);
+        if (SUCCEEDED(hr)) {
+            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+            ZeroMemory(&srvDesc, sizeof(srvDesc));
+            srvDesc.Format = texDesc.Format;
+            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+            srvDesc.Texture2D.MipLevels = 1;
+            hr = device->CreateShaderResourceView(pTexture, &srvDesc, &m_shaderView);
+            pTexture->Release();
+            if (FAILED(hr)) {
+                DXUT_ERR_MSGBOX("Failed to create default SRV.", hr);
+                return;
+            }
+        }
+        else {
+            DXUT_ERR_MSGBOX("Failed to create default texture.", hr);
+            return;
+        }
+    }
+    else {
+        D3DX11_IMAGE_LOAD_INFO loadInfo;
+        ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
+        loadInfo.Width = D3DX11_DEFAULT;
+        loadInfo.Height = D3DX11_DEFAULT;
+        loadInfo.Depth = D3DX11_DEFAULT;
+        loadInfo.FirstMipLevel = 0;
+        loadInfo.MipLevels = D3DX11_DEFAULT;
+        loadInfo.Usage = D3D11_USAGE_DEFAULT;
+        loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        loadInfo.CpuAccessFlags = 0;
+        loadInfo.MiscFlags = 0;
+        loadInfo.Format = DXGI_FORMAT_FROM_FILE;
+        loadInfo.Filter = D3DX11_FILTER_LINEAR;
+        loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
+        loadInfo.pSrcInfo = nullptr;
+
+        HRESULT hr = D3DX11CreateShaderResourceViewFromFile(device, name, &loadInfo, NULL, &m_shaderView, NULL);
+        if (FAILED(hr)) {
+            DXUT_ERR_MSGBOX("Failed to load texture.", hr);
+            return;
+        }
     }
 
     D3D11_SAMPLER_DESC sampDesc;
@@ -117,6 +165,7 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
 }
 
 inline void Material::TextureMapInfo::Release() {
+    if (name) free(name);
 	if (m_shaderView) m_shaderView->Release();
 	if (m_textureSamplerState) m_textureSamplerState->Release();
 }

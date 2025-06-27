@@ -86,8 +86,11 @@ float PCF(float2 uv, float depth, float2 texelSize)
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    float3 normal = normalize(input.Normal);
+    float4 texColor = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    if (texColor.a == 0.0f)
+        texColor = float4(0.3f, 0.3f, 0.3f, 1.0f);
     
+    float3 normal = normalize(input.Normal);
     float3 lightDir = normalize(lightDirection);
     
     float diff = max(dot(normal, lightDir), 0.0);
@@ -98,7 +101,6 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     float3 specular = spec * lightColor;
     
-    float4 texColor = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
     float3 result = (ambiend_color.xyz + diffuse + specular) * texColor.rgb;
     return float4(result, texColor.a);
     

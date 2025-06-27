@@ -3,7 +3,6 @@
 #include "Camera.h"
 #include "Material.h"
 #include "Shader.h"
-#include "ViewProjectonData.h"
 #include "ShadowMap.h"
 
 VertexBuffer::VertexBuffer() {
@@ -65,7 +64,6 @@ void IndexBuffer::Release() {
 MeshComponent::MeshComponent(GameObject* obj) : AbstractBaseComponent(obj) {
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
-    m_material = nullptr;
     m_preObjectBuffer = nullptr;
     m_indices = 0;
     model = nullptr;
@@ -88,26 +86,27 @@ static XMMATRIX GetInverseTransposeWorldMatrix(const XMMATRIX& worldMatrix) {
     return inverseTranspose;
 }
 
-void MeshComponent::UpdateWVPMatrix(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight) {
+void MeshComponent::Render(ID3D11DeviceContext* context, DirectionLight* directionLight) {
     if (!m_device_loader) return;
-    XMMATRIX worldPosition = gameObject().GetComponentByType<Transform>()->GetWorldMatrix();
-    m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * viewProjection.m_view * viewProjection.m_projection);
+
+    Transform* transform = gameObject().GetComponentByType<Transform>();
+    MeshMaterial* material = gameObject().GetComponentByType<MeshMaterial>();
+
+    XMMATRIX worldPosition = transform->GetWorldMatrix();
+    m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * camera.getView() * camera.getProjection());
     m_bufferWVP.World = XMMatrixTranspose(worldPosition);
-    m_bufferWVP.ViewProjection = XMMatrixTranspose(viewProjection.m_view * viewProjection.m_projection);
+    m_bufferWVP.ViewProjection = XMMatrixTranspose(camera.getView() * camera.getProjection());
     m_bufferWVP.InverseWorld = GetInverseTransposeWorldMatrix(worldPosition);
     m_bufferWVP.LightPos = XMMatrixTranspose(directionLight->GetViewProjectionMatrix());
-    m_bufferWVP.texture_scale = m_material->scale();
-    m_bufferWVP.texture_offset = m_material->offset();
+    m_bufferWVP.texture_scale = material ? material->scale() : XMFLOAT2(1.0f, 1.0f);
+    m_bufferWVP.texture_offset = material ? material->offset() : XMFLOAT2(0.0f, 0.0f);
 
     context->UpdateSubresource(m_preObjectBuffer, 0, nullptr, &m_bufferWVP, 0, 0);
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
-}
-
-void MeshComponent::Render(ID3D11DeviceContext* context) {
-    if (!m_device_loader) return;
 
     IASetVertexAndIndexBuffer(context);
-    m_material->Bind(context);
+    if (material)
+        material->Bind(context);
     context->DrawIndexed(m_indices, 0, 0);
 }
 
@@ -137,59 +136,59 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
     
         ImGui::BeginChild("MeshRenderer", ImVec2(0, 120), true);
         {
-            MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
-            if (material) {
-                if (material->diffuseTex && material->diffuseTex->m_shaderView) {
-                    ImGui::Image((void*)material->diffuseTex->m_shaderView, ImVec2(100, 100));
-                    ImGui::SameLine();
-    
-                    ImGui::BeginGroup();
-                    {
-                        static char buffer[MAX_PATH];
-                        snprintf(buffer, MAX_PATH, "Name: %s", material->diffuseTex->name);
-                        ImGui::Text(buffer);
-    
-                        XMFLOAT2 tiling = material->scale();
-                        float til[2] = { tiling.x, tiling.y };
-    
-                        ImGui::Dummy(ImVec2(0.0f, 2.0f));
-                        ImGui::Text("Tiling");
-                        ImGui::SameLine();
-                        ImGui::Text("X:");
-                        ImGui::SameLine();
-                        ImGui::SetNextItemWidth(50.0f);
-                        if (ImGui::DragFloat("##TexX", &til[0], 0.1f))
-                            material->setScale(XMFLOAT2(til[0], til[1]));
-    
-                        ImGui::SameLine();
-                        ImGui::Text("Y:");
-                        ImGui::SameLine();
-                        ImGui::SetNextItemWidth(50.0f);
-                        if (ImGui::DragFloat("##TexY", &til[1], 0.1f))
-                            material->setScale(XMFLOAT2(til[0], til[1]));
-    
-                        XMFLOAT2 offset = material->offset();
-                        float off[2] = { offset.x, offset.y };
-    
-                        ImGui::Dummy(ImVec2(0.0f, 2.0f));
-                        ImGui::Text("Offset");
-                        ImGui::SameLine();
-                        ImGui::Text("X:");
-                        ImGui::SameLine();
-                        ImGui::SetNextItemWidth(50.0f);
-                        if (ImGui::DragFloat("##OffX", &off[0], 0.01f))
-                            material->setOffset(XMFLOAT2(off[0], off[1]));
-    
-                        ImGui::SameLine();
-                        ImGui::Text("Y:");
-                        ImGui::SameLine();
-                        ImGui::SetNextItemWidth(50.0f);
-                        if (ImGui::DragFloat("##OffY", &off[1], 0.01f))
-                            material->setOffset(XMFLOAT2(off[0], off[1]));
-                    }
-                    ImGui::EndGroup();
-                }
-            }
+            //MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
+            //if (material) {
+            //    if (material->diffuseTex && material->diffuseTex->m_shaderView) {
+            //        ImGui::Image((void*)material->diffuseTex->m_shaderView, ImVec2(100, 100));
+            //        ImGui::SameLine();
+            //
+            //        ImGui::BeginGroup();
+            //        {
+            //            static char buffer[MAX_PATH];
+            //            snprintf(buffer, MAX_PATH, "Name: %s", material->diffuseTex->name);
+            //            ImGui::Text(buffer);
+            //
+            //            XMFLOAT2 tiling = material->scale();
+            //            float til[2] = { tiling.x, tiling.y };
+            //
+            //            ImGui::Dummy(ImVec2(0.0f, 2.0f));
+            //            ImGui::Text("Tiling");
+            //            ImGui::SameLine();
+            //            ImGui::Text("X:");
+            //            ImGui::SameLine();
+            //            ImGui::SetNextItemWidth(50.0f);
+            //            if (ImGui::DragFloat("##TexX", &til[0], 0.1f))
+            //                material->setScale(XMFLOAT2(til[0], til[1]));
+            //
+            //            ImGui::SameLine();
+            //            ImGui::Text("Y:");
+            //            ImGui::SameLine();
+            //            ImGui::SetNextItemWidth(50.0f);
+            //            if (ImGui::DragFloat("##TexY", &til[1], 0.1f))
+            //                material->setScale(XMFLOAT2(til[0], til[1]));
+            //
+            //            XMFLOAT2 offset = material->offset();
+            //            float off[2] = { offset.x, offset.y };
+            //
+            //            ImGui::Dummy(ImVec2(0.0f, 2.0f));
+            //            ImGui::Text("Offset");
+            //            ImGui::SameLine();
+            //            ImGui::Text("X:");
+            //            ImGui::SameLine();
+            //            ImGui::SetNextItemWidth(50.0f);
+            //            if (ImGui::DragFloat("##OffX", &off[0], 0.01f))
+            //                material->setOffset(XMFLOAT2(off[0], off[1]));
+            //
+            //            ImGui::SameLine();
+            //            ImGui::Text("Y:");
+            //            ImGui::SameLine();
+            //            ImGui::SetNextItemWidth(50.0f);
+            //            if (ImGui::DragFloat("##OffY", &off[1], 0.01f))
+            //                material->setOffset(XMFLOAT2(off[0], off[1]));
+            //        }
+            //        ImGui::EndGroup();
+            //    }
+            //}
         }
         ImGui::EndChild();
     
@@ -198,14 +197,6 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
     }
 }
 #endif
-
-void MeshComponent::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset){
-    m_material = new MeshMaterial();
-    m_material->diffuseTex = new Material::TextureMapInfo();
-    m_material->diffuseTex->name = name;
-    m_material->SetScale(scale, offset);
-    m_material->setColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-}
 
 HRESULT MeshComponent::Init(ID3D11Device* device) {
     HRESULT hr;
@@ -232,14 +223,6 @@ HRESULT MeshComponent::Init(ID3D11Device* device) {
     hr = device->CreateBuffer(&bufferShadowConstant, NULL, &m_shadowConstantBuffer);
     if (FAILED(hr))
         DXUT_ERR_MSGBOX("Failed to create matrix buffer.", hr);
-    if (!m_material) {
-        m_material = new MeshMaterial();
-        m_material->diffuseTex = new Material::TextureMapInfo();
-        m_material->SetScale(XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f));
-    }
-    else if (m_material->diffuseTex && m_material->diffuseTex->name) {
-        m_material->Load(device);
-    }
     m_device_loader = true;
     return hr;
 }
@@ -274,10 +257,6 @@ void MeshComponent::Release() {
     if (m_indexBuffer) {
         m_indexBuffer->Release();
         delete m_indexBuffer;
-    }
-    if (m_material) {
-        m_material->Release();
-        delete m_material;
     }
     if (m_preObjectBuffer) m_preObjectBuffer->Release();
     if (m_shadowConstantBuffer) m_shadowConstantBuffer->Release();

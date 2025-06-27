@@ -32,7 +32,7 @@ public:
 	GameObject& operator=(const GameObject&) = delete;
 
 	template<class TComponent>
-	ALWAYS_INLINE TComponent* AddComponent(GameObject* obj) { return m_components->AddComponent<TComponent>(obj); }
+	ALWAYS_INLINE TComponent* AddComponent() { return m_components->AddComponent<TComponent>(this); }
 
 	template<class TComponent>
 	ALWAYS_INLINE TComponent* GetComponentByType() const { return m_components->GetComponentByType<TComponent>(); }

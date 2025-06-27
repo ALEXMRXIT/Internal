@@ -194,9 +194,6 @@
     <ClInclude Include="ShadowMap.h">
       <Filter>Файлы заголовков\Light</Filter>
     </ClInclude>
-    <ClInclude Include="ViewProjectonData.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="Quaternion.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>

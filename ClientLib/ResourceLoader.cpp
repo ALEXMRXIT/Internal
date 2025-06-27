@@ -3,6 +3,8 @@
 #include "Model.h"
 #include "SharedObject.h"
 
+#include <intrin.h>
+
 ResourceLoader::ResourceLoader(Engine& engine, FileSharedBuffer* fileBuffer) : 
         engine(engine), fileBuffer(fileBuffer), stop(false) {
 	stopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -48,20 +50,20 @@ DWORD ResourceLoader::ThreadLoop() {
         }
         LeaveCriticalSection(&queueMutex);
         if (resource.m_fileName)
-            LoadResource(resource.m_fileName, resource.m_mesh);
+            LoadResource(resource);
         else
             WaitForSingleObject(stopEvent, INFINITE);
     }
     return 0;
 }
 
-void ResourceLoader::LoadResource(const char* resourceName, SharedObject* mesh) {
+void ResourceLoader::LoadResource(MeshContainer& container) {
     std::vector<Vertex> vertices;
     std::vector<DWORD> indices;
-    fileBuffer->LoadFile(resourceName, vertices, indices);
+    fileBuffer->LoadFile(container.m_fileName, vertices, indices);
 
-    mesh->CreateVertex(engine.device(), vertices, sizeof(Vertex), vertices.size());
-    mesh->CreateIndex(engine.device(), indices, sizeof(DWORD), indices.size());
-    mesh->setMaterial(fileBuffer->material, XMFLOAT2(1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f));
-    mesh->Init(engine.device());
+    container.m_mesh->CreateVertex(engine.device(), vertices, sizeof(Vertex), vertices.size());
+    container.m_mesh->CreateIndex(engine.device(), indices, sizeof(DWORD), indices.size());
+    container.m_mesh->SetMaterialName(fileBuffer->material);
+    container.m_mesh->Init(engine.device());
 }

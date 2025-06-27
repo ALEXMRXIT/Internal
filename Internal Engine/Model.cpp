@@ -1,6 +1,5 @@
 #include "Model.h"
 #include "Material.h"
-#include "ViewProjectonData.h"
 #include "DirectionLight.h"
 
 Model::Model(MeshComponent& component) : m_component(component) {
@@ -11,10 +10,8 @@ void Model::Update(float deltaTime) {
 	m_component.Update(deltaTime);
 }
 
-void Model::Render(ID3D11DeviceContext* context, const ViewProjectonData& viewProjection, DirectionLight* directionLight) {
-	m_component.UpdateWVPMatrix(context, viewProjection, directionLight);
-
-	m_component.Render(context);
+void Model::Render(ID3D11DeviceContext* context, DirectionLight* directionLight) {
+	m_component.Render(context, directionLight);
 }
 
 void Model::RenderShadow(ID3D11DeviceContext* context, DirectionLight* directionLight) {
@@ -40,8 +37,4 @@ bool Model::CreateVertex(ID3D11Device* device, const std::vector<Vertex>& vertic
 bool Model::CreateIndex(ID3D11Device* device, const std::vector<DWORD>& indices, uint32_t sizeType, uint32_t size) {
 	setIndecesPhysics(indices);
 	return m_component.CreateIndex(device, indices, sizeType, size);
-}
-
-void Model::setMaterial(const char* name, XMFLOAT2 scale, XMFLOAT2 offset) {
-	m_component.setMaterial(name, scale, offset);
 }
