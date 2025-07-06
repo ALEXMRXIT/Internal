@@ -24,14 +24,16 @@ void MeshMaterial::Bind(ID3D11DeviceContext* context) {
 }
 
 void MeshMaterial::Load(ID3D11Device* device) {
-    D3D11_BUFFER_DESC bufferDesc;
-    ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-    bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth = sizeof(MeshMaterialBuffer);
-    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags = 0;
-    device->CreateBuffer(&bufferDesc, NULL, &m_meshMaterialBuffer);
+    if (!m_meshMaterialBuffer) {
+        D3D11_BUFFER_DESC bufferDesc;
+        ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+        bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        bufferDesc.ByteWidth = sizeof(MeshMaterialBuffer);
+        bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        bufferDesc.CPUAccessFlags = 0;
+        bufferDesc.MiscFlags = 0;
+        device->CreateBuffer(&bufferDesc, NULL, &m_meshMaterialBuffer);
+    }
 
 	diffuseTex->Load(device);
 }
@@ -59,7 +61,7 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
     HRESULT hr{};
     if (!name) {
         D3D11_TEXTURE2D_DESC texDesc;
-        ZeroMemory(&texDesc, sizeof(texDesc));
+        ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
         texDesc.Width = 1;
         texDesc.Height = 1;
         texDesc.MipLevels = 1;
@@ -71,6 +73,7 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
 
         uint32_t whitePixel = 0x00000000;
         D3D11_SUBRESOURCE_DATA initData;
+        ZeroMemory(&initData, sizeof(D3D11_SUBRESOURCE_DATA));
         initData.pSysMem = &whitePixel;
         initData.SysMemPitch = 4;
         initData.SysMemSlicePitch = 4;
@@ -96,6 +99,7 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
         }
     }
     else {
+        if (m_shaderView) m_shaderView->Release();
         D3DX11_IMAGE_LOAD_INFO loadInfo;
         ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO));
         loadInfo.Width = D3DX11_DEFAULT;

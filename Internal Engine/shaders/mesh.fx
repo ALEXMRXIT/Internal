@@ -71,17 +71,28 @@ SamplerComparisonState gSamShadow : register(s1);
 
 float PCF(float2 uv, float depth, float2 texelSize)
 {
+    if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
+        return 0.0;
+
     float shadow = 0.0;
-    [loop] for (int x = -pcfSize; x <= pcfSize; ++x)
+    float totalSamples = 0.0;
+    
+    for (int x = -pcfSize; x <= pcfSize; ++x)
     {
-        [loop] for (int y = -pcfSize; y <= pcfSize; ++y)
+        for (int y = -pcfSize; y <= pcfSize; ++y)
         {
             float2 offset = float2(x, y) * texelSize;
-            shadow += ShadowMap.SampleCmpLevelZero(gSamShadow, uv + offset, depth);
+            float2 sampleUV = uv + offset;
+            
+            if (sampleUV.x >= 0 && sampleUV.x <= 1 && sampleUV.y >= 0 && sampleUV.y <= 1)
+            {
+                shadow += ShadowMap.SampleCmpLevelZero(gSamShadow, sampleUV, depth);
+                totalSamples += 1.0;
+            }
         }
     }
-    float totalSamples = (2 * pcfSize + 1) * (2 * pcfSize + 1);
-    return shadow / totalSamples;
+    
+    return totalSamples > 0 ? shadow / totalSamples : 1.0;
 }
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
@@ -93,34 +104,30 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     float3 normal = normalize(input.Normal);
     float3 lightDir = normalize(lightDirection);
     
+    float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
+    shadowPos.xy = saturate(shadowPos.xy * 0.5f + 0.5f);
+    shadowPos.y = 1.0f - shadowPos.y;
+    
+    float shadowBias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.0005);
+    float2 texelSize = 1.0 / shadowSize;
+    float depthTest = shadowPos.z - shadowBias;
+    float shadowResult = (baked == 1.0f) ?
+            step(depthTest, ShadowMap.Sample(ObjSamplerState, shadowPos.xy).r) :
+            PCF(shadowPos.xy, depthTest, texelSize);
+    
     float diff = max(dot(normal, lightDir), 0.0);
     float3 diffuse = diff * ambiend_color * diffuseIntensity;
+    float shadowFactor = lerp(1.0f, shadowResult, shadowIntensity);
     
-    float3 viewDir = normalize(cameraPos - input.WorldPos);
-    float3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-    float3 specular = spec * lightColor;
+    float spec = 0.0;
+    if (diff > 0.0)
+    {
+        float3 viewDir = normalize(cameraPos - input.WorldPos);
+        float3 reflectDir = reflect(-lightDir, normal);
+        spec = pow(max(dot(viewDir, reflectDir), 0.0), specularPower);
+    }
+    float3 specular = spec * lightColor.rgb * specularIntensity;
     
-    float3 result = (ambiend_color.xyz + diffuse + specular) * texColor.rgb;
+    float3 result = (lightColor.rgb + (diffuse + specular) * shadowFactor) * texColor.rgb;
     return float4(result, texColor.a);
-    
-        //float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
-    //shadowPos.xy = saturate(shadowPos.xy * 0.5f + 0.5f);
-    //shadowPos.y = 1.0f - shadowPos.y;
-    
-    //float shadowBias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.0005);
-    //float2 texelSize = 1.0 / shadowSize;
-    //float depthTest = shadowPos.z - shadowBias;
-    //float shadowResult = (baked == 1.0f) ?
-    //        step(depthTest, ShadowMap.Sample(ObjSamplerState, shadowPos.xy).r) :
-    //        PCF(shadowPos.xy, depthTest, texelSize);
-        
-    //float shadowFactor = lerp(1.0f, shadowResult, shadowIntensity);
-    
-    //float4 finalColor = color * ambiend_color;
-    //finalColor.rgb *= diffuseShadow;                        // diffuse shadow
-    //finalColor.rgb *= shadowFactor * diffuseIntensity;      // shadow map + intensity
-    //finalColor.a = color.a;
-    //
-    //return finalColor;
 }
