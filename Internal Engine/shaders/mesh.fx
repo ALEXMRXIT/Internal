@@ -71,9 +71,6 @@ SamplerComparisonState gSamShadow : register(s1);
 
 float PCF(float2 uv, float depth, float2 texelSize)
 {
-    if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
-        return 0.0;
-
     float shadow = 0.0;
     float totalSamples = 0.0;
     
@@ -83,12 +80,8 @@ float PCF(float2 uv, float depth, float2 texelSize)
         {
             float2 offset = float2(x, y) * texelSize;
             float2 sampleUV = uv + offset;
-            
-            if (sampleUV.x >= 0 && sampleUV.x <= 1 && sampleUV.y >= 0 && sampleUV.y <= 1)
-            {
-                shadow += ShadowMap.SampleCmpLevelZero(gSamShadow, sampleUV, depth);
-                totalSamples += 1.0;
-            }
+            shadow += ShadowMap.SampleCmpLevelZero(gSamShadow, sampleUV, depth);
+            totalSamples += 1.0;
         }
     }
     
@@ -102,13 +95,14 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
         texColor = float4(0.3f, 0.3f, 0.3f, 1.0f);
     
     float3 normal = normalize(input.Normal);
-    float3 lightDir = normalize(lightDirection);
+    float3 lightDir = normalize(-lightDirection);
     
     float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
     shadowPos.xy = saturate(shadowPos.xy * 0.5f + 0.5f);
     shadowPos.y = 1.0f - shadowPos.y;
     
-    float shadowBias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.0005);
+    float shadowBias = 0.005 * tan(acos(saturate(dot(normal, lightDir))));
+    shadowBias = clamp(shadowBias, 0.0005, 0.01);
     float2 texelSize = 1.0 / shadowSize;
     float depthTest = shadowPos.z - shadowBias;
     float shadowResult = (baked == 1.0f) ?
