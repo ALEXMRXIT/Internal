@@ -17,10 +17,10 @@ DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
     m_directionOption.LightColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_directionOption.AmbiendColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_directionOption.baked = 0;
-    m_directionOption.diffuseIntensity = 0.333f;
-    m_directionOption.shadowIntensity = 0.4f;
-    m_directionOption.bias = 0.001f;
-    shadowMapSize = 3;
+    m_directionOption.diffuseIntensity = 1.0f;
+    m_directionOption.shadowIntensity = 0.5f;
+    m_directionOption.bias = 0.012f;
+    shadowMapSize = 4;
     m_directionOption.shadowSize = XMFLOAT2(
         (float)m_presetValues[shadowMapSize],
         (float)m_presetValues[shadowMapSize]

@@ -95,22 +95,24 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
         texColor = float4(0.3f, 0.3f, 0.3f, 1.0f);
     
     float3 normal = normalize(input.Normal);
-    float3 lightDir = normalize(-lightDirection);
+    float3 lightDir = normalize(lightDirection);
     
     float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
     shadowPos.xy = saturate(shadowPos.xy * 0.5f + 0.5f);
     shadowPos.y = 1.0f - shadowPos.y;
     
-    float shadowBias = 0.005 * tan(acos(saturate(dot(normal, lightDir))));
-    shadowBias = clamp(shadowBias, 0.0005, 0.01);
+    float shadowBias = 0.05 * bias;
     float2 texelSize = 1.0 / shadowSize;
     float depthTest = shadowPos.z - shadowBias;
     float shadowResult = (baked == 1.0f) ?
-            step(depthTest, ShadowMap.Sample(ObjSamplerState, shadowPos.xy).r) :
+            ShadowMap.SampleCmpLevelZero(gSamShadow, shadowPos.xy, depthTest) :
             PCF(shadowPos.xy, depthTest, texelSize);
     
-    float diff = max(dot(normal, lightDir), 0.0);
-    float3 diffuse = diff * ambiend_color * diffuseIntensity;
+    float3 ambient = ambiend_color.rgb;
+    
+    float diff = max(dot(normal, lightDir), 0.0f);
+    float3 diffuse = diff * lightColor.rgb * diffuseIntensity;
+    
     float shadowFactor = lerp(1.0f, shadowResult, shadowIntensity);
     
     float spec = 0.0;
@@ -122,6 +124,7 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     }
     float3 specular = spec * lightColor.rgb * specularIntensity;
     
-    float3 result = (lightColor.rgb + (diffuse + specular) * shadowFactor) * texColor.rgb;
+    float3 lighting = ambient + (diffuse + specular) * shadowFactor;
+    float3 result = lighting * texColor.rgb;
     return float4(result, texColor.a);
 }
