@@ -123,6 +123,7 @@ void MeshComponent::RenderShadow(ID3D11DeviceContext* context, DirectionLight* d
     ID3D11Buffer* vertex = *m_vertexBuffer;
     context->IASetVertexBuffers(0, 1, &vertex, &stride, &offset);
     context->IASetIndexBuffer(*m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     context->DrawIndexed(m_indices, 0, 0);
 }
 

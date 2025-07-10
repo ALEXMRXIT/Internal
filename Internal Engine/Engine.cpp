@@ -544,8 +544,14 @@ void Engine::Render() {
     }
 #endif
 
-    HRESULT hr = m_swapChain->Present(min(config.vSync, 2), 0);
-    m_SwapChainOccluded = hr == DXGI_STATUS_OCCLUDED;
+    UINT syncInterval = min(config.vSync, 2);
+    UINT presentFlags = 0;
+    if (m_SwapChainOccluded) {
+        presentFlags |= DXGI_PRESENT_TEST;
+    }
+
+    HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
+    m_SwapChainOccluded = (hr == DXGI_STATUS_OCCLUDED);
 }
 
 void Engine::Release() {

@@ -95,7 +95,7 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
         texColor = float4(0.3f, 0.3f, 0.3f, 1.0f);
     
     float3 normal = normalize(input.Normal);
-    float3 lightDir = normalize(lightDirection);
+    float3 lightDir = normalize(-lightDirection);
     
     float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
     shadowPos.xy = saturate(shadowPos.xy * 0.5f + 0.5f);
@@ -119,7 +119,7 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     if (diff > 0.0)
     {
         float3 viewDir = normalize(cameraPos - input.WorldPos);
-        float3 reflectDir = reflect(-lightDir, normal);
+        float3 reflectDir = reflect(lightDir, normal);
         spec = pow(max(dot(viewDir, reflectDir), 0.0), specularPower);
     }
     float3 specular = spec * lightColor.rgb * specularIntensity;

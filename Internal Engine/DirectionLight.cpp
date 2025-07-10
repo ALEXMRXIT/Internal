@@ -14,11 +14,11 @@ DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
     directionType = 0;
     shadowType = 0;
 
-    m_directionOption.LightColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_directionOption.AmbiendColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_directionOption.LightColor = XMFLOAT4(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+    m_directionOption.AmbiendColor = XMFLOAT4(255.0f / 237.0f, 255.0f / 241.0f, 255.0f / 255.0f, 1.0f);
     m_directionOption.baked = 0;
     m_directionOption.diffuseIntensity = 1.0f;
-    m_directionOption.shadowIntensity = 0.5f;
+    m_directionOption.shadowIntensity = 1.0f;
     m_directionOption.bias = 0.012f;
     shadowMapSize = 4;
     m_directionOption.shadowSize = XMFLOAT2(
@@ -75,8 +75,7 @@ void DirectionLight::Release() {
 BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX worldPos) {
     BufferDirectionLight buffer;
     const Transform* transform = (const Transform*)gameObject().GetComponentByType<Transform>();
-    Quaternion rotation = transform->rotation();
-    XMVECTOR direction = XMVector3Normalize(rotation.m_quat);
+    XMVECTOR direction = Quaternion::QuaternionToDirectionVector(transform->rotation());
 
     XMMATRIX view = XMMatrixLookAtLH(XMVectorZero(), direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
 
@@ -88,8 +87,7 @@ BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX world
 XMMATRIX DirectionLight::GetViewProjectionMatrix() {
     if (!gameObject().IsStatic()) {
         const Transform* transform = (const Transform*)gameObject().GetComponentByType<Transform>();
-        Quaternion rotation = transform->rotation();
-        XMVECTOR direction = XMVector3Normalize(rotation.m_quat);
+        XMVECTOR direction = Quaternion::QuaternionToDirectionVector(transform->rotation());
 
         XMMATRIX view = XMMatrixLookAtLH(XMVectorZero(), direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
         m_viewProjectionCache = view * m_lightProjectionMatrix;
@@ -105,7 +103,7 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 205.0f), true);
+        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 495.0f), true);
         {
             const char* types[] = { "Direction Light" };
             const char* shadows[] = { "Soft Shadow" };
@@ -193,6 +191,18 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             if (ImGui::SliderInt("##ShadowPCFSize", &pcf, 1, 5, "%d", ImGuiSliderFlags_AlwaysClamp))
                 m_directionOption.pcfSize = static_cast<float>(pcf);
             ImGui::NextColumn();
+
+            ImGui::Columns(1);
+            float availableWidth = ImGui::GetContentRegionAvail().x;
+            XMFLOAT2 shadowSize = m_directionOption.shadowSize;
+            float aspectRatio = shadowSize.x / shadowSize.y;
+            float displayHeight = availableWidth / aspectRatio;
+            float indent = (ImGui::GetContentRegionAvail().x - availableWidth) * 0.5f;
+            if (indent > 0.0f)
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + indent);
+            ImGui::Dummy(ImVec2(0.0f, 5.0f));
+            ImTextureID texId = (ImTextureID)shadowMap.ShadowShaderResources();
+            ImGui::Image(texId, ImVec2(availableWidth, displayHeight));
 
             ImGui::Columns(1);
         }
