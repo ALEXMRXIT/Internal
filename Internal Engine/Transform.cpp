@@ -9,12 +9,12 @@ XMMATRIX Transform::GetWorldMatrix() const {
 }
 
 Transform::Transform(GameObject* obj) : AbstractBaseComponent(obj) {
-    m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    m_position = Vector3(0.0f, 0.0f, 0.0f);
     m_rotation = Quaternion::Identity();
-    m_scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    m_scale = Vector3(1.0f, 1.0f, 1.0f);
 }
 
-void Transform::position(const XMFLOAT3 position) {
+void Transform::position(const Vector3 position) {
     m_position = position;
 }
 
@@ -22,7 +22,7 @@ void Transform::rotation(Quaternion quaternion) {
     m_rotation = quaternion;
 }
 
-void Transform::scale(const XMFLOAT3 vector) {
+void Transform::scale(const Vector3 vector) {
     m_scale = vector;
 }
 
@@ -51,7 +51,7 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                 ImGuiSliderFlags flags = ImGuiSliderFlags_AlwaysClamp;
 
                 {
-                    XMFLOAT3 pos = transform->position();
+                    Vector3 pos = transform->position();
 
                     const char* posText = "Position:";
                     ImGui::Text("%s", posText);
@@ -124,7 +124,7 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                 }
 
                 {
-                    XMFLOAT3 scale = transform->scale();
+                    Vector3 scale = transform->scale();
 
                     const char* scaleText = "Scale:";
                     ImGui::Text("%s", scaleText);

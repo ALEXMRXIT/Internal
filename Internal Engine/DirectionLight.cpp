@@ -4,6 +4,7 @@
 #include "GameObject.h"
 #include "ShadowMap.h"
 #include "Camera.h"
+#include "Vector3.h"
 
 const int DirectionLight::m_presetValues[5] = { 256, 512, 1024, 2048, 4096 };
 
@@ -62,7 +63,7 @@ void DirectionLight::Render(ID3D11DeviceContext* context) {
     XMFLOAT4 lightDir = Quaternion::QuaternionToDirection(quat);
 
     m_directionOption.LightDirection = lightDir;
-    XMStoreFloat3(&m_directionOption.cameraPos, camera.getPos());
+    XMStoreFloat3(&m_directionOption.cameraPos, Engine::main_camera().getPos());
 
     context->UpdateSubresource(m_directionBuffer, 0, nullptr, &m_directionOption, 0, 0);
     context->PSSetConstantBuffers(0, 1, &m_directionBuffer);
@@ -77,10 +78,8 @@ BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX world
     const Transform* transform = (const Transform*)gameObject().GetComponentByType<Transform>();
     XMVECTOR direction = Quaternion::QuaternionToDirectionVector(transform->rotation());
 
-    XMFLOAT3 pos = transform->position();
-	XMVECTOR position = XMVectorSet(pos.x, pos.y, pos.z, 1.0f);
-
-    XMMATRIX view = XMMatrixLookAtLH(position, position + direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
+    XMVECTOR pos = transform->position().ToXMVector();
+    XMMATRIX view = XMMatrixLookAtLH(pos, pos + direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
 
     XMStoreFloat4(&buffer.direction, direction);
     buffer.lightViewProj = XMMatrixTranspose(worldPos * view * m_lightProjectionMatrix);
@@ -92,10 +91,8 @@ XMMATRIX DirectionLight::GetViewProjectionMatrix() {
         const Transform* transform = (const Transform*)gameObject().GetComponentByType<Transform>();
         XMVECTOR direction = Quaternion::QuaternionToDirectionVector(transform->rotation());
 
-        XMFLOAT3 pos = transform->position();
-        XMVECTOR position = XMVectorSet(pos.x, pos.y, pos.z, 1.0f);
-
-        XMMATRIX view = XMMatrixLookAtLH(position, position + direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
+        XMVECTOR pos = transform->position().ToXMVector();
+        XMMATRIX view = XMMatrixLookAtLH(pos, pos + direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
         m_viewProjectionCache = view * m_lightProjectionMatrix;
     }
     return m_viewProjectionCache;

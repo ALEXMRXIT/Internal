@@ -1,6 +1,7 @@
 #pragma once
 #include "framework.h"
 #include "Config.h"
+#include "Camera.h"
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 #include "ImGUIDevice.h"
@@ -9,7 +10,6 @@ class ImGUIDevice;
 
 class Shader;
 class Font;
-class Camera;
 class Model;
 class Location;
 class Skybox;
@@ -98,6 +98,7 @@ public:
 	Engine();
 
 	GameObject* lastSelected = nullptr;
+	static Camera* m_camera;
 
 	Engine(const Engine&) = delete;
 	Engine& operator=(const Engine&) = delete;
@@ -119,6 +120,8 @@ public:
 	const DXGI_MODE_DESC& getSupportedResolution() const;
 	const wchar_t* toStringVSync() const;
 
+	static Camera& main_camera() { return *m_camera; }
+
 	ID3D11Device* device() const { return m_device; }
 	ID3D11DeviceContext* deviceContext() const { return m_deviceContext; }
 	ID3D11ShaderResourceView* GetRenderTextureSRV() const { return m_renderTextureSRV; }
@@ -133,6 +136,5 @@ public:
 
 extern Engine engine;
 extern Config config;
-extern Camera camera;
 extern PrimitiveDrawable gizmozRect;
 extern ShadowMap shadowMap;

@@ -7,13 +7,14 @@ Quaternion::Quaternion(float x, float y, float z, float w) : m_quat(DirectX::XMV
     XMConvertToRadians(z),
     XMConvertToRadians(w)
 )) {  }
+
 Quaternion::Quaternion(const DirectX::XMVECTOR& q) : m_quat(XMQuaternionNormalize(q)) {}
 
 Quaternion Quaternion::Identity() { return Quaternion(); }
 
-Quaternion SERVLIBCALL Quaternion::AngleAxis(float angleDegrees, const DirectX::XMFLOAT3 axis) {
+Quaternion SERVLIBCALL Quaternion::AngleAxis(float angleDegrees, const Vector3 axis) {
     return Quaternion(DirectX::XMQuaternionRotationAxis(
-        DirectX::XMLoadFloat3(&axis),
+        DirectX::XMLoadFloat3(reinterpret_cast<const DirectX::XMFLOAT3*>(&axis)),
         DirectX::XMConvertToRadians(angleDegrees)
     ));
 }
@@ -63,12 +64,26 @@ SERVLIBCALL XMVECTOR Quaternion::QuaternionToDirectionVector(const Quaternion& q
     return direction;
 }
 
+SERVLIBCALL Quaternion Quaternion::CreateFromYawPitchRoll(float yaw, float pitch, float roll) {
+    XMVECTOR quat = XMQuaternionRotationRollPitchYaw(pitch, yaw, roll);
+    Quaternion result;
+    XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(&result), quat);
+    return result;
+}
+
 Quaternion Quaternion::Normalized() const {
     return Quaternion(DirectX::XMQuaternionNormalize(m_quat));
 }
 
 void Quaternion::Normalize() {
     m_quat = DirectX::XMQuaternionNormalize(m_quat);
+}
+
+XMFLOAT3 Quaternion::ToEuler() const {
+    XMVECTOR euler = XMQuaternionRotationRollPitchYawFromVector(m_quat);
+    XMFLOAT3 q;
+    XMStoreFloat3(&q, euler);
+    return q;
 }
 
 Quaternion Quaternion::Inverse() const {

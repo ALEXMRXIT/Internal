@@ -2,6 +2,7 @@
 #include "framework.h"
 #include "AbstractBaseComponent.h"
 #include "Quaternion.h"
+#include "Vector3.h"
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 #include "ImGUIDevice.h"
@@ -11,9 +12,9 @@ class GameObject;
 
 class Transform : public AbstractBaseComponent {
 private:
-    XMFLOAT3 m_position;
+    Vector3 m_position;
     Quaternion m_rotation;
-    XMFLOAT3 m_scale;
+    Vector3 m_scale;
 
 public:
     Transform(GameObject* obj);
@@ -22,14 +23,14 @@ public:
     void UpdateInterfaceInInspector(GameObject* gameObject) override;
 #endif
 
-    void position(const XMFLOAT3 position);
-    XMFLOAT3 position() const { return m_position; }
+    void position(const Vector3 position);
+    Vector3 position() const { return m_position; }
 
     void rotation(Quaternion quaternion);
     Quaternion rotation() const { return m_rotation; }
 
-    void scale(const XMFLOAT3 vector);
-    XMFLOAT3 scale() const { return m_scale; }
+    void scale(const Vector3 vector);
+    Vector3 scale() const { return m_scale; }
 
     XMMATRIX GetWorldMatrix() const;
 };

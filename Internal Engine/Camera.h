@@ -1,31 +1,28 @@
 #pragma once
 #include "framework.h"
+#include "AbstractBaseComponent.h"
 
-extern class Camera {
+class Transform;
+
+class Camera : public AbstractBaseComponent {
 private:
-	XMVECTOR position;
 	XMMATRIX view;
-	XMVECTOR target;
-	XMVECTOR up;
-	XMVECTOR forward;
-	XMVECTOR right;
 	XMMATRIX projection;
+	Transform* transform = NULL;
 
 public:
-	Camera();
+	Camera(GameObject* obj);
 	Camera(const Camera&) = delete;
 	Camera& operator=(const Camera&) = delete;
 
-	float verticalLeftRight;
-	float horizontalBackForward;
-
-	float yaw;
-	float pitch;
-
 	void Update();
-	void SetProjection();
 
-	inline const XMMATRIX& getView() const { return view; }
-	inline const XMMATRIX& getProjection() const { return projection; }
-	inline const XMVECTOR& getPos() const { return position; }
-} camera;
+	const XMMATRIX& getView() const { return view; }
+	const XMMATRIX& getProjection() const { return projection; }
+	const XMVECTOR& getPos() const;
+
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+	void UpdateInterfaceInInspector(GameObject* gameObject) override;
+#endif
+
+};

@@ -93,9 +93,9 @@ void MeshComponent::Render(ID3D11DeviceContext* context, DirectionLight* directi
     MeshMaterial* material = gameObject().GetComponentByType<MeshMaterial>();
 
     XMMATRIX worldPosition = transform->GetWorldMatrix();
-    m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * camera.getView() * camera.getProjection());
+    m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * Engine::main_camera().getView() * Engine::main_camera().getProjection());
     m_bufferWVP.World = XMMatrixTranspose(worldPosition);
-    m_bufferWVP.ViewProjection = XMMatrixTranspose(camera.getView() * camera.getProjection());
+    m_bufferWVP.ViewProjection = XMMatrixTranspose(Engine::main_camera().getView() * Engine::main_camera().getProjection());
     m_bufferWVP.InverseWorld = GetInverseTransposeWorldMatrix(worldPosition);
     m_bufferWVP.LightPos = XMMatrixTranspose(directionLight->GetViewProjectionMatrix());
     m_bufferWVP.texture_scale = material ? material->scale() : XMFLOAT2(1.0f, 1.0f);

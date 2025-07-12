@@ -14,10 +14,11 @@
 #include "ShadowMap.h"
 
 Engine engine;
-Camera camera;
 Config config;
 PrimitiveDrawable gizmozRect;
 ShadowMap shadowMap;
+
+Camera* Engine::m_camera = NULL;
 
 bool Engine::InitWindowDevice(const WindowDescription* desc) {
     SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -360,12 +361,12 @@ bool Engine::InitRenderDevice() {
 bool Engine::InitScene() {
     setFullScreen(m_windowDesc->hWnd, config.fullscreen);
     m_debugRaycast = config.debugRaycast;
-    camera.SetProjection();
 
     m_font = new Font();
     m_font->Init(m_device);
 
     m_location = new Location(m_device);
+    m_camera = m_location->m_main_camera;
 
     shadowMap.Init(m_device, m_location->m_directionLight);
 
@@ -395,20 +396,36 @@ void Engine::UpdateInput(float deltaTime) {
 
 #define LSHIFTSPEED (keyboardState[DIK_LSHIFT] & 0x80) ? config.additionalLShiftSpeed : 1.0f
     const float speed = config.cameraSpeed * (LSHIFTSPEED) * deltaTime;
-    const float intensivity = (config.mouseIntensive / 100.0f) * deltaTime;
+    const float mouseSensitivity = (config.mouseIntensive / 100.0f) * deltaTime;
 #undef LSHIFTSPEED
 
-    if (keyboardState[DIK_A] & 0x80)
-        camera.verticalLeftRight -= speed;
-    if (keyboardState[DIK_D] & 0x80)
-        camera.verticalLeftRight += speed;
-    if (keyboardState[DIK_W] & 0x80)
-        camera.horizontalBackForward += speed;
-    if (keyboardState[DIK_S] & 0x80)
-        camera.horizontalBackForward -= speed;
+    Transform* camTransform = main_camera().gameObject().GetComponentByType<Transform>();
+    Quaternion rotation = camTransform->rotation();
+    Vector3 position = camTransform->position();
+
+    if (keyboardState[DIK_W] | keyboardState[DIK_S] |
+        keyboardState[DIK_A] | keyboardState[DIK_D])
+    {
+        Vector3 moveDir = Vector3::zero();
+
+        if (keyboardState[DIK_W] & 0x80) moveDir += Vector3::forward();
+        if (keyboardState[DIK_S] & 0x80) moveDir -= Vector3::forward();
+        if (keyboardState[DIK_A] & 0x80) moveDir -= Vector3::right();
+        if (keyboardState[DIK_D] & 0x80) moveDir += Vector3::right();
+
+        position += rotation * moveDir.Normalized() * speed;
+        camTransform->position(position);
+    }
+
     if (mouseCurrState.rgbButtons[1] & 0x80) {
-        camera.yaw += mouseCurrState.lX * intensivity;
-        camera.pitch += mouseCurrState.lY * intensivity;
+        float yaw = mouseCurrState.lX * mouseSensitivity;
+        float pitch = mouseCurrState.lY * mouseSensitivity;
+
+        Quaternion yawRot = Quaternion::AngleAxis(yaw, Vector3::up());
+        Quaternion pitchRot = Quaternion::AngleAxis(pitch, Vector3::right());
+
+        rotation = yawRot * rotation * pitchRot;
+        camTransform->rotation(rotation);
     }
 }
 
@@ -464,7 +481,7 @@ void Engine::FixedUpdate(float deltaTime) {
 }
 
 void Engine::Update(float deltaTime) {
-    camera.Update();
+    main_camera().Update();
     m_location->Update(deltaTime);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator)
         m_meshes[iterator]->Update(deltaTime);
@@ -643,15 +660,15 @@ void Engine::Raycast(int mouseX, int mouseY) {
     }
 #endif
 
-    float pointX = (((2.0f * (float)mouseX) / screenWidth) - 1) / camera.getProjection()(0, 0);
-    float pointY = -(((2.0f * (float)mouseY) / screenHeight) - 1.0f) / camera.getProjection()(1, 1);
+    float pointX = (((2.0f * (float)mouseX) / screenWidth) - 1) / main_camera().getProjection()(0, 0);
+    float pointY = -(((2.0f * (float)mouseY) / screenHeight) - 1.0f) / main_camera().getProjection()(1, 1);
     float pointZ = 1.0f;
 
     XMVECTOR pickRayInViewSpaceDir = XMVectorSet(pointX, pointY, pointZ, 1.0f);
 
     XMMATRIX pickRayToWorldSpaceMatrix;
     XMVECTOR matInvDeter;
-    pickRayToWorldSpaceMatrix = XMMatrixInverse(&matInvDeter, camera.getView());
+    pickRayToWorldSpaceMatrix = XMMatrixInverse(&matInvDeter, main_camera().getView());
 
     XMVECTOR pickRayInWorldSpacePos = XMVector3TransformCoord(pickRayInViewSpacePos, pickRayToWorldSpaceMatrix);
     XMVECTOR pickRayInWorldSpaceDir = XMVector3TransformNormal(pickRayInViewSpaceDir, pickRayToWorldSpaceMatrix);

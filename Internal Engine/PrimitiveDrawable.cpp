@@ -102,7 +102,7 @@ void PrimitiveDrawable::Render() {
     if (!m_vertices.size())
         return;
 
-    XMStoreFloat4x4(&m_bufferWVP.WVP, XMMatrixTranspose(camera.getView() * camera.getProjection()));
+    XMStoreFloat4x4(&m_bufferWVP.WVP, XMMatrixTranspose(Engine::main_camera().getView() * Engine::main_camera().getProjection()));
     m_context->UpdateSubresource(m_preObjectBuffer, 0, nullptr, &m_bufferWVP, 0, 0);
     m_context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
 

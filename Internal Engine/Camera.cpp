@@ -1,41 +1,36 @@
 #include "Camera.h"
 #include "Engine.h"
+#include "Quaternion.h"
+#include "Component.h"
+#include "GameObject.h"
+#include "Vector3.h"
+#include "Transform.h"
 
-Camera::Camera() {
-	position = XMVectorSet(30.0f, 45.0f, -60.0f, 0.0f);
-	target = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+Camera::Camera(GameObject* obj) : AbstractBaseComponent(obj) {
+	transform = gameObject().GetComponentByType<Transform>();
 
-	view = XMMatrixLookAtLH(position, target, up);
-
-	forward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	right = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-
-	horizontalBackForward = 0.0f;
-	verticalLeftRight = 0.0f;
-
-	yaw = 0.0f;
-	pitch = 0.0f;
+	const DXGI_MODE_DESC& dxgi_mode = engine.getSupportedResolution();
+	float screen = (float)dxgi_mode.Width / (float)dxgi_mode.Height;
+	projection = XMMatrixPerspectiveFovLH(0.325f * XM_PI, screen, 0.3f, 2000.0f);
 }
 
 void Camera::Update() {
-	XMMATRIX rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
+    Vector3 pos = transform->position();
+    Quaternion rot = transform->rotation();
 
-	forward = XMVector3TransformCoord(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), rotationMatrix);
-	right = XMVector3TransformCoord(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), rotationMatrix);
-	up = XMVector3Normalize(XMVector3Cross(forward, right));
+    Vector3 forward = rot * Vector3::forward();
+    Vector3 right = rot * Vector3::right();
+    Vector3 up = Vector3::Cross(forward, right).Normalized();
 
-	position += verticalLeftRight * right;
-	position += horizontalBackForward * forward;
-
-	verticalLeftRight = 0.0f;
-	horizontalBackForward = 0.0f;
-
-	target = position + forward;
-	view = XMMatrixLookAtLH(position, target, up);
+    XMVECTOR positionVec = pos.ToXMVector();
+    XMVECTOR targetVec = positionVec + forward.ToXMVector();
+    view = XMMatrixLookAtLH(positionVec, targetVec, up.ToXMVector());
 }
 
-void Camera::SetProjection() {
-	float screen = (float)engine.getSupportedResolution().Width / (float)engine.getSupportedResolution().Height;
-	projection = XMMatrixPerspectiveFovLH(0.325f * XM_PI, screen, 0.3f, 2000.0f);
+const XMVECTOR& Camera::getPos() const { return transform->position().ToXMVector(); }
+
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+void Camera::UpdateInterfaceInInspector(GameObject* gameObject) {
+
 }
+#endif

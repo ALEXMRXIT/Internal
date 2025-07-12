@@ -5,6 +5,7 @@
 #include "FileSharedBuffer.h"
 #include "DirectionLight.h"
 #include "servlib.h"
+#include "Camera.h"
 
 class GameObject;
 
@@ -16,6 +17,7 @@ private:
 
 public:
 	Skybox* m_skybox;
+	Camera* m_main_camera;
 	DirectionLight* m_directionLight;
 
 public:
@@ -30,6 +32,7 @@ public:
 	std::list<GameObject*>& staticObjects() { return m_objects; }
 };
 
-ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos);
-ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion);
-ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const XMFLOAT3 pos, const Quaternion quaternion, const XMFLOAT3 scale);
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate();
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const Vector3 pos);
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const Vector3 pos, const Quaternion quaternion);
+ALWAYS_INLINE static SERVLIBCALL GameObject* Instantiate(const Vector3 pos, const Quaternion quaternion, const Vector3 scale);

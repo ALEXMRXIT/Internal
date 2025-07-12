@@ -66,17 +66,19 @@ HRESULT Skybox::Init(ID3D11Device* device) {
 void Skybox::Update(float deltaTime) {
     if (!m_device_loader) return;
     m_pos = XMMatrixIdentity();
+    XMVECTOR pos = Engine::main_camera().getPos();
     XMMATRIX scale = XMMatrixScaling(5.0f, 1.0f, 5.0f);
     XMMATRIX translate = XMMatrixTranslation(
-        XMVectorGetX(camera.getPos()),
-        XMVectorGetY(camera.getPos()),
-        XMVectorGetZ(camera.getPos()));
+        XMVectorGetX(pos),
+        XMVectorGetY(pos),
+        XMVectorGetZ(pos)
+    );
     m_pos = scale * translate;
 }
 
 void Skybox::Render(ID3D11DeviceContext* context, DirectionLight* directionLight) {
     if (!m_device_loader) return;
-    m_wvp.WVP = m_pos * camera.getView() * camera.getProjection();
+    m_wvp.WVP = m_pos * Engine::main_camera().getView() * Engine::main_camera().getProjection();
     m_wvp.WVP = XMMatrixTranspose(m_wvp.WVP);
     m_shader->setVertexShader(context);
     m_shader->setPiexlShader(context);

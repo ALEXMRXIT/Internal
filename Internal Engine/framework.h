@@ -21,6 +21,8 @@
 #include <typeindex>
 #include <shobjidl.h>
 #include <wrl/client.h>
+#include <cmath>
+#include <limits>
 
 #pragma comment(lib, "d3d11.lib")
 #ifdef _DEBUG
