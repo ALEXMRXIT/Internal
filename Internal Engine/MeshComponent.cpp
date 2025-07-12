@@ -137,59 +137,7 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
     
         ImGui::BeginChild("MeshRenderer", ImVec2(0, 120), true);
         {
-            //MeshMaterial* material = (gameObject->GetComponentByType<MeshComponent>()->material());
-            //if (material) {
-            //    if (material->diffuseTex && material->diffuseTex->m_shaderView) {
-            //        ImGui::Image((void*)material->diffuseTex->m_shaderView, ImVec2(100, 100));
-            //        ImGui::SameLine();
-            //
-            //        ImGui::BeginGroup();
-            //        {
-            //            static char buffer[MAX_PATH];
-            //            snprintf(buffer, MAX_PATH, "Name: %s", material->diffuseTex->name);
-            //            ImGui::Text(buffer);
-            //
-            //            XMFLOAT2 tiling = material->scale();
-            //            float til[2] = { tiling.x, tiling.y };
-            //
-            //            ImGui::Dummy(ImVec2(0.0f, 2.0f));
-            //            ImGui::Text("Tiling");
-            //            ImGui::SameLine();
-            //            ImGui::Text("X:");
-            //            ImGui::SameLine();
-            //            ImGui::SetNextItemWidth(50.0f);
-            //            if (ImGui::DragFloat("##TexX", &til[0], 0.1f))
-            //                material->setScale(XMFLOAT2(til[0], til[1]));
-            //
-            //            ImGui::SameLine();
-            //            ImGui::Text("Y:");
-            //            ImGui::SameLine();
-            //            ImGui::SetNextItemWidth(50.0f);
-            //            if (ImGui::DragFloat("##TexY", &til[1], 0.1f))
-            //                material->setScale(XMFLOAT2(til[0], til[1]));
-            //
-            //            XMFLOAT2 offset = material->offset();
-            //            float off[2] = { offset.x, offset.y };
-            //
-            //            ImGui::Dummy(ImVec2(0.0f, 2.0f));
-            //            ImGui::Text("Offset");
-            //            ImGui::SameLine();
-            //            ImGui::Text("X:");
-            //            ImGui::SameLine();
-            //            ImGui::SetNextItemWidth(50.0f);
-            //            if (ImGui::DragFloat("##OffX", &off[0], 0.01f))
-            //                material->setOffset(XMFLOAT2(off[0], off[1]));
-            //
-            //            ImGui::SameLine();
-            //            ImGui::Text("Y:");
-            //            ImGui::SameLine();
-            //            ImGui::SetNextItemWidth(50.0f);
-            //            if (ImGui::DragFloat("##OffY", &off[1], 0.01f))
-            //                material->setOffset(XMFLOAT2(off[0], off[1]));
-            //        }
-            //        ImGui::EndGroup();
-            //    }
-            //}
+
         }
         ImGui::EndChild();
     

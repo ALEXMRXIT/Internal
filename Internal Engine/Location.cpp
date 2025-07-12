@@ -25,7 +25,7 @@ Location::Location(ID3D11Device* device) {
     m_meshLoader = new MeshLoader();
     m_loader = new ResourceLoader(engine, m_meshLoader);
 
-    GameObject* light = Instantiate(XMFLOAT3(0.0f, 0.0f, 0.0f), Quaternion(272.0f, 247.72f, -290.0f, 0.0f));
+    GameObject* light = Instantiate(XMFLOAT3(0.0f, 125.0f, 0.0f), Quaternion(272.0f, 247.72f, -290.0f, 0.0f));
     light->name = "Direction Light";
     m_directionLight = light->AddComponent<DirectionLight>();
     m_directionLight->LightDirection() = Quaternion::QuaternionToDirection(

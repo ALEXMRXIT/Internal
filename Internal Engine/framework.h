@@ -19,6 +19,8 @@
 #include <windowsx.h>
 #include <ShellScalingAPI.h>
 #include <typeindex>
+#include <shobjidl.h>
+#include <wrl/client.h>
 
 #pragma comment(lib, "d3d11.lib")
 #ifdef _DEBUG
@@ -37,6 +39,7 @@
 #pragma comment(lib, "dbghelp.lib")
 #pragma comment(lib, "dxerr.lib")
 #pragma comment(lib, "Shcore.lib")
+#pragma comment(lib, "ole32.lib")
 
 #include <d3d11.h>
 #include <d3dx11.h>

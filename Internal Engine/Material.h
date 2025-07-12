@@ -15,10 +15,11 @@ public:
 	virtual void SetScale(XMFLOAT2 scale, XMFLOAT2 offset) = 0;
 
 	struct TextureMapInfo {
+	public:
 		ID3D11ShaderResourceView* m_shaderView;
 		ID3D11SamplerState* m_textureSamplerState;
 		ID3D11SamplerState* m_shadowSamplerState;
-		char* name;
+		wchar_t* name;
 		void Load(ID3D11Device* device);
 		void Release();
 	};
@@ -62,9 +63,9 @@ public:
 	void setScale(XMFLOAT2 scale) { m_scale = scale; }
 	void setOffset(XMFLOAT2 offset) { m_offset = offset; }
 
-	XMFLOAT2 scale() const { return m_scale; }
-	XMFLOAT2 offset() const { return m_offset; }
-	XMFLOAT4 color() const { return m_color; }
+	XMFLOAT2& scale() { return m_scale; }
+	XMFLOAT2& offset() { return m_offset; }
+	XMFLOAT4& color() { return m_color; }
 
 	void Release();
 };

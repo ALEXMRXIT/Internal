@@ -77,7 +77,10 @@ BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX world
     const Transform* transform = (const Transform*)gameObject().GetComponentByType<Transform>();
     XMVECTOR direction = Quaternion::QuaternionToDirectionVector(transform->rotation());
 
-    XMMATRIX view = XMMatrixLookAtLH(XMVectorZero(), direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
+    XMFLOAT3 pos = transform->position();
+	XMVECTOR position = XMVectorSet(pos.x, pos.y, pos.z, 1.0f);
+
+    XMMATRIX view = XMMatrixLookAtLH(position, position + direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
 
     XMStoreFloat4(&buffer.direction, direction);
     buffer.lightViewProj = XMMatrixTranspose(worldPos * view * m_lightProjectionMatrix);
@@ -89,7 +92,10 @@ XMMATRIX DirectionLight::GetViewProjectionMatrix() {
         const Transform* transform = (const Transform*)gameObject().GetComponentByType<Transform>();
         XMVECTOR direction = Quaternion::QuaternionToDirectionVector(transform->rotation());
 
-        XMMATRIX view = XMMatrixLookAtLH(XMVectorZero(), direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
+        XMFLOAT3 pos = transform->position();
+        XMVECTOR position = XMVectorSet(pos.x, pos.y, pos.z, 1.0f);
+
+        XMMATRIX view = XMMatrixLookAtLH(position, position + direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
         m_viewProjectionCache = view * m_lightProjectionMatrix;
     }
     return m_viewProjectionCache;
@@ -103,7 +109,7 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 495.0f), true);
+        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 515.0f), true);
         {
             const char* types[] = { "Direction Light" };
             const char* shadows[] = { "Soft Shadow" };
@@ -193,16 +199,14 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
             ImGui::NextColumn();
 
             ImGui::Columns(1);
+
             float availableWidth = ImGui::GetContentRegionAvail().x;
-            XMFLOAT2 shadowSize = m_directionOption.shadowSize;
-            float aspectRatio = shadowSize.x / shadowSize.y;
-            float displayHeight = availableWidth / aspectRatio;
-            float indent = (ImGui::GetContentRegionAvail().x - availableWidth) * 0.5f;
-            if (indent > 0.0f)
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + indent);
-            ImGui::Dummy(ImVec2(0.0f, 5.0f));
-            ImTextureID texId = (ImTextureID)shadowMap.ShadowShaderResources();
-            ImGui::Image(texId, ImVec2(availableWidth, displayHeight));
+            ImGui::Image(
+                (ImTextureID)shadowMap.ShadowShaderResources(),
+                ImVec2(availableWidth, 256),
+                ImVec2(0.2f, 0.2f),
+                ImVec2(0.8f, 0.8f)
+            );
 
             ImGui::Columns(1);
         }

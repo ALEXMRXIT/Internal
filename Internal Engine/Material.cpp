@@ -116,7 +116,7 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
         loadInfo.MipFilter = D3DX11_FILTER_LINEAR;
         loadInfo.pSrcInfo = nullptr;
 
-        HRESULT hr = D3DX11CreateShaderResourceViewFromFile(device, name, &loadInfo, NULL, &m_shaderView, NULL);
+        HRESULT hr = D3DX11CreateShaderResourceViewFromFileW(device, name, &loadInfo, NULL, &m_shaderView, NULL);
         if (FAILED(hr)) {
             DXUT_ERR_MSGBOX("Failed to load texture.", hr);
             return;
