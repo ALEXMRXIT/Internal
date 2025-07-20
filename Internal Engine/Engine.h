@@ -131,6 +131,7 @@ public:
 	bool getRaycast() const { return m_raycastEnabled; }
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 	void setMousePosition(XMFLOAT2 scenePos, XMFLOAT2 sceneSize) { m_scenePos = scenePos; m_sceneSize = sceneSize; }
+	__forceinline ImGUIDevice& gui() { return *m_gui; }
 #endif
 };
 

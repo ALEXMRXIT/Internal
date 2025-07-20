@@ -1,3 +1,5 @@
+#define PCF_SIZE 2
+
 cbuffer cbPerObject : register(b0)
 {
     float4x4 WVP;
@@ -50,9 +52,8 @@ cbuffer directionOption : register(b0)
     float shadowIntensity;
     float bias;
     float2 shadowSize;
-    float pcfSize;
     float3 cameraPos;
-    float2 paddingDirection;
+    float3 paddingDirection;
 }
 
 cbuffer modelMaterial : register(b1)
@@ -69,62 +70,63 @@ Texture2D<float> ShadowMap : register(t1);
 SamplerState ObjSamplerState : register(s0);
 SamplerComparisonState gSamShadow : register(s1);
 
+static const float2 shadowTexelSize = 1.0f / shadowSize;
+
 float PCF(float2 uv, float depth, float2 texelSize)
 {
     float shadow = 0.0;
     float totalSamples = 0.0;
     
-    for (int x = -pcfSize; x <= pcfSize; ++x)
+    [unroll]
+    for (int x = -PCF_SIZE; x <= PCF_SIZE; ++x)
     {
-        for (int y = -pcfSize; y <= pcfSize; ++y)
+        [unroll]
+        for (int y = -PCF_SIZE; y <= PCF_SIZE; ++y)
         {
-            float2 offset = float2(x, y) * texelSize;
-            float2 sampleUV = uv + offset;
-            shadow += ShadowMap.SampleCmpLevelZero(gSamShadow, sampleUV, depth);
+            shadow += ShadowMap.SampleCmpLevelZero(gSamShadow,
+                uv + float2(x, y) * texelSize, depth);
             totalSamples += 1.0;
         }
     }
     
-    return totalSamples > 0 ? shadow / totalSamples : 1.0;
+    return shadow * rcp(totalSamples);
 }
 
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     float4 texColor = ObjTexture.Sample(ObjSamplerState, input.TexCoord);
+    [flatten]
     if (texColor.a == 0.0f)
         texColor = float4(0.3f, 0.3f, 0.3f, 1.0f);
     
     float3 normal = normalize(input.Normal);
     float3 lightDir = normalize(-lightDirection);
+    float NdotL = saturate(dot(normal, lightDir));
     
     float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
     shadowPos.xy = saturate(shadowPos.xy * 0.5f + 0.5f);
     shadowPos.y = 1.0f - shadowPos.y;
     
-    float shadowBias = 0.05 * bias;
-    float2 texelSize = 1.0 / shadowSize;
-    float depthTest = shadowPos.z - shadowBias;
+    float depthTest = shadowPos.z - (0.05 * bias);
     float shadowResult = (baked == 1.0f) ?
             ShadowMap.SampleCmpLevelZero(gSamShadow, shadowPos.xy, depthTest) :
-            PCF(shadowPos.xy, depthTest, texelSize);
+            PCF(shadowPos.xy, depthTest, shadowTexelSize);
     
-    float3 ambient = ambiend_color.rgb;
+    float3 ambient = ambiend_color.rgb * texColor.rgb;
+    float3 diffuse = NdotL * lightColor.rgb * diffuseIntensity;
     
-    float diff = max(dot(normal, lightDir), 0.0f);
-    float3 diffuse = diff * lightColor.rgb * diffuseIntensity;
-    
-    float shadowFactor = lerp(1.0f, shadowResult, shadowIntensity);
-    
-    float spec = 0.0;
-    if (diff > 0.0)
+    float3 specular = 0.0;
+    [branch]
+    if (NdotL > 0.0)
     {
         float3 viewDir = normalize(cameraPos - input.WorldPos);
-        float3 reflectDir = reflect(lightDir, normal);
-        spec = pow(max(dot(viewDir, reflectDir), 0.0), specularPower);
+        float3 reflectDir = reflect(-lightDir, normal);
+        float specularTerm = pow(max(dot(viewDir, reflectDir), 0.0001),
+                          max(specularPower, 1.0));
+        specular = specularTerm * lightColor.rgb * specularColor.rgb * specularIntensity;
     }
-    float3 specular = spec * lightColor.rgb * specularIntensity;
     
+    float shadowFactor = lerp(1.0f, shadowResult, shadowIntensity);
     float3 lighting = ambient + (diffuse + specular) * shadowFactor;
-    float3 result = lighting * texColor.rgb;
-    return float4(result, texColor.a);
+    return float4(lighting * texColor.rgb, texColor.a);
 }

@@ -134,8 +134,13 @@ void MeshComponent::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+        const float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
+        const float framePadding = ImGui::GetStyle().FramePadding.y;
+        const float itemHeight = ImGui::GetTextLineHeight() + framePadding * 2.0f + itemSpacing;
+        const float totalHeight = 0 * itemHeight + ImGui::GetStyle().WindowPadding.y * 2.0f;
     
-        ImGui::BeginChild("MeshRenderer", ImVec2(0, 120), true);
+        ImGui::BeginChild("MeshRenderer", ImVec2(0.0f, totalHeight), true);
         {
 
         }

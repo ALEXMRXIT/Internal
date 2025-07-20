@@ -24,6 +24,12 @@
 #include <cmath>
 #include <limits>
 
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+#include <shlwapi.h>
+#include <shellapi.h>
+#pragma comment(lib, "shlwapi.lib")
+#endif
+
 #pragma comment(lib, "d3d11.lib")
 #ifdef _DEBUG
 #pragma comment(lib, "d3dx11d.lib")

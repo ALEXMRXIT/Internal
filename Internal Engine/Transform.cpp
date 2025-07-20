@@ -34,7 +34,12 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-        ImGui::BeginChild("ButtonBlock", ImVec2(0, 95), true);
+        const float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
+        const float framePadding = ImGui::GetStyle().FramePadding.y;
+        const float itemHeight = ImGui::GetTextLineHeight() + framePadding * 2.0f + itemSpacing;
+        const float totalHeight = 3 * itemHeight + ImGui::GetStyle().WindowPadding.y * 2.0f;
+
+        ImGui::BeginChild("ButtonBlock", ImVec2(0.0f, totalHeight), true);
         {
             float availableWidth = ImGui::GetContentRegionAvail().x;
             float buttonWidth = (availableWidth - ImGui::GetStyle().ItemSpacing.x) / 2;

@@ -59,27 +59,27 @@ HRESULT Skybox::Init(ID3D11Device* device) {
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to create input layout.", hr);
     hr = m_component.Init(device);
     if (FAILED(hr)) DXUT_ERR_MSGBOX("Failed to Init MeshComponent by Skybox.", hr);
+
+    m_transform = m_component.gameObject().GetComponentByType<Transform>();
+    m_transform->scale(Vector3(5.0f, 1.0f, 5.0f));
+
     m_device_loader = true;
     return hr;
 }
 
 void Skybox::Update(float deltaTime) {
     if (!m_device_loader) return;
-    m_pos = XMMatrixIdentity();
     XMVECTOR pos = Engine::main_camera().getPos();
-    XMMATRIX scale = XMMatrixScaling(5.0f, 1.0f, 5.0f);
-    XMMATRIX translate = XMMatrixTranslation(
-        XMVectorGetX(pos),
-        XMVectorGetY(pos),
-        XMVectorGetZ(pos)
-    );
-    m_pos = scale * translate;
+    m_transform->position(Vector3(XMVectorGetX(pos), XMVectorGetY(pos), XMVectorGetZ(pos)));
 }
 
 void Skybox::Render(ID3D11DeviceContext* context, DirectionLight* directionLight) {
     if (!m_device_loader) return;
-    m_wvp.WVP = m_pos * Engine::main_camera().getView() * Engine::main_camera().getProjection();
-    m_wvp.WVP = XMMatrixTranspose(m_wvp.WVP);
+
+    m_wvp.WVP = m_transform->GetWorldMatrix() * 
+        Engine::main_camera().getView() * 
+        Engine::main_camera().getProjection();
+
     m_shader->setVertexShader(context);
     m_shader->setPiexlShader(context);
     context->IASetInputLayout(m_layout);
@@ -87,6 +87,7 @@ void Skybox::Render(ID3D11DeviceContext* context, DirectionLight* directionLight
     context->VSSetConstantBuffers(0, 1, &m_preObjectBuffer);
     context->OMSetDepthStencilState(m_depthState, 0);
     context->RSSetState(m_cullMode);
+
     m_component.Render(context, directionLight);
 }
 

@@ -7,6 +7,9 @@
 #include "Vector3.h"
 
 const int DirectionLight::m_presetValues[5] = { 256, 512, 1024, 2048, 4096 };
+const float shadow_orthograph_size = 512.0f;
+const float shadow_orthograph_near = 1024.0f;
+const float shadow_distance = 512.0f;
 
 DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
     m_directionBuffer = nullptr;
@@ -15,8 +18,8 @@ DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
     directionType = 0;
     shadowType = 0;
 
-    m_directionOption.LightColor = XMFLOAT4(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
-    m_directionOption.AmbiendColor = XMFLOAT4(255.0f / 237.0f, 255.0f / 241.0f, 255.0f / 255.0f, 1.0f);
+    m_directionOption.LightColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_directionOption.AmbiendColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     m_directionOption.baked = 0;
     m_directionOption.diffuseIntensity = 1.0f;
     m_directionOption.shadowIntensity = 1.0f;
@@ -26,7 +29,6 @@ DirectionLight::DirectionLight(GameObject* obj) : AbstractBaseComponent(obj) {
         (float)m_presetValues[shadowMapSize],
         (float)m_presetValues[shadowMapSize]
     );
-    m_directionOption.pcfSize = 2;
 }
 
 HRESULT DirectionLight::Init(ID3D11Device* device) {
@@ -45,11 +47,11 @@ HRESULT DirectionLight::Init(ID3D11Device* device) {
         return hr;
     }
 
-    const float dst = 250.0f;
-    m_lightProjectionMatrix = XMMatrixOrthographicOffCenterLH(
-        -dst, dst,
-        -dst, dst,
-        0.1f, 600.0f
+    m_lightProjectionMatrix = XMMatrixOrthographicLH(
+        shadow_orthograph_size,
+        shadow_orthograph_size,
+        0.1f,
+        shadow_orthograph_near
     );
 
     m_device_loader = true;
@@ -78,8 +80,9 @@ BufferDirectionLight DirectionLight::UpdateMatrixByDirectionLight(XMMATRIX world
     const Transform* transform = (const Transform*)gameObject().GetComponentByType<Transform>();
     XMVECTOR direction = Quaternion::QuaternionToDirectionVector(transform->rotation());
 
-    XMVECTOR pos = transform->position().ToXMVector();
-    XMMATRIX view = XMMatrixLookAtLH(pos, pos + direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
+    const XMVECTOR focusPoint = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+    XMVECTOR cameraPos = focusPoint - (direction * shadow_distance);
+    XMMATRIX view = XMMatrixLookAtLH(cameraPos, focusPoint, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
 
     XMStoreFloat4(&buffer.direction, direction);
     buffer.lightViewProj = XMMatrixTranspose(worldPos * view * m_lightProjectionMatrix);
@@ -91,8 +94,10 @@ XMMATRIX DirectionLight::GetViewProjectionMatrix() {
         const Transform* transform = (const Transform*)gameObject().GetComponentByType<Transform>();
         XMVECTOR direction = Quaternion::QuaternionToDirectionVector(transform->rotation());
 
-        XMVECTOR pos = transform->position().ToXMVector();
-        XMMATRIX view = XMMatrixLookAtLH(pos, pos + direction, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
+        const XMVECTOR focusPoint = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+        XMVECTOR cameraPos = focusPoint - (direction * shadow_distance);
+        XMMATRIX view = XMMatrixLookAtLH(cameraPos, focusPoint, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0));
+
         m_viewProjectionCache = view * m_lightProjectionMatrix;
     }
     return m_viewProjectionCache;
@@ -106,7 +111,12 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.25f));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
 
-        ImGui::BeginChild("LightBlock", ImVec2(0.0f, 515.0f), true);
+        const float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
+        const float framePadding = ImGui::GetStyle().FramePadding.y;
+        const float itemHeight = ImGui::GetTextLineHeight() + framePadding * 2.0f + itemSpacing;
+        const float totalHeight = 8 * itemHeight + ImGui::GetStyle().WindowPadding.y * 2.0f;
+
+        ImGui::BeginChild("LightBlock", ImVec2(0.0f, totalHeight), true);
         {
             const char* types[] = { "Direction Light" };
             const char* shadows[] = { "Soft Shadow" };
@@ -185,26 +195,6 @@ void DirectionLight::UpdateInterfaceInInspector(GameObject* gameObject) {
                 );
             }
             ImGui::NextColumn();
-
-            ImGui::SetCursorPosX(40.0f);
-            ImGui::Text("Shadow PCF size");
-            ImGui::NextColumn();
-            ImGui::SetNextItemWidth(-1);
-            int pcf = static_cast<int>(m_directionOption.pcfSize);
-            if (ImGui::SliderInt("##ShadowPCFSize", &pcf, 1, 5, "%d", ImGuiSliderFlags_AlwaysClamp))
-                m_directionOption.pcfSize = static_cast<float>(pcf);
-            ImGui::NextColumn();
-
-            ImGui::Columns(1);
-
-            float availableWidth = ImGui::GetContentRegionAvail().x;
-            ImGui::Image(
-                (ImTextureID)shadowMap.ShadowShaderResources(),
-                ImVec2(availableWidth, 256),
-                ImVec2(0.2f, 0.2f),
-                ImVec2(0.8f, 0.8f)
-            );
-
             ImGui::Columns(1);
         }
         ImGui::EndChild();

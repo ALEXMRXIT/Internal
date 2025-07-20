@@ -2,6 +2,10 @@
 #include "framework.h"
 #include "AbstractBaseComponent.h"
 
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+#include"ImGUIDevice.h"
+#endif
+
 class Material {
 public:
 	Material() = default;
@@ -22,6 +26,8 @@ public:
 		wchar_t* name;
 		void Load(ID3D11Device* device);
 		void Release();
+
+		static ID3D11ShaderResourceView* LoadTexture(ID3D11Device* device, const wchar_t* texture_name);
 	};
 };
 
@@ -58,6 +64,8 @@ public:
 	void Bind(ID3D11DeviceContext* context) override;
 	void Load(ID3D11Device* device) override;
 	void SetScale(XMFLOAT2 scale, XMFLOAT2 offset) override;
+
+	void setDiffuse(texture_assets_t* texture);
 
 	void setColor(XMFLOAT4 color) { m_color = color; }
 	void setScale(XMFLOAT2 scale) { m_scale = scale; }

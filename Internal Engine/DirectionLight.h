@@ -21,9 +21,8 @@ struct BufferDirectionOption {
 	float shadowIntensity;
 	float bias;
 	XMFLOAT2 shadowSize;
-	float pcfSize;
 	XMFLOAT3 cameraPos;
-	float padding[2];
+	float padding[3];
 };
 
 class DirectionLight : public AbstractBaseComponent, public LoaderNotificationDevice {

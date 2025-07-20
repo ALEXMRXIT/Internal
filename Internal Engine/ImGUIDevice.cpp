@@ -7,6 +7,8 @@
 #include "Config.h"
 #include "PrimitiveDrawable.h"
 #include "ShadowMap.h"
+#include "debug.h"
+#include "Material.h"
 
 void ImGUIDevice::InitWindowStyle(void) {
 #ifdef _DEBUG
@@ -135,10 +137,59 @@ void ImGUIDevice::WhiteStyle(void) {
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 }
 
+void ImGUIDevice::LoadTexture(ID3D11Device* device, const wchar_t* path) {
+    for (int i = 0; i < m_assets_count; i++) {
+        if (wcscmp(m_assets[i].path, path) == 0)
+            return;
+    }
+
+    texture_assets_t* newArray = (texture_assets_t*)realloc(
+        m_assets, (m_assets_count + 1) * sizeof(texture_assets_t));
+    if (!newArray) return;
+
+    m_assets = newArray;
+    texture_assets_t* newAsset = &m_assets[m_assets_count];
+    ZeroMemory(newAsset, sizeof(texture_assets_t));
+
+    wcscpy_s(newAsset->path, MAX_PATH, path);
+
+    wchar_t* fileName = PathFindFileNameW(path);
+    wchar_t* dot = wcsrchr(fileName, L'.');
+    if (dot) {
+        size_t nameLen = dot - fileName;
+        wcsncpy_s(newAsset->name, MAX_NAME, fileName, nameLen);
+        newAsset->name[nameLen] = L'\0';
+    }
+    else
+        wcscpy_s(newAsset->name, MAX_NAME, fileName);
+
+    newAsset->shaderView = Material::TextureMapInfo::LoadTexture(device, path);
+
+    newAsset->loaded = true;
+    newAsset->assetsType = ASSET_TEXTURE;
+    m_assets_count++;
+}
+
+void ImGUIDevice::LoadModel(ID3D11Device* device, const wchar_t* path) {
+
+}
+
+void ImGUIDevice::CleanupTextures() {
+    for (int i = 0; i < m_assets_count; i++)
+        if (m_assets[i].shaderView)
+            m_assets[i].shaderView->Release();
+    free(m_assets);
+    m_assets = NULL;
+    m_assets_count = 0;
+}
+
 ImGUIDevice::ImGUIDevice() { 
     m_styleSelectedState = false;
     m_selectedStyle = 0;
     m_fontSize = 14.0f;
+
+    m_assets = NULL;
+    m_assets_count = 0;
 }
 
 void ImGUIDevice::Init(ID3D11Device* device, ID3D11DeviceContext* context) {
@@ -434,7 +485,33 @@ void ImGUIDevice::Render() {
     
     ImGui::Begin("Assets");
     {
+        for (int i = 0; i < m_assets_count; ++i) {
+            texture_assets_t* asset = &m_assets[i];
+            ImGui::PushID(i);
     
+            char name_utf8[MAX_NAME];
+            WideCharToMultiByte(CP_UTF8, 0, asset->name, -1, name_utf8, MAX_NAME, NULL, NULL);
+    
+            ImGui::BeginGroup();
+            {
+                ImGui::ImageButton((ImTextureID)asset->shaderView, ImVec2(96.0f, 96.0f));
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+                    ImGui::SetDragDropPayload("TEXTURE_ASSET", &asset, sizeof(texture_assets_t*));
+    
+                    ImGui::Image((ImTextureID)asset->shaderView, ImVec2(64, 64));
+                    ImGui::Text("%s", name_utf8);
+                    ImGui::EndDragDropSource();
+                }
+    
+                float text_width = ImGui::CalcTextSize(name_utf8).x;
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (96.0f - text_width) * 0.5f);
+                ImGui::Text("%s", name_utf8);
+            }
+            ImGui::EndGroup();
+    
+            ImGui::PopID();
+            if (i < m_assets_count - 1) ImGui::SameLine();
+        }
     }
     ImGui::End();
 
@@ -468,5 +545,6 @@ void ImGUIDevice::Release() {
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
+    CleanupTextures();
 }
 #endif

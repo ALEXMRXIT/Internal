@@ -31,12 +31,12 @@ Location::Location(ID3D11Device* device) {
     m_meshLoader = new MeshLoader();
     m_loader = new ResourceLoader(engine, m_meshLoader);
 
-    GameObject* camera = Instantiate(Vector3(0.0f, 0.0f, 0.0f));
+    GameObject* camera = Instantiate(Vector3(200.0f, 40.0f, -60.0f));
     camera->name = "Camera";
     m_main_camera = camera->AddComponent<Camera>();
     Insert(camera);
 
-    GameObject* light = Instantiate(Vector3(0.0f, 125.0f, 0.0f), Quaternion(272.0f, 247.72f, -290.0f, 0.0f));
+    GameObject* light = Instantiate(Vector3(0.0f, 125.0f, 0.0f), Quaternion(-400.0f, 250.0f, 500.0f, 0.0f));
     light->name = "Direction Light";
     m_directionLight = light->AddComponent<DirectionLight>();
     m_directionLight->LightDirection() = Quaternion::QuaternionToDirection(
@@ -52,11 +52,12 @@ Location::Location(ID3D11Device* device) {
     m_loader->AddResourceToLoad("mesh\\skybox.obj", m_skybox);
     MeshMaterial* skyboxMeshMaterial = objectSkybox->AddComponent<MeshMaterial>();
     skyboxMeshMaterial->diffuseTex = new Material::TextureMapInfo();
+    skyboxMeshMaterial->diffuseTex->name = (wchar_t*)L"mesh\\clouds01.dds";
     skyboxMeshMaterial->Load(device);
     Insert(objectSkybox);
 
     GameObject* tarrain = Instantiate(Vector3(0.0f, 0.0f, 0.0f));
-    tarrain->name = "Tarrain";
+    tarrain->name = "Terrain";
     MeshComponent* meshTarrain = tarrain->AddComponent<MeshComponent>();
     Model* modelTarrain = new Model(*meshTarrain);
     tarrain->model = modelTarrain;

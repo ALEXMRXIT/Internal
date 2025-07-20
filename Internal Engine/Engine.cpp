@@ -56,6 +56,8 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
         desiredClientRect.bottom - desiredClientRect.top, 
         NULL, NULL, m_windowDesc->hInstance, NULL);
 
+    DragAcceptFiles(m_windowDesc->hWnd, TRUE);
+
     ShowWindow(m_windowDesc->hWnd, m_windowDesc->nCmdShow);
     UpdateWindow(m_windowDesc->hWnd);
 
@@ -213,7 +215,6 @@ bool Engine::InitRenderDevice() {
     UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #if defined(DEBUG) || defined(_DEBUG)
     flags |= D3D11_CREATE_DEVICE_DEBUG;
-    flags |= D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
 #endif
     for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
         hr = D3D11CreateDeviceAndSwapChain(nullptr, driverTypes[driverTypeIndex], nullptr,
@@ -396,23 +397,22 @@ void Engine::UpdateInput(float deltaTime) {
 
 #define LSHIFTSPEED (keyboardState[DIK_LSHIFT] & 0x80) ? config.additionalLShiftSpeed : 1.0f
     const float speed = config.cameraSpeed * (LSHIFTSPEED) * deltaTime;
-    const float mouseSensitivity = (config.mouseIntensive / 100.0f) * deltaTime;
+    const float mouseSensitivity = (config.mouseIntensive) * deltaTime;
 #undef LSHIFTSPEED
 
     Transform* camTransform = main_camera().gameObject().GetComponentByType<Transform>();
     Quaternion rotation = camTransform->rotation();
-    Vector3 position = camTransform->position();
 
     if (keyboardState[DIK_W] | keyboardState[DIK_S] |
         keyboardState[DIK_A] | keyboardState[DIK_D])
     {
         Vector3 moveDir = Vector3::zero();
-
         if (keyboardState[DIK_W] & 0x80) moveDir += Vector3::forward();
         if (keyboardState[DIK_S] & 0x80) moveDir -= Vector3::forward();
         if (keyboardState[DIK_A] & 0x80) moveDir -= Vector3::right();
         if (keyboardState[DIK_D] & 0x80) moveDir += Vector3::right();
 
+        Vector3 position = camTransform->position();
         position += rotation * moveDir.Normalized() * speed;
         camTransform->position(position);
     }
@@ -422,9 +422,12 @@ void Engine::UpdateInput(float deltaTime) {
         float pitch = mouseCurrState.lY * mouseSensitivity;
 
         Quaternion yawRot = Quaternion::AngleAxis(yaw, Vector3::up());
-        Quaternion pitchRot = Quaternion::AngleAxis(pitch, Vector3::right());
+        rotation = rotation * yawRot;
 
-        rotation = yawRot * rotation * pitchRot;
+        Vector3 localRight = rotation * Vector3::right();
+        Quaternion pitchRot = Quaternion::AngleAxis(pitch, localRight);
+
+        rotation = rotation * pitchRot;
         camTransform->rotation(rotation);
     }
 }
@@ -498,7 +501,7 @@ void Engine::Render() {
                 m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight);
         }
     }
-
+    
     m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
     float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -512,11 +515,11 @@ void Engine::Render() {
 
     m_deviceContext->RSSetViewports(1, &m_viewport);
 
-    //m_location->m_skybox->Render(m_deviceContext, loc->m_directionLight);
-    //m_deviceContext->OMSetDepthStencilState(nullptr, 0);
+    m_location->m_skybox->Render(m_deviceContext, loc->m_directionLight);
+    m_deviceContext->OMSetDepthStencilState(nullptr, 0);
 
     loc->m_directionLight->Render(m_deviceContext);
-
+    
     m_deviceContext->IASetInputLayout(m_layout);
     m_meshShader->setVertexShader(m_deviceContext);
     m_meshShader->setPiexlShader(m_deviceContext);
@@ -528,7 +531,7 @@ void Engine::Render() {
         if (obj.IsEnabled() && !obj.IsTransparent())
             m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight);
     }
-
+    
     // рендерим все прозрачные объекты (включая directionLight, skybox...)
     m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xFFFFFFFF);
     for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
@@ -536,7 +539,7 @@ void Engine::Render() {
         if (obj.IsEnabled() && obj.IsTransparent())
             m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight);
     }
-
+    
     gizmozRect.Render();
 
     static wchar_t buffer[128];
@@ -789,6 +792,26 @@ LRESULT Engine::windowProcessor(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             int mouseX = GET_X_LPARAM(lParam);
             int mouseY = GET_Y_LPARAM(lParam);
             engine.Raycast(mouseX, mouseY);
+        }
+#endif
+    } break;
+    case WM_DROPFILES: {
+#ifdef INTERNAL_ENGINE_GUI_INTERFACE
+        HDROP hDrop = (HDROP)wParam;
+        UINT fileCount = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
+
+        for (UINT i = 0; i < fileCount; i++) {
+            wchar_t path[MAX_PATH];
+            DragQueryFileW(hDrop, i, path, MAX_PATH);
+            const wchar_t* ext = PathFindExtensionW(path);
+
+            if (_wcsicmp(ext, L".obj") == 0)
+                engine.gui().LoadModel(engine.device(), path);
+            else
+                engine.gui().LoadTexture(engine.device(), path);
+
+            DragFinish(hDrop);
+            return 0;
         }
 #endif
     } break;

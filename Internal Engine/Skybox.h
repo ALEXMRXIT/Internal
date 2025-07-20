@@ -8,6 +8,7 @@ typedef struct _viewProject {
 } ViewProject, *LPViewProject;
 
 class DirectionLight;
+class Transform;
 
 class Skybox : public SharedObject, public LoaderNotificationDevice {
 private:
@@ -17,8 +18,8 @@ private:
 	ID3D11InputLayout* m_layout;
 	MeshComponent& m_component;
 	Shader* m_shader;
-
-	XMMATRIX m_pos;
+	
+	Transform* m_transform;
 	ViewProject m_wvp;
 
 public:
