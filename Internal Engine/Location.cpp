@@ -52,7 +52,6 @@ Location::Location(ID3D11Device* device) {
     m_loader->AddResourceToLoad("mesh\\skybox.obj", m_skybox);
     MeshMaterial* skyboxMeshMaterial = objectSkybox->AddComponent<MeshMaterial>();
     skyboxMeshMaterial->diffuseTex = new Material::TextureMapInfo();
-    skyboxMeshMaterial->diffuseTex->name = (wchar_t*)L"mesh\\clouds01.dds";
     skyboxMeshMaterial->Load(device);
     Insert(objectSkybox);
 
