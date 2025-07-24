@@ -5,7 +5,6 @@ cbuffer cbPerObject : register(b0)
     float4x4 WVP;
     float4x4 World;
     float4x4 ViewProjection;
-    float4x4 InverseWorld;
     float4x4 LightPos;
     float2 texture_scale;
     float2 texture_offset;
@@ -35,7 +34,7 @@ VS_OUTPUT VS(VS_INPUT input)
     output.Pos = mul(worldPos, ViewProjection);
     output.WorldPos = worldPos.xyz;
     output.TexCoord = float2(input.TexCoord.x, -input.TexCoord.y) * texture_scale + texture_offset;
-    output.Normal = mul(input.Normal, (float3x3)InverseWorld);
+    output.Normal = mul(input.Normal, (float3x3)World);
     output.Normal = normalize(output.Normal);
     output.ShadowPos = mul(worldPos, LightPos);
     

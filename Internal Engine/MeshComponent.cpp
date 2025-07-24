@@ -75,17 +75,6 @@ void MeshComponent::Update(float deltaTime) {
 
 }
 
-static XMMATRIX GetInverseTransposeWorldMatrix(const XMMATRIX& worldMatrix) {
-    XMMATRIX world3x3 = worldMatrix;
-    world3x3.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-
-    XMMATRIX inverseWorld;
-    XMVECTOR det;
-    inverseWorld = XMMatrixInverse(&det, world3x3);
-    XMMATRIX inverseTranspose = XMMatrixTranspose(inverseWorld);
-    return inverseTranspose;
-}
-
 void MeshComponent::Render(ID3D11DeviceContext* context, DirectionLight* directionLight) {
     if (!m_device_loader) return;
 
@@ -96,7 +85,6 @@ void MeshComponent::Render(ID3D11DeviceContext* context, DirectionLight* directi
     m_bufferWVP.WVP = XMMatrixTranspose(worldPosition * Engine::main_camera().getView() * Engine::main_camera().getProjection());
     m_bufferWVP.World = XMMatrixTranspose(worldPosition);
     m_bufferWVP.ViewProjection = XMMatrixTranspose(Engine::main_camera().getView() * Engine::main_camera().getProjection());
-    m_bufferWVP.InverseWorld = GetInverseTransposeWorldMatrix(worldPosition);
     m_bufferWVP.LightPos = XMMatrixTranspose(directionLight->GetViewProjectionMatrix());
     m_bufferWVP.texture_scale = material ? material->scale() : XMFLOAT2(1.0f, 1.0f);
     m_bufferWVP.texture_offset = material ? material->offset() : XMFLOAT2(0.0f, 0.0f);

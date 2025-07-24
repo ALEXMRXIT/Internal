@@ -57,7 +57,6 @@ struct WorldViewProjection {
 	XMMATRIX WVP;
 	XMMATRIX World;
 	XMMATRIX ViewProjection;
-	XMMATRIX InverseWorld;
 	XMMATRIX LightPos;
 	XMFLOAT2 texture_scale;
 	XMFLOAT2 texture_offset;
