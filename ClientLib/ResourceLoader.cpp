@@ -38,21 +38,25 @@ DWORD WINAPI ResourceLoader::WorkerFunction(LPVOID param) {
 DWORD ResourceLoader::ThreadLoop() {
     while (true) {
         MeshContainer resource;
-        resource.m_fileName = nullptr;
+        resource.m_fileName = NULL;
         EnterCriticalSection(&queueMutex);
-        if (stop && resourceQueue.empty()) {
+        bool shouldExit = stop && resourceQueue.empty();
+        if (shouldExit) {
             LeaveCriticalSection(&queueMutex);
             break;
         }
         if (!resourceQueue.empty()) {
             resource = resourceQueue.front();
             resourceQueue.pop();
+            LeaveCriticalSection(&queueMutex);
+
+            if (resource.m_fileName)
+                LoadResource(resource);
         }
-        LeaveCriticalSection(&queueMutex);
-        if (resource.m_fileName)
-            LoadResource(resource);
-        else
-            WaitForSingleObject(stopEvent, INFINITE);
+        else {
+            LeaveCriticalSection(&queueMutex);
+            WaitForSingleObject(stopEvent, 100);
+        }
     }
     return 0;
 }
