@@ -13,6 +13,17 @@
 #include "MeshComponent.h"
 #include "ShadowMap.h"
 
+#ifdef PROFILER_TRACY
+#define TRACY_ENABLE
+#undef min
+#undef max
+#include "tracy/Tracy.hpp"
+#include "TracyClient.cpp"
+#include "tracy/TracyD3D11.hpp"
+
+tracy::D3D11Ctx* m_tracyCtx;
+#endif
+
 Engine engine;
 Config config;
 PrimitiveDrawable gizmozRect;
@@ -360,6 +371,10 @@ bool Engine::InitRenderDevice() {
 }
 
 bool Engine::InitScene() {
+#ifdef PROFILER_TRACY
+    m_tracyCtx = TracyD3D11Context(m_device, m_deviceContext);
+#endif
+
     setFullScreen(m_windowDesc->hWnd, config.fullscreen);
     m_debugRaycast = config.debugRaycast;
 
@@ -493,12 +508,20 @@ void Engine::Update(float deltaTime) {
 
 void Engine::Render() {
     Location* loc = m_location;
-    if (!loc->m_directionLight->gameObject().IsStatic()) {
-        shadowMap.Render(m_deviceContext, m_location->m_directionLight);
-        for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
-            const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
-            if (obj.IsEnabled() && !obj.IsTransparent())
-                m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight);
+#ifdef PROFILER_TRACY
+    FrameMark;
+#endif
+    {
+#ifdef PROFILER_TRACY
+        TracyD3D11Zone(m_tracyCtx, "render shadow");
+#endif
+        if (!loc->m_directionLight->gameObject().IsStatic()) {
+            shadowMap.Render(m_deviceContext, m_location->m_directionLight);
+            for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+                const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
+                if (obj.IsEnabled() && !obj.IsTransparent())
+                    m_meshes[iterator]->RenderShadow(m_deviceContext, m_location->m_directionLight);
+            }
         }
     }
     
@@ -515,40 +538,70 @@ void Engine::Render() {
 
     m_deviceContext->RSSetViewports(1, &m_viewport);
 
-    m_location->m_skybox->Render(m_deviceContext, loc->m_directionLight);
-    m_deviceContext->OMSetDepthStencilState(nullptr, 0);
+    {
+#ifdef PROFILER_TRACY
+        TracyD3D11Zone(m_tracyCtx, "render skybox");
+#endif
+        m_location->m_skybox->Render(m_deviceContext, loc->m_directionLight);
+        m_deviceContext->OMSetDepthStencilState(nullptr, 0);
+    }
 
-    loc->m_directionLight->Render(m_deviceContext);
-    
-    m_deviceContext->IASetInputLayout(m_layout);
-    m_meshShader->setVertexShader(m_deviceContext);
-    m_meshShader->setPiexlShader(m_deviceContext);
-    m_deviceContext->RSSetState(m_cWcullMode);
-    m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-    // рендерим все непрозрачные объекты
-    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
-        const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
-        if (obj.IsEnabled() && !obj.IsTransparent())
-            m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight);
+    {
+#ifdef PROFILER_TRACY
+        TracyD3D11Zone(m_tracyCtx, "render direction light");
+#endif
+        loc->m_directionLight->Render(m_deviceContext);
     }
     
-    // рендерим все прозрачные объекты (включая directionLight, skybox...)
-    m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xFFFFFFFF);
-    for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
-        const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
-        if (obj.IsEnabled() && obj.IsTransparent())
-            m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight);
+    {
+#ifdef PROFILER_TRACY
+        TracyD3D11Zone(m_tracyCtx, "render meshes");
+#endif
+        m_deviceContext->IASetInputLayout(m_layout);
+        m_meshShader->setVertexShader(m_deviceContext);
+        m_meshShader->setPiexlShader(m_deviceContext);
+        m_deviceContext->RSSetState(m_cWcullMode);
+        m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+        // рендерим все непрозрачные объекты
+        for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+            const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
+            if (obj.IsEnabled() && !obj.IsTransparent())
+                m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight);
+        }
+
+        // рендерим все прозрачные объекты (включая directionLight, skybox...)
+        m_deviceContext->OMSetBlendState(m_blending, nullptr, 0xFFFFFFFF);
+        for (int iterator = 0; iterator < m_meshes.size(); ++iterator) {
+            const GameObject& obj = m_meshes[iterator]->mesh().gameObject();
+            if (obj.IsEnabled() && obj.IsTransparent())
+                m_meshes[iterator]->Render(m_deviceContext, m_location->m_directionLight);
+        }
     }
     
-    gizmozRect.Render();
+    {
+#ifdef PROFILER_TRACY
+        TracyD3D11Zone(m_tracyCtx, "render gizmo");
+#endif
+        gizmozRect.Render();
+    }
 
-    static wchar_t buffer[128];
-    swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
-    m_font->Render(m_deviceContext, buffer);
+    {
+#ifdef PROFILER_TRACY
+        TracyD3D11Zone(m_tracyCtx, "render ui");
+#endif
+        static wchar_t buffer[128];
+        swprintf_s(buffer, 128, L"(Internal Game Engine) DirectX 11 FPS: %d VSync: %s", m_timeInfo.fps, toStringVSync());
+        m_font->Render(m_deviceContext, buffer);
+    }
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
-    m_gui->Render();
+    {
+#ifdef PROFILER_TRACY
+        TracyD3D11Zone(m_tracyCtx, "render imgui");
+#endif
+        m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+        m_gui->Render();
+    }
 
     static bool bakedShadowTexture = false;
     if (loc->m_directionLight->gameObject().IsStatic() && !bakedShadowTexture) {
@@ -564,7 +617,11 @@ void Engine::Render() {
     }
 #endif
 
+#ifdef PROFILER_TRACY
+    UINT syncInterval = std::min(config.vSync, 2);
+#else
     UINT syncInterval = min(config.vSync, 2);
+#endif
     UINT presentFlags = 0;
     if (m_SwapChainOccluded) {
         presentFlags |= DXGI_PRESENT_TEST;
@@ -572,9 +629,16 @@ void Engine::Render() {
 
     HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
     m_SwapChainOccluded = (hr == DXGI_STATUS_OCCLUDED);
+#ifdef PROFILER_TRACY
+    TracyD3D11Collect(m_tracyCtx);
+#endif
 }
 
 void Engine::Release() {
+#ifdef PROFILER_TRACY
+    m_deviceContext->Flush();
+    TracyD3D11Destroy(m_tracyCtx);
+#endif
     if (m_swapChain) m_swapChain->Release();
     if (m_device) m_device->Release();
     if (m_deviceContext) m_deviceContext->ClearState();

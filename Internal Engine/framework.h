@@ -23,6 +23,7 @@
 #include <wrl/client.h>
 #include <cmath>
 #include <limits>
+#include <cstdint>
 
 #ifdef INTERNAL_ENGINE_GUI_INTERFACE
 #include <shlwapi.h>
