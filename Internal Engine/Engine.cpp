@@ -50,22 +50,58 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
     wndClassEx.lpszClassName = m_windowDesc->title;
     wndClassEx.hIconSm = LoadIcon(NULL, IDI_WINLOGO);
 
-    RegisterClassEx(&wndClassEx);
+    if (!RegisterClassEx(&wndClassEx)) {
+        MessageBox(NULL, "Failed to register window class", "Error", MB_ICONERROR);
+        return false;
+    }
+
+    if (config.resolution < 0 || config.resolution >= m_supportedResolution.size())
+        config.resolution = 0;
+
+    int windowWidth = m_supportedResolution[config.resolution].Width;
+    int windowHeight = m_supportedResolution[config.resolution].Height;
+
+    const int minWidth = 320;
+    const int minHeight = 240;
+
+    if (windowWidth < minWidth) windowWidth = minWidth;
+    if (windowHeight < minHeight) windowHeight = minHeight;
 
     RECT desiredClientRect = {
         0, 0,
-        m_supportedResolution[config.resolution].Width,
-        m_supportedResolution[config.resolution].Height
+        windowWidth,
+        windowHeight
     };
 
-    DWORD& windowStyle = m_windowDesc->windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
-    AdjustWindowRectEx(&desiredClientRect, windowStyle, FALSE, 0);
+    DWORD windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
+    if (!config.fullscreen)
+        AdjustWindowRectEx(&desiredClientRect, windowStyle, FALSE, 0);
+    else
+        windowStyle = WS_POPUP;
 
-    m_windowDesc->hWnd = CreateWindowEx(NULL, m_windowDesc->title, m_windowDesc->title,
-        windowStyle, CW_USEDEFAULT, CW_USEDEFAULT,
-        desiredClientRect.right - desiredClientRect.left, 
-        desiredClientRect.bottom - desiredClientRect.top, 
-        NULL, NULL, m_windowDesc->hInstance, NULL);
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    int windowX = (screenWidth - (desiredClientRect.right - desiredClientRect.left)) / 2;
+    int windowY = (screenHeight - (desiredClientRect.bottom - desiredClientRect.top)) / 2;
+
+    m_windowDesc->hWnd = CreateWindowEx(
+        NULL,
+        m_windowDesc->title,
+        m_windowDesc->title,
+        windowStyle,
+        windowX, windowY,
+        desiredClientRect.right - desiredClientRect.left,
+        desiredClientRect.bottom - desiredClientRect.top,
+        NULL,
+        NULL,
+        m_windowDesc->hInstance,
+        NULL
+    );
+
+    if (!m_windowDesc->hWnd) {
+        MessageBox(NULL, "Failed to create window", "Error", MB_ICONERROR);
+        return false;
+    }
 
     DragAcceptFiles(m_windowDesc->hWnd, TRUE);
 
@@ -185,7 +221,7 @@ HRESULT Engine::GetSupportedResolutions(DXGI_FORMAT format) {
 bool Engine::InitRenderDevice() {
     HRESULT hr{};
 
-    hr = BuildMultiSampleQualityList(DXGI_FORMAT_R8G8B8A8_UNORM);
+    hr = BuildMultiSampleQualityList(DXGI_FORMAT_R10G10B10A2_UNORM);
     if (FAILED(hr)) {
         DXUT_ERR_MSGBOX("Error build sample quality list.", hr);
         return false;
@@ -205,7 +241,7 @@ bool Engine::InitRenderDevice() {
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 2;
     swapChainDesc.OutputWindow = m_windowDesc->hWnd;
-    swapChainDesc.Windowed = TRUE;
+    swapChainDesc.Windowed = !config.fullscreen;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     swapChainDesc.Flags = config.fullscreen ? DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH : 0;
 
@@ -686,14 +722,14 @@ int Engine::messageWindow() {
                 Sleep(10);
                 continue;
             }
-
+            
             UpdateFrequenceTime(m_timeInfo);
-
+            
             while (m_timeInfo.accumulator >= m_timeInfo.targetFrameTime) {
                 FixedUpdate(m_timeInfo.targetFrameTime);
                 m_timeInfo.accumulator -= m_timeInfo.targetFrameTime;
             }
-
+            
             UpdateInput(m_timeInfo.deltaTime);
             Update(m_timeInfo.deltaTime);
             m_SwapChainOccluded = false;
@@ -781,33 +817,7 @@ void Engine::addMeshRenderer(Model* mesh) {
 }
 
 void Engine::setFullScreen(HWND hwnd, bool fullscreen) {
-    static WINDOWPLACEMENT prevPlacement = { sizeof(WINDOWPLACEMENT) };
-    static RECT prevRect = { 0 };
-    DWORD style = GetWindowLong(hwnd, GWL_STYLE);
-    MONITORINFO mi = { sizeof(MONITORINFO) };
-
-    if (!fullscreen) {
-        SetWindowLong(hwnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
-        SetWindowPlacement(hwnd, &prevPlacement);
-        SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
-            SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
-    }
-    else {
-        GetWindowPlacement(hwnd, &prevPlacement);
-        GetWindowRect(hwnd, &prevRect);
-
-        if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY), &mi)) {
-            SetWindowLong(hwnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN);
-
-            SetWindowPos(hwnd, HWND_TOP,
-                mi.rcMonitor.left, mi.rcMonitor.top,
-                mi.rcMonitor.right - mi.rcMonitor.left,
-                mi.rcMonitor.bottom - mi.rcMonitor.top,
-                SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
-        }
-    }
-    //engine.getChain()->SetFullscreenState(fullscreen, NULL);
+    
 }
 
 const WindowDescription* Engine::getWindowDesc() const {

@@ -24,7 +24,6 @@ typedef struct _windowDescription {
 	HWND hWnd;
 	LONG width;
 	LONG height;
-	bool fullScreen;
 	int nCmdShow;
 } WindowDescription, *LPWindowDescription;
 

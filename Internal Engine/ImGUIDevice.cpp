@@ -9,6 +9,8 @@
 #include "ShadowMap.h"
 #include "debug.h"
 #include "Material.h"
+#include "ResourceLoader.h"
+#include "FileSharedBuffer.h"
 
 void ImGUIDevice::InitWindowStyle(void) {
 #ifdef _DEBUG
@@ -171,7 +173,18 @@ void ImGUIDevice::LoadTexture(ID3D11Device* device, const wchar_t* path) {
 }
 
 void ImGUIDevice::LoadModel(ID3D11Device* device, const wchar_t* path) {
+    if (!m_meshLoader)
+        m_meshLoader = new MeshLoader();
+    if (!m_loader)
+        m_loader = new ResourceLoader(engine, m_meshLoader);
 
+    const wchar_t* meshstr = wcsstr(path, L"\\mesh");
+    wchar_t buffer[32];
+    if (meshstr)
+        errno_t err = wcscpy_s(buffer, sizeof(buffer) / sizeof(wchar_t), meshstr);
+
+    //MeshComponent mesh = new MeshComponent();
+    //m_loader->AddResourceToLoad("mesh\\skybox.obj", m_skybox);
 }
 
 void ImGUIDevice::CleanupTextures() {
@@ -546,5 +559,7 @@ void ImGUIDevice::Release() {
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
     CleanupTextures();
+    if (m_loader) delete m_loader;
+    if (m_meshLoader) delete m_meshLoader;
 }
 #endif

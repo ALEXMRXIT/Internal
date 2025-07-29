@@ -6,6 +6,8 @@
 #include "ImGUI/imgui_impl_win32.h"
 
 class GameObject;
+class ResourceLoader;
+class MeshLoader;
 
 #define MAX_NAME 256
 
@@ -27,6 +29,9 @@ private:
 	bool m_styleSelectedState;
 	int m_selectedStyle;
 	float m_fontSize;
+
+	ResourceLoader* m_loader;
+	MeshLoader* m_meshLoader;
 
 	texture_assets_t* m_assets;
 	int m_assets_count;
