@@ -76,6 +76,17 @@ Location::Location(ID3D11Device* device) {
     homeMeshMaterial->diffuseTex = new Material::TextureMapInfo();
     homeMeshMaterial->Load(device);
     Insert(home);
+
+    GameObject* box = Instantiate(Vector3(0.1f, 0.0f, 0.0f), Quaternion::Identity(), Vector3(1.0f, 1.0f, 1.0f));
+    box->name = "Box";
+    MeshComponent* meshBox = box->AddComponent<MeshComponent>();
+    Model* modelBox = new Model(*meshBox);
+    box->model = modelBox;
+    m_loader->AddResourceToLoad("mesh\\box.obj", modelBox);
+    MeshMaterial* boxMaterial = box->AddComponent<MeshMaterial>();
+    boxMaterial->diffuseTex = new Material::TextureMapInfo();
+    boxMaterial->Load(device);
+    Insert(box);
 }
 
 void Location::Update(float deltaTime) {
