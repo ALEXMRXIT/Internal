@@ -19,12 +19,6 @@ void ImGUIDevice::InitWindowStyle(void) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 
-    float dpiScale = ImGui_ImplWin32_GetDpiScaleForHwnd(engine.getWindowDesc()->hWnd);
-    if (dpiScale > 1.0f) {
-        ImGui::GetStyle().ScaleAllSizes(dpiScale);
-        io.FontGlobalScale = dpiScale;
-    }
-
     ImFont* font = io.Fonts->AddFontFromFileTTF("arlrdbd.ttf", m_fontSize);
     io.FontDefault = font;
 

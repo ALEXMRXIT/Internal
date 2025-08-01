@@ -35,13 +35,13 @@ public:
     std::vector<GraphicsEnumDeviceSettingsCombo*> m_deviceSettingsComboList;
 };
 
-class GraphicsEnumDeviceInfo {
+struct GraphicsEnumDeviceInfo {
 public:
     uint32_t m_adapterOrdinal;
     D3D_DRIVER_TYPE m_deviceType;
     D3D_FEATURE_LEVEL m_selectedLevel;
     D3D_FEATURE_LEVEL m_maxLevel;
-    BOOL m_momputeShaderDispatcher;
+    BOOL m_computeShaderDispatcher;
 };
 
 struct GraphicsEnumOutputInfo {

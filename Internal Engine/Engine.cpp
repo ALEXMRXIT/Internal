@@ -73,7 +73,7 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
         windowHeight
     };
 
-    DWORD windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_MAXIMIZEBOX | WS_SIZEBOX);
+    DWORD windowStyle = WS_OVERLAPPEDWINDOW;
     if (!config.fullscreen)
         AdjustWindowRectEx(&desiredClientRect, windowStyle, FALSE, 0);
     else

@@ -9,9 +9,7 @@
 Camera::Camera(GameObject* obj) : AbstractBaseComponent(obj) {
 	transform = gameObject().GetComponentByType<Transform>();
 
-	const DXGI_MODE_DESC& dxgi_mode = engine.getSupportedResolution();
-	float screen = (float)dxgi_mode.Width / (float)dxgi_mode.Height;
-	projection = XMMatrixPerspectiveFovLH(0.325f * XM_PI, screen, 0.3f, 2000.0f);
+	projection = XMMatrixPerspectiveFovLH(D3DX_PI / 4, 1.0f, 0.05f, 2000.0f);
 }
 
 void Camera::Update() {
