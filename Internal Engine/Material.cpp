@@ -14,8 +14,14 @@ MeshMaterial::MeshMaterial(GameObject* obj) : AbstractBaseComponent(obj) {
 }
 
 void MeshMaterial::Bind(ID3D11DeviceContext* context) {
-    context->UpdateSubresource(m_meshMaterialBuffer, 0, nullptr, &m_buffer, 0, 0);
-    context->PSSetConstantBuffers(1, 1, &m_meshMaterialBuffer);
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    context->Map(m_meshMaterialBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    MeshMaterialBuffer* material = (MeshMaterialBuffer*)mappedResource.pData;
+    material->SpecularColor = m_buffer.SpecularColor;
+    material->SpecularPower = m_buffer.SpecularPower;
+    material->SpecularIntensity = m_buffer.SpecularIntensity;
+    context->Unmap(m_meshMaterialBuffer, 0);
+
 	context->PSSetShaderResources(0, 1, &diffuseTex->m_shaderView);
 	ID3D11ShaderResourceView* shadowResourceView = shadowMap.ShadowShaderResources();
 	context->PSSetShaderResources(1, 1, &shadowResourceView);
@@ -27,10 +33,10 @@ void MeshMaterial::Load(ID3D11Device* device) {
     if (!m_meshMaterialBuffer) {
         D3D11_BUFFER_DESC bufferDesc;
         ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-        bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
         bufferDesc.ByteWidth = sizeof(MeshMaterialBuffer);
         bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        bufferDesc.CPUAccessFlags = 0;
+        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         bufferDesc.MiscFlags = 0;
         device->CreateBuffer(&bufferDesc, NULL, &m_meshMaterialBuffer);
     }
@@ -255,11 +261,13 @@ inline void Material::TextureMapInfo::Load(ID3D11Device* device) {
         sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 
     const int anisotropy = 1 + (config.qualityTexture * 2);
+    sampDesc.MipLODBias = 0.0f;
     sampDesc.MaxAnisotropy = min(anisotropy, 16);
     sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+    sampDesc.BorderColor[0] = sampDesc.BorderColor[1] = sampDesc.BorderColor[2] = sampDesc.BorderColor[3] = 0;
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 

@@ -1,11 +1,11 @@
 #include "Config.h"
 
 Config::Config() {
-	resolution = 0;
+	resolution = 30;
 	multiply = 0;
 	qualityTexture = 10;
 	fullscreen = false;
-	vSync = 0;
+	vSync = 1;
 	showCursor = true;
 	cameraSpeed = 50.0f;
 	mouseIntensive = 25.0f;

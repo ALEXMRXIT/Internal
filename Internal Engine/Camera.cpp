@@ -9,7 +9,9 @@
 Camera::Camera(GameObject* obj) : AbstractBaseComponent(obj) {
 	transform = gameObject().GetComponentByType<Transform>();
 
-	projection = XMMatrixPerspectiveFovLH(D3DX_PI / 4, 1.0f, 0.05f, 2000.0f);
+    const WindowDescription* wndDesc = engine.getWindowDesc();
+    float screenAspect = wndDesc->width / wndDesc->height;
+	projection = XMMatrixPerspectiveFovLH(D3DX_PI / 3.0f, screenAspect, 2.0f, 2000.0f);
 }
 
 void Camera::Update() {
