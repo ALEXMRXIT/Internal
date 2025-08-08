@@ -100,7 +100,7 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
     
     float3 normal = normalize(input.Normal);
     float3 lightDir = normalize(-lightDirection);
-    float NdotL = saturate(dot(normal, lightDir));
+    float NdotL = max(saturate(dot(normal, lightDir)), 0.1f);
     
     float3 shadowPos = input.ShadowPos.xyz / input.ShadowPos.w;
     shadowPos.xy = saturate(shadowPos.xy * 0.5f + 0.5f);
