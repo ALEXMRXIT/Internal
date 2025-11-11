@@ -55,8 +55,7 @@ bool Engine::InitWindowDevice(const WindowDescription* desc) {
         return false;
     }
 
-    if (config.resolution < 0 || config.resolution >= m_supportedResolution.size())
-        config.resolution = 0;
+    config.resolution = m_supportedResolution.size() - 1;
 
     int windowWidth = m_supportedResolution[config.resolution].Width;
     int windowHeight = m_supportedResolution[config.resolution].Height;

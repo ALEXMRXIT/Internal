@@ -5,10 +5,10 @@ Config::Config() {
 	multiply = 0;
 	qualityTexture = 10;
 	fullscreen = false;
-	vSync = 1;
+	vSync = 0;
 	showCursor = true;
 	cameraSpeed = 50.0f;
-	mouseIntensive = 25.0f;
+	mouseIntensive = 100.0f;
 	additionalLShiftSpeed = 3.0f;
 	primitiveBufferSize = 512;
 	debugRaycast = false;
