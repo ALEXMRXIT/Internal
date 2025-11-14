@@ -64,8 +64,8 @@ SERVLIBCALL XMVECTOR Quaternion::QuaternionToDirectionVector(const Quaternion& q
     return direction;
 }
 
-SERVLIBCALL Quaternion Quaternion::CreateFromYawPitchRoll(float yaw, float pitch, float roll) {
-    XMVECTOR quat = XMQuaternionRotationRollPitchYaw(pitch, yaw, roll);
+SERVLIBCALL Quaternion Quaternion::CreateFromRollPitchYaw(float roll, float pitch, float yaw) {
+    XMVECTOR quat = XMQuaternionRotationRollPitchYaw(roll, pitch, yaw);
     Quaternion result;
     XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(&result), quat);
     return result;
@@ -75,15 +75,40 @@ Quaternion Quaternion::Normalized() const {
     return Quaternion(DirectX::XMQuaternionNormalize(m_quat));
 }
 
+float Quaternion::NormalizeAxis(float angle) const {
+    angle = fmodf(fabsf(angle), 360.0f);
+    if (angle < 0.0f) angle += 360.0f;
+    if (angle > 180.0f) angle -= 360.0f;
+    return angle;
+}
+
 void Quaternion::Normalize() {
     m_quat = DirectX::XMQuaternionNormalize(m_quat);
 }
 
 XMFLOAT3 Quaternion::ToEuler() const {
-    XMVECTOR euler = XMQuaternionRotationRollPitchYawFromVector(m_quat);
-    XMFLOAT3 q;
-    XMStoreFloat3(&q, euler);
-    return q;
+    const float singularityTest = Z() * X() - W() * Y();
+    const float yawY = 2.f * (W() * Z() + X() * Y());
+    const float yawX = (1.f - 2.f * (Y() * Y() + Z() * Z()));
+    const float SINGULARITY_THRESHOLD = 0.4999995f;
+    const float RAD_TO_DEG = (180.f / D3DX_PI);
+    float pitch, yaw, roll;
+    if (singularityTest < -SINGULARITY_THRESHOLD) {
+        pitch = -90.f;
+        yaw = (atan2f(yawY, yawX) * RAD_TO_DEG);
+        roll = NormalizeAxis(-yaw - (2.f * atan2f(X(), W()) * RAD_TO_DEG));
+    }
+    else if (singularityTest > SINGULARITY_THRESHOLD) {
+        pitch = 90.f;
+        yaw = (atan2f(yawY, yawX) * RAD_TO_DEG);
+        roll = NormalizeAxis(yaw - (2.f * atan2f(X(), W()) * RAD_TO_DEG));
+    }
+    else {
+        pitch = (sinf(2.f * singularityTest) * RAD_TO_DEG);
+        yaw = (atan2f(yawY, yawX) * RAD_TO_DEG);
+        roll = (atan2f(-2.f * (W() * X() + Y() * Z()), (1.f - 2.f * (X() * X() + Y() * Y()))) * RAD_TO_DEG);
+    }
+    return XMFLOAT3(pitch, yaw, roll);
 }
 
 Quaternion Quaternion::Inverse() const {

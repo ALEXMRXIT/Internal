@@ -91,10 +91,10 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                 }
 
                 {
-                    Quaternion quaternion = transform->rotation();
-                    float angleX = XMConvertToDegrees(quaternion.X());
-                    float angleY = XMConvertToDegrees(quaternion.Y());
-                    float angleZ = XMConvertToDegrees(quaternion.Z());
+                    XMFLOAT3 quaternion = transform->rotation().ToEuler();
+                    float pitch = XMConvertToDegrees(quaternion.x);
+                    float yaw = XMConvertToDegrees(quaternion.y);
+                    float roll = XMConvertToDegrees(quaternion.z);
 
                     const char* rotText = "Rotation:";
                     ImGui::Text("%s", rotText);
@@ -108,24 +108,25 @@ void Transform::UpdateInterfaceInInspector(GameObject* gameObject) {
                     ImGui::Text("X:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotX", &angleX, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
+                    rotationChanged |= ImGui::DragFloat("##RotX", &pitch, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     ImGui::SameLine();
 
                     ImGui::Text("Y:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotY", &angleY, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
+                    rotationChanged |= ImGui::DragFloat("##RotY", &yaw, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     ImGui::SameLine();
 
                     ImGui::Text("Z:");
                     ImGui::SameLine();
                     ImGui::SetNextItemWidth(dragFloatWidth);
-                    rotationChanged |= ImGui::DragFloat("##RotZ", &angleZ, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
+                    rotationChanged |= ImGui::DragFloat("##RotZ", &roll, 0.25f, -FLT_MAX, FLT_MAX, "%.2f", flags);
                     if (gameObjectStatic)
                         ImGui::EndDisabled();
 
-                    if (rotationChanged)
-                        transform->rotation(Quaternion(angleX, angleY, angleZ, 0.0f));
+                    if (rotationChanged) {
+                        transform->rotation(Quaternion::CreateFromRollPitchYaw(pitch, yaw, roll));
+                    }
                 }
 
                 {

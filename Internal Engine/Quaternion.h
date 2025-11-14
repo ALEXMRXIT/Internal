@@ -21,9 +21,10 @@ public:
     static SERVLIBCALL Quaternion LookRotation(const DirectX::XMFLOAT3& forward, const DirectX::XMFLOAT3& up = { 0, 1, 0 });
     static SERVLIBCALL XMFLOAT4 QuaternionToDirection(const Quaternion& quat);
     static SERVLIBCALL XMVECTOR QuaternionToDirectionVector(const Quaternion& quat);
-    static SERVLIBCALL Quaternion CreateFromYawPitchRoll(float yaw, float pitch, float roll);
+    static SERVLIBCALL Quaternion CreateFromRollPitchYaw(float yaw, float pitch, float roll);
 
     Quaternion Normalized() const;
+    __forceinline float NormalizeAxis(float angle) const;
     void Normalize();
     XMFLOAT3 ToEuler() const;
     Quaternion Inverse() const;
@@ -37,12 +38,12 @@ public:
     bool operator!=(const Quaternion& rhs) const;
     Quaternion operator^(const Quaternion& quat) const;
 
-    float X() const;
-    float Y() const;
-    float Z() const;
-    float W() const;
-    void Set(float x, float y, float z, float w);
-    float operator[](int index) const;
+    __forceinline float X() const;
+    __forceinline float Y() const;
+    __forceinline float Z() const;
+    __forceinline float W() const;
+    __forceinline void Set(float x, float y, float z, float w);
+    __forceinline float operator[](int index) const;
 
     __forceinline Vector3 operator*(const Vector3& vec) const {
         DirectX::XMVECTOR v = vec.ToXMVector();
