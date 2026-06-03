@@ -3,6 +3,8 @@ Internal Game Engine — это современный игровой движо
 Он предоставляет мощный набор инструментов для рендеринга, физики, асинхронной загрузки ресурсов и гибкой системы компонентов, позволяя разработчикам сосредоточиться на создании игрового контента.
 
 <img width="1918" height="1197" alt="image" src="https://github.com/user-attachments/assets/fee9d21b-b1b2-41e8-8e84-9168a5b6c3b5" />
+<img width="2871" height="1798" alt="image" src="https://github.com/user-attachments/assets/97f81c76-260b-4aa2-91b2-f8513c1d6f34" />
+
 
 Список изменений
 Основные возможности<br>
